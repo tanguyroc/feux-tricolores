@@ -58,6 +58,13 @@ def cmd_backtest(args) -> None:
     run_all()
 
 
+def cmd_stocks(args) -> None:
+    from .stocks import compute_all, save_all
+
+    res = compute_all()
+    save_all(res)
+
+
 def cmd_robustness(args) -> None:
     from .robustness import run_all
 
@@ -88,6 +95,8 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_signals)
     s = sub.add_parser("backtest", help="validation point-in-time")
     s.set_defaults(fn=cmd_backtest)
+    s = sub.add_parser("stocks", help="module actions : liste de suivi stocks.yaml (EDGAR + prix)")
+    s.set_defaults(fn=cmd_stocks)
     s = sub.add_parser("robustness", help="sous-périodes, bootstrap, sensibilité, confirmation")
     s.set_defaults(fn=cmd_robustness)
     s = sub.add_parser("dashboard", help="générer docs/index.html")

@@ -106,3 +106,25 @@ conduct:
     leverage_cap_share_equities: 0.05
     action_within_trading_days: 5
   exceptional_order_checklist_hours: 48
+
+stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeurs
+  valuation:
+    indicators: [ev_ebit_pct, p_fcf_pct]     # percentiles sur 10 ans de l'historique propre de la société
+    pct_years: 10
+    pct_min_years: 5
+    red_min: 80
+    green_max: 30
+  extension:
+    red_min: 90                                 # écart à la MM200 jours, percentile 10 ans
+    gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
+  reverse_dcf:
+    wacc: 0.09
+    terminal_growth: 0.025
+    years: 10
+    red_if_implied_over_realized: 1.5           # croissance implicite > 1,5 × croissance réalisée 5 ans → drapeau
+  quality:   # éliminatoire : une valeur qui échoue ne peut jamais être verte
+    roic_min: 0.10
+    fcf_to_net_income_min: 0.70
+    net_debt_to_ebitda_max: 2.0
+    tax_rate: 0.21
+  leverage_flag: {sma_days: 200}

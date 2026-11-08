@@ -1,0 +1,29 @@
+{
+ "MSTR": {
+  "price": 128.92999267578125,
+  "gap_ma200": -0.03598590096596255,
+  "trend_broken": true,
+  "drawdown": 0.727898199080911,
+  "btc_color": "green",
+  "btc_V": -0.6781275952535901,
+  "color": "green",
+  "color_confirmed": "green",
+  "V": null,
+  "gsy": false,
+  "date": "2026-11-06",
+  "concepts": {}
+ },
+ "9984": {
+  "price": 3549.0,
+  "gap_ma200": -0.3256787388349385,
+  "gap_ma200_pct": 0.2380952380952381,
+  "gsy": false,
+  "trend_broken": true,
+  "drawdown": 0.588855421686747,
+  "V": null,
+  "color": "orange",
+  "color_confirmed": "orange",
+  "date": "2026-11-06",
+  "concepts": {}
+ }
+}

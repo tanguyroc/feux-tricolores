@@ -119,6 +119,38 @@ def _card_btc(df: pd.DataFrame) -> str:
             f"{_timeline_svg(df, '2014-01-01')}</section>")
 
 
+def _stocks_section() -> str:
+    from .stocks import load_all, watchlist
+
+    res = load_all()
+    if not res:
+        return ("<p class='sub'>Module actions non exécuté (définir <code>SEC_USER_AGENT</code> puis <code>python -m feux stocks</code>). "
+                "Liste de suivi : <code>stocks.yaml</code>.</p>")
+    wl = watchlist()
+    rows = ""
+    for key, df in res.items():
+        spec = wl.get(key, {"name": key, "type": "?"})
+        row = df.iloc[-1]
+        c = row["color_confirmed"]
+        kind = spec.get("type", "operating")
+        if kind == "operating":
+            val = (f"EV/EBIT {_fmt(row.get('ev_ebit'), '{:.1f}')} (p{_fmt(row.get('ev_ebit_pct'))}) · P/FCF {_fmt(row.get('p_fcf'), '{:.1f}')} (p{_fmt(row.get('p_fcf_pct'))}) · V {_fmt(row.get('V'))}")
+            qual = (f"ROIC {_fmt(row.get('roic'), '{:.0f}', ' %', 100)} · FCF/RN {_fmt(row.get('fcf_ni'), '{:.2f}')} · DN/EBITDA {_fmt(row.get('nd_ebitda'), '{:.1f}')} → "
+                    + ("<b>OK</b>" if bool(row.get("quality_ok", False)) else "<b style='color:var(--red)'>échec</b>"))
+            growth = f"implicite {_fmt(row.get('implied_growth'), '{:+.0f}', ' %/an', 100)} vs réalisée 5 ans {_fmt(row.get('fcf_cagr_5y'), '{:+.0f}', ' %/an', 100)}"
+        elif kind == "crypto_proxy":
+            val, qual, growth = "suit le feu Bitcoin", "—", "prime sur la trésorerie BTC (mNAV) : non calculée"
+        else:
+            val, qual, growth = "hors EDGAR : valorisation n.d.", "—", "—"
+        ext = f"MM200 {_fmt(row.get('gap_ma200'), '{:+.0f}', ' %', 100)} · GSY {'oui' if bool(row.get('gsy', False)) else 'non'} · tendance {'cassée' if bool(row.get('trend_broken', False)) else 'OK'}"
+        rows += (f"<tr><td><b>{html.escape(spec['name'])}</b><br><small>{key} · {kind}</small></td><td class='c {c}'>{LABEL[c]}</td>"
+                 f"<td>{val}</td><td>{qual}</td><td>{growth}</td><td>{ext}</td><td>{_fmt(row.get('drawdown'), '{:.0f}', ' %', 100)}</td><td>{df.index[-1]:%d/%m/%Y}</td></tr>")
+    return ("<table><tr><th>Société</th><th>Feu</th><th>Valorisation (percentiles 10 ans)</th><th>Qualité (éliminatoire)</th>"
+            "<th>Croissance du FCF</th><th>Extension / tendance</th><th>Baisse vs plus haut</th><th>Données au</th></tr>" + rows + "</table>"
+            "<p class='sub'>Rouge = valorisation ≥ 80e percentile ET (hausse ≥100 %/2 ans avec accélération OU écart MM200 ≥ 90e percentile) ; "
+            "vert = valorisation ≤ 30e percentile ET filtre qualité réussi. Comptes SEC EDGAR datés du dépôt (point-in-time), première publication conservée.</p>")
+
+
 def _conduct_table() -> str:
     rows = ""
     for color in ["green", "orange", "red"]:
@@ -166,10 +198,11 @@ def build() -> None:
     now = dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
     page = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Feux tricolores — investissement long terme</title><style>{CSS}</style></head><body><main>
-<h1>Feux tricolores</h1><p class="sub">Lecture générée le {now} · règles gelées le {r['frozen_at']} (v{r['version']}) · <a href="backtest.html">validation 1990-2026</a> · <a href="latest.json">données brutes</a></p>
+<h1>Feux tricolores</h1><p class="sub">Lecture générée le {now} · règles gelées le {r['frozen_at']} (v{r['version']}) · <a href="backtest.html">validation 1990-2026</a> · <a href="robustness.html">robustesse</a> · <a href="latest.json">données brutes</a></p>
 <div class="warn">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais, quelle que soit la couleur.</div>
 <h2>Lecture du jour</h2><div class="grid">{''.join(cards)}</div>
 <p class="legend"><i style="background:{HEX['green']}"></i>vert <i style="background:{HEX['orange']}"></i>orange <i style="background:{HEX['red']}"></i>rouge — frise mensuelle depuis 1990 (Bitcoin : 2014)</p>
+<h2>Actions suivies</h2>{_stocks_section()}
 <h2>Ce que chaque couleur autorise</h2>{_conduct_table()}
 <h2>Ce que les feux ont donné dans le passé (point-in-time)</h2>{_validation_summary()}
 <p class="sub">Rendements de prix hors dividendes ; chaque jour est classé par sa couleur du jour. Détails, épisodes, coût des faux positifs et simulation du levier x2 : <a href="backtest.html">rapport complet</a>.</p>

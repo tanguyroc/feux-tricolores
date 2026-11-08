@@ -1,0 +1,13 @@
+# Liste de suivi (au plus 10 valeurs). Modifier librement ; les règles sont dans rules.yaml → stocks.
+# type :
+#   operating    société classique : valorisation (EV/EBIT, P/FCF) + DCF inversé + qualité + extension (SEC EDGAR + prix)
+#   crypto_proxy société dont la valeur suit le Bitcoin (trésorerie en BTC) : suit le feu Bitcoin + sa propre tendance
+#   price_only   pas de comptes dans EDGAR (société non américaine) : extension et critère GSY seulement
+# cik : identifiant SEC (10 chiffres sans les zéros), requis pour operating et crypto_proxy.
+stocks:
+  ORCL: {name: "Oracle", cik: 1341439, type: operating, ticker: "ORCL"}
+  MSFT: {name: "Microsoft", cik: 789019, type: operating, ticker: "MSFT"}
+  CRM:  {name: "Salesforce", cik: 1108524, type: operating, ticker: "CRM"}
+  NVDA: {name: "Nvidia", cik: 1045810, type: operating, ticker: "NVDA"}
+  MSTR: {name: "Strategy (ex-MicroStrategy)", cik: 1050446, type: crypto_proxy, ticker: "MSTR"}
+  9984: {name: "SoftBank Group", type: price_only, ticker: "9984.T"}
