@@ -30,6 +30,6 @@ jobs:
       - run: |
           git config user.name "feux-bot"
           git config user.email "feux-bot@users.noreply.github.com"
-          git add data/series data/signals docs
+          git add data/universe.csv data/raw/isin_symbols.json docs
           git diff --cached --quiet || git commit -m "Brief mensuel $(date -u +%F)"
           git push

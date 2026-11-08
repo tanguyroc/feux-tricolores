@@ -7,3 +7,5 @@ data/raw/companyfacts_*.json
 data/raw/deribit_funding_hourly.json
 journal/
 data/signals/stocks/
+data/series/
+data/signals/
