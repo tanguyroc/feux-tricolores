@@ -15,21 +15,39 @@ _PLAIN_NAMES = {"sp500": "les grandes entreprises américaines (S&P 500)", "ndx"
                 "world": "les grandes entreprises mondiales (MSCI World)", "btc": "le Bitcoin"}
 
 
+def _fr_date(s) -> str:
+    try:
+        d = pd.Timestamp(s)
+        return f"{d.day:02d}/{d.month:02d}/{d.year}"
+    except Exception:
+        return str(s)
+
+
 def _why_index(row: pd.Series) -> str:
     bits = []
+    proxy = " (mesurées sur le S&P 500, faute d'équivalent pour cet indice)" if bool(row.get("valuation_is_proxy", False)) else ""
     if row["V"] == row["V"] and row["V"] >= 80:
-        bits.append("les actions se paient cher par rapport aux bénéfices des dix dernières années")
+        bits.append(f"les actions se paient cher par rapport aux bénéfices des dix dernières années{proxy}")
     if bool(row.get("gsy", False)):
         bits.append("le marché a plus que doublé en deux ans et la hausse s'accélère")
     elif row["X"] == row["X"] and row["X"] >= 90:
         bits.append("les cours se sont beaucoup éloignés de leur moyenne des 200 derniers jours")
     if row["E"] == row["E"] and row["E"] >= 80:
-        bits.append("les investisseurs américains empruntent beaucoup pour acheter des actions")
+        when = f" (dette sur marge au {_fr_date(row['margin_ref_date'])}, publiée avec un mois de retard)" if row.get("margin_ref_date") else ""
+        bits.append(f"les investisseurs américains ont beaucoup accru leurs achats à crédit{when}")
     if row["drawdown"] >= 0.25 and row["P"] == row["P"] and row["P"] >= 80:
         bits.append("le marché a perdu plus d'un quart de sa valeur et la peur est forte")
     if row["V"] == row["V"] and row["V"] <= 40:
-        bits.append("les actions se paient peu cher par rapport à leur histoire")
+        bits.append(f"les actions se paient peu cher par rapport à leur histoire{proxy}")
     return " ; ".join(bits)
+
+
+def since_sentence(row: pd.Series, what: str = "l'indice") -> str:
+    """« Rouge depuis le 01/10/2025 (401 jours) : l'indice a fait +9,9 % depuis. » — la rétroaction factuelle de l'état en cours."""
+    if not row.get("state_since") or row.get("perf_since_state") is None or row.get("perf_since_state") != row.get("perf_since_state"):
+        return ""
+    c = COLOR_FR.get(row.get("color_confirmed", row.get("color")), "")
+    return f"{c.capitalize()} depuis le {_fr_date(row['state_since'])} ({int(row.get('state_days', 0))} jours) : {what} a fait {100 * row['perf_since_state']:+.1f} % depuis."
 
 
 def simple_index(key: str, row: pd.Series) -> str:
@@ -49,17 +67,34 @@ def simple_index(key: str, row: pd.Series) -> str:
     return s
 
 
+def _btc_levels(row: pd.Series) -> str:
+    """Les deux repères en niveau, tels qu'ils sont : le verdict vient de z-scores relatifs aux quatre dernières années,
+    et ceux-ci peuvent dire « déprimé » alors que le prix est au-dessus des repères (fin 2026)."""
+    bits = []
+    r = row.get("ratio_200w")
+    if r == r and r is not None:
+        bits.append(f"prix à {r:.2f}× sa moyenne des 200 semaines" + (" (au-dessus)" if r > 1 else " (en dessous)"))
+    m = row.get("mvrv")
+    if m == m and m is not None:
+        bits.append(f"MVRV {m:.2f}" + (" (les détenteurs sont en gain en moyenne)" if m > 1 else " (les détenteurs sont en perte en moyenne)"))
+    return ", ".join(bits)
+
+
 def simple_btc(row: pd.Series) -> str:
     c = row.get("color_confirmed", row["color"])
     dd = f"{100 * row['drawdown']:.0f} %"
+    lv = _btc_levels(row)
     if c == "red":
-        s = (f"Feu rouge sur le Bitcoin : son prix est très au-dessus de ses repères des quatre dernières années et la hausse "
+        s = (f"Feu rouge sur le Bitcoin : son prix est très au-dessus de ce qu'il a été ces quatre dernières années ({lv}) et la hausse "
              f"s'accélère ou les spéculateurs à levier paient très cher pour rester acheteurs. Pas d'achat exceptionnel, pas de société « proxy » à levier.")
     elif c == "green":
-        s = (f"Feu vert sur le Bitcoin : il est à {dd} sous son record et nettement sous ses repères habituels (prix moyen des quatre dernières "
-             f"années, prix moyen payé par les détenteurs). Historiquement, c'est dans ces zones qu'on achète, par tiers.")
+        above = (row.get("ratio_200w") or 0) > 1 or (row.get("mvrv") or 0) > 1
+        s = (f"Feu vert sur le Bitcoin : il est à {dd} sous son record et bas par rapport à ses quatre dernières années ({lv}). "
+             + ("Nuance importante : le prix reste au-dessus de ses repères de long terme ; le vert vient de la comparaison aux quatre dernières "
+                "années, pas d'une capitulation. " if above else "")
+             + "La règle autorise un achat exceptionnel par tiers ; la zone est fréquente (un tiers du temps depuis 2014), ce n'est pas un plancher.")
     else:
-        s = f"Feu orange sur le Bitcoin : ni euphorie ni capitulation (à {dd} sous son record). Versements habituels seulement."
+        s = f"Feu orange sur le Bitcoin : ni euphorie ni capitulation (à {dd} sous son record ; {lv}). Versements habituels seulement."
     if bool(row.get("trend_broken", False)):
         s += " Il est sous sa moyenne des 200 jours : les sociétés « proxys » à levier (type Strategy) sont à éviter tant que c'est le cas."
     return s
@@ -108,13 +143,15 @@ def headline(states: dict[str, dict]) -> str:
     reds = [v["name"] for v in idx.values() if v["color"] == "red"]
     greens = [v["name"] for v in idx.values() if v["color"] == "green"]
     if reds and not greens:
-        a = "marchés actions chers et un peu euphoriques (rouge)" if len(reds) == len(idx) else f"rouge sur {', '.join(reds)}"
+        tense = any((v.get("X") or 0) >= 90 for v in idx.values())
+        a = ("marchés actions chers et tendus (rouge)" if tense else "marchés actions chers, avec des achats à crédit en forte hausse (rouge)") \
+            if len(reds) == len(idx) else f"rouge sur {', '.join(reds)}"
     elif greens:
         a = f"vert sur {', '.join(greens)}" + (f", rouge sur {', '.join(reds)}" if reds else "")
     else:
         a = "marchés actions sans excès (orange)"
     b = states.get("btc", {}).get("color")
-    bt = {"green": "Bitcoin déprimé (vert)", "red": "Bitcoin en euphorie (rouge)", "orange": "Bitcoin sans excès (orange)"}.get(b, "")
+    bt = {"green": "Bitcoin bas par rapport à ses quatre dernières années (vert)", "red": "Bitcoin en euphorie (rouge)", "orange": "Bitcoin sans excès (orange)"}.get(b, "")
     return f"Aujourd'hui : {a} ; {bt}." if bt else f"Aujourd'hui : {a}."
 
 
@@ -164,7 +201,7 @@ GLOSSARY = [
                           "la société elle-même sur dix ans, pas à une norme universelle.", "Famille V d'une action, en percentile 10 ans."),
     ("P/FCF (actions)", "Combien d'années de cash réellement dégagé (après investissements) il faut pour payer la capitalisation boursière. Plus fiable que le bénéfice comptable.", "Famille V d'une action."),
     ("ROIC, FCF/RN, dette nette/EBITDA (qualité)", "Le rendement de l'argent investi dans l'entreprise (bon au-dessus de 10 %), la part du bénéfice qui se transforme en cash (bon "
-                                                    "au-dessus de 70 %), le nombre d'années de résultat pour rembourser la dette (prudent sous 2).",
+                                                    "au-dessus de 70 %), le nombre d'années de résultat pour rembourser la dette (prudent sous 2,5).",
      "Filtre éliminatoire : une société qui le rate ne peut jamais être verte, quel que soit son prix."),
     ("DCF inversé", "Au lieu de deviner ce que vaut l'entreprise (toujours faux), on calcule la croissance annuelle du cash que le prix actuel suppose pendant dix ans, et on "
                     "la compare à ce que l'entreprise a fait ces cinq dernières années. Si le prix suppose 25 %/an et qu'elle a fait 10 %, on paie un rêve.",

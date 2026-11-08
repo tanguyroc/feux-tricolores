@@ -37,6 +37,7 @@ button.btn[disabled]{opacity:.45;cursor:not-allowed}.kpis{display:grid;grid-temp
 .rowred td:first-child{border-left:3px solid var(--red)}.rowgreen td:first-child{border-left:3px solid var(--green)}
 .detail{background:#f6f7f9;border-radius:8px;padding:10px 12px;font-size:13px;margin:6px 0 12px}
 .vg{position:relative;height:6px;border-radius:3px;margin:4px 0 3px;min-width:90px;background:linear-gradient(90deg,#2e8b57 0%,#9acd32 30%,#f0c000 50%,#f08c00 70%,#b3261e 100%)}.vg i{position:absolute;top:-3px;width:3px;height:12px;margin-left:-1px;border-radius:2px;border:1px solid #fff}
+small.warn{color:#b3261e}
 .pill.warnp{border-color:#b3261e;color:#b3261e;background:#fff5f4}
 .secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.sec{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:4px solid var(--line)}
 .sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}
@@ -71,19 +72,33 @@ def _payload() -> dict:
     for k, v in stocks.items():
         rows.append({kk: v.get(kk) for kk in ("name", "ticker", "country", "sector", "industry", "weight", "rank", "pea", "kind", "color_confirmed", "color",
                                             "V", "ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda", "quality_ok", "implied_growth",
-                                            "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "da_known",
+                                            "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "da_known", "accounts_as_of", "shares_source",
                                             "fcf_cagr_5y", "gap_ma200", "gap_ma200_pct", "runup_24m", "gsy", "trend_broken", "drawdown", "mom_12m", "date", "since",
                                             "source", "accounts_currency", "price_currency", "mode", "ebit_source", "shares_ok", "pe", "pb", "roe", "note")} | {"key": k})
     themes = themes_overlay(stocks)
     q = r["stocks"]["quality"]
+    # deux faits descriptifs sur l'univers réel (contexte, hors règles) : largeur et concentration
+    priced = [s for s in rows if s.get("gap_ma200") is not None]
+    breadth = {"n": len(priced), "above_ma200": sum(1 for s in priced if s["gap_ma200"] > 0),
+               "trend_broken": sum(1 for s in priced if s.get("trend_broken")),
+               "colors": {c: sum(1 for s in rows if s.get("color_confirmed") == c) for c in ("green", "orange", "red")}}
+    try:
+        from .universe import load as load_universe
+        u = load_universe().sort_values("weight", ascending=False)
+        tot = float(u["weight"].sum())
+        breadth["top10_share"] = float(u["weight"].head(10).sum() / tot) if tot else None
+        breadth["top1"] = {"name": str(u.iloc[0]["name"]), "share": float(u.iloc[0]["weight"] / tot)} if tot else None
+    except Exception:
+        breadth["top10_share"] = None
     universe_as_of = None
     up = ROOT / "data" / "universe.csv"
     if up.exists():
         universe_as_of = str(pd.read_csv(up, nrows=1)["as_of"].iloc[0])
     return {
-        "generated": dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC"), "frozen_at": r["frozen_at"], "version": "0.5",
+        "generated": dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC"), "generated_iso": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
+        "frozen_at": r["frozen_at"], "version": "0.6",
         "states": states, "headline": headline(states), "actions": monthly_actions(states), "base_rates": base,
-        "stocks": rows, "universe_as_of": universe_as_of, "themes": themes,
+        "stocks": rows, "universe_as_of": universe_as_of, "themes": themes, "breadth": breadth,
         "quality_rules": {"roic_min": q["roic_min"], "fcf_ni_min": q["fcf_to_net_income_min"], "nd_ebitda_max": q["net_debt_to_ebitda_max"],
                           "avg_years": q.get("avg_years", 5), "ebitda_avg_years": q.get("ebitda_avg_years", 3)},
         "stock_rules": {"red_min": r["stocks"]["valuation"]["red_min"], "green_max": r["stocks"]["valuation"]["green_max"],
@@ -126,6 +141,7 @@ def build() -> None:
 <h2>Secteurs et thèmes</h2>
 <p class="sub">Les onze secteurs mondiaux et deux thèmes. Pour chaque secteur : les drapeaux de prix de son ETF (bulle, tension, tendance) et la valorisation médiane des sociétés du Top 100 qui le composent, combinées avec les mêmes règles que les indices (rouge = cher ET tendu ou en bulle ; vert = bon marché, ou capitulation). Lecture de contexte, non backtestée : elle ne gouverne ni le levier ni les montants.</p>
 <div id="sectors"></div>
+<div id="breadth" class="breadth"></div>
 <div class="warn" style="margin-top:18px">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais.</div>
 </section>
 
@@ -218,6 +234,7 @@ Outil personnel, déterministe, sans conseil en investissement.</footer>
 APP_JS = r"""
 (function(){
 const D=window.FEUX;const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
+const D_DATE=D.generated_iso||new Date().toISOString();const fmtDate=d=>{if(!d)return '';const x=new Date(d);return isNaN(x)?String(d):x.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});};
 const LABEL={green:'VERT',orange:'ORANGE',red:'ROUGE'};const FR={green:'vert',orange:'orange',red:'rouge'};
 const pct=(x,d=0,sign=false)=>x==null||isNaN(x)?'n.d.':((sign&&x>=0?'+':'')+(100*x).toFixed(d)+' %');
 const num=(x,d=1)=>x==null||isNaN(x)?'n.d.':Number(x).toLocaleString('fr-FR',{maximumFractionDigits:d});
@@ -247,7 +264,9 @@ function solidity(s){if(s.V==null)return '—';if(s.mode==='reit')return '<span 
  return f.map(k=>`<span class="pill warnp">⚠ ${SHORT[k](s)}</span>`).join(' ')+(u.length?`<br><small class="note">${u.join(', ')} : n.d.</small>`:'');}
 function fmtCell(k,s){switch(k){
  case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>`;
- case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `<b>${Math.round(s.V)}</b> <small>${VLAB(s.V)}</small>${vgauge(s.V)}<small>${s.mode!=='industrial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>`;
+const ageMonths=d=>d?Math.round((new Date(D_DATE)-new Date(d))/2629800000):null;
+const accountsNote=s=>{if(!s.accounts_as_of)return '';const m=ageMonths(s.accounts_as_of);const old=m!=null&&m>15;return `<br><small class="${old?'warn':'note'}">comptes au ${fmtDate(s.accounts_as_of)}${old?' — anciens ('+m+' mois) : lecture prudente':''}</small>`;};
+ case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `<b>${Math.round(s.V)}</b> <small>${VLAB(s.V)}</small>${vgauge(s.V)}<small>${s.mode!=='industrial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>${accountsNote(s)}`;
  case 'quality_ok':return solidity(s);
  case 'implied_growth':return s.implied_growth==null?'—':`${pct(s.implied_growth,0,true)}/an<br><small>réalisée 5 ans ${pct(s.fcf_cagr_5y,0,true)}</small>`;
  case 'gap_ma200':return `${pct(s.gap_ma200,0,true)}<br><small>p${s.gap_ma200_pct==null?'n.d.':Math.round(s.gap_ma200_pct)}</small>`;case 'runup_24m':return pct(s.runup_24m,0,true);
@@ -287,6 +306,9 @@ function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerH
   <p class="sec-sentence">${t.sentence}</p>${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
  $('#sectors').innerHTML=`<div class="secs">${T.filter(t=>t.kind==='sector').map(row).join('')}</div><h3 style="margin:14px 0 6px">Thèmes</h3><div class="secs">${T.filter(t=>t.kind!=='sector').map(row).join('')}</div>`;}
 renderSectors();
+(function(){const b=D.breadth;if(!b||!b.n)return;const pct=(x,n)=>Math.round(100*x/n);
+ $('#breadth').innerHTML=`<h3 style="margin:14px 0 6px">Le Top 100 en un coup d'œil <small class="note">(faits de contexte, hors règles)</small></h3>
+ <p><b>${pct(b.above_ma200,b.n)} %</b> des ${b.n} plus grandes sociétés sont au-dessus de leur moyenne des 200 jours, <b>${pct(b.trend_broken,b.n)} %</b> ont une tendance cassée (dernier mois sous la moyenne 10 mois). Feux : <span class="c green">${b.colors.green} verts</span> · <span class="c orange">${b.colors.orange} orange</span> · <span class="c red">${b.colors.red} rouges</span>.${b.top10_share!=null?` Concentration : les 10 premières pèsent <b>${Math.round(100*b.top10_share)} %</b> du Top 100${b.top1?` (${b.top1.name} seule : ${Math.round(100*b.top1.share)} %)`:''}.`:''}</p>`;})();
 
 // ---- Mon portefeuille ----
 let PF=store('feux-portfolio')||{lines:[],targets:{equity:60,stock:15,btc:10,safe:15,monthly:1000}};

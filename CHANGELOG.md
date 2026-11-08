@@ -1,5 +1,27 @@
 # Journal des modifications des règles
 
+## 2026-11-08 — v0.6 (couche d'honnêteté ; aucune règle modifiée)
+Suite à une revue critique indépendante des signaux (lecteur n'ayant pas participé à la conception), vérifiée point par point :
+- **Validation** : le tableau affiche désormais l'écart vert − rouge à 3 ans face au critère pré-enregistré (≥ 5 pts) — **non atteint
+  pour le S&P 500 (4,4 pts) et le MSCI World (4,8 pts)** ; le nombre d'épisodes (≥ 20 jours) derrière chaque couleur ; le 90e
+  percentile des baisses à 24 mois (sur le S&P 500, plus profond après un jour orange qu'après un rouge) ; et un encadré « ce que ce
+  tableau ne doit pas cacher » : 2007 orange sur les trois indices, règles écrites/gelées/testées le même jour (pas de valeur probante),
+  effectifs faibles. Le protocole prévoyait de simplifier une règle qui échoue : c'est l'objet de la refonte v1.0 proposée.
+- **Cartes** : « Rouge depuis le 01/10/2025 (401 jours) : l'indice a fait +9,9 % depuis » (rétroaction factuelle de l'état en cours) ;
+  « Valorisation : celle du S&P 500 (proxy) » sur Nasdaq-100 et MSCI World ; dates de référence de la dette sur marge (fin septembre,
+  publiée fin octobre) et de l'allocation des ménages (30 juin) à côté des valeurs ; « euphorie » remplacé par « achats à crédit ».
+- **Bitcoin** : la phrase est générée à partir des niveaux (prix 1,12× sa moyenne 200 semaines, MVRV 1,41) et dit explicitement que le
+  vert vient de la comparaison aux quatre dernières années, pas d'une capitulation, et que cette zone a couvert un tiers du temps depuis 2014.
+- **Actions** : date des derniers comptes lus dans le tableau, avertissement au-delà de 15 mois (TSMC, Toyota).
+- **Journal** : les statistiques historiques citent leur effectif en épisodes.
+- **Thèmes** : 7 au lieu de 2, choisis là où les bulles se sont historiquement formées et avec ≥ 15 ans d'historique (semi-conducteurs,
+  éditeurs de logiciels, biotechnologies, énergies propres, mines d'or, constructeurs de maisons, défense). Drapeaux de prix seulement.
+- **Top 100 en un coup d'œil** : part des sociétés au-dessus de leur MM200 et en tendance cassée, répartition des feux, concentration
+  (10 premières = 47 % du Top 100, Apple 10 %). Faits de contexte, hors règles.
+- **Univers** : appartenance au S&P 500 (positions officielles SPY : 74 sociétés, 67 % du poids), au Nasdaq-100 (29) et au MSCI World (95),
+  pour une future valorisation bottom-up des indices.
+- Textes corrigés : dette nette/EBITDA « prudent sous 2,5 » (glossaire, runbook).
+
 ## 2026-11-08 — v0.5 (actions : solidité pluriannuelle, dégradé de valorisation, secteurs ; règles des indices et du Bitcoin inchangées)
 Constat déclencheur : 92 actions orange sur 102 et 42 « échecs » qualité sur 86. Diagnostic : un tiers des échecs venait de défauts
 de données (concept XBRL abandonné et figé — KLA sans résultat d'exploitation depuis 2015, Qualcomm/Broadcom/UnitedHealth/Visa

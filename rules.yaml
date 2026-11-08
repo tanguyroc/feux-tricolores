@@ -147,8 +147,14 @@ themes:   # secteurs et thèmes (v0.5). Drapeaux de prix sur l'ETF ; pour les 11
     utilities: {ticker: "XLU", name: "Services aux collectivités", kind: sector, gics: "Utilities"}
     communication: {ticker: "VOX", name: "Communication", kind: sector, gics: "Communication Services"}
     realestate: {ticker: "VNQ", name: "Immobilier coté", kind: sector, gics: "Real Estate"}
-    semis:     {ticker: "^SOX", name: "Semi-conducteurs (thème)", kind: theme}
-    software:  {ticker: "IGV",  name: "Éditeurs de logiciels (thème)", kind: theme}
+    # thèmes : là où les bulles se sont historiquement formées (industries, périmètre de l'étude GSY), ETF/indice ≥ 15 ans d'historique
+    semis:     {ticker: "^SOX", name: "Semi-conducteurs", kind: theme, since: 1993}
+    software:  {ticker: "IGV",  name: "Éditeurs de logiciels", kind: theme, since: 2001}
+    biotech:   {ticker: "IBB",  name: "Biotechnologies", kind: theme, since: 2001}
+    cleanenergy: {ticker: "PBW", name: "Énergies propres", kind: theme, since: 2005}
+    goldminers: {ticker: "GDX", name: "Mines d'or", kind: theme, since: 2006}
+    homebuilders: {ticker: "XHB", name: "Constructeurs de maisons (États-Unis)", kind: theme, since: 2006}
+    defense:   {ticker: "ITA",  name: "Défense et aéronautique", kind: theme, since: 2006}
   sector_min_members: 3        # en dessous, pas de valorisation sectorielle → orange (drapeaux seulement)
   sector_red_min_v: 80         # médiane des V ≥ 80 ET (tendu OU bulle GSY) → rouge
   sector_green_max_v: 40       # médiane des V ≤ 40 → vert ; ou capitulation : baisse ≥ 25 % ET écart MM200 ≤ 10e percentile

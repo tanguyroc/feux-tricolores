@@ -76,7 +76,7 @@ inconnu, l'actif ne peut pas être rouge (orange par défaut) et cela apparaît 
 - Liste dans `stocks.yaml` (≤ 10). Types : `operating` (comptes EDGAR), `crypto_proxy` (suit le feu Bitcoin et sa propre
   tendance ; la prime sur la trésorerie BTC n'est pas calculée), `price_only` (société non américaine : extension seulement).
 - Valorisation = médiane des percentiles 10 ans d'EV/EBIT et P/FCF (TTM, première publication, datée du dépôt).
-  Rouge si ≥ 80 ET (GSY ou écart MM200 ≥ p90) ; vert si ≤ 30 ET filtre qualité (ROIC ≥ 10 %, FCF/RN ≥ 0,7, DN/EBITDA ≤ 2).
+  Rouge si ≥ 80 ET (GSY ou écart MM200 ≥ p90) ; vert si ≤ 30 ET solidité (moyennes 5 ans : ROIC ≥ 10 %, FCF/RN ≥ 0,7, DN/EBITDA ≤ 2,5 ; v0.5).
 - DCF inversé : croissance du FCF implicite sur 10 ans (WACC 9 %, terminal 2,5 %) comparée à la croissance réalisée 5 ans ;
   un écart > 1,5× est un signal de prudence, pas une couleur.
 - Limites : concepts XBRL variables selon les sociétés (le chargeur essaie plusieurs noms ; vérifier `concepts` dans

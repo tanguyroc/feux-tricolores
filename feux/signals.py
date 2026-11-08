@@ -260,14 +260,46 @@ def compute_all() -> dict[str, pd.DataFrame]:
     return res
 
 
+def _state_run(df: pd.DataFrame) -> dict:
+    """Depuis quand l'état confirmé actuel dure, et ce qu'a fait le prix depuis : la rétroaction la plus honnête et la moins chère."""
+    col = df["color_confirmed"] if "color_confirmed" in df else df["color"]
+    cur = col.iloc[-1]
+    changes = col.ne(col.shift())
+    start = col.index[changes][-1] if changes.any() else col.index[0]
+    px0 = df["price"].loc[start] if "price" in df else np.nan
+    perf = float(df["price"].iloc[-1] / px0 - 1) if "price" in df and px0 and not np.isnan(px0) else None
+    return {"state_since": str(pd.Timestamp(start).date()), "state_days": int((df.index[-1] - start).days), "perf_since_state": perf,
+            "state_color": cur}
+
+
+def _ref_dates() -> dict:
+    """Dates de référence des séries publiées avec retard (affichées à côté des valeurs : la dette sur marge « du jour »
+    est celle de fin de mois précédent, l'allocation des ménages celle du trimestre clos il y a 2 à 5 mois)."""
+    out = {}
+    for name, key in (("margin_debt", "margin_ref_date"), ("aiae", "aiae_ref_date")):
+        try:
+            s = store.load(name).dropna(subset=["value"])
+            out[key] = str(pd.Timestamp(s["ref_date"].max()).date())
+            out[key.replace("ref", "available")] = str(pd.Timestamp(s["available_date"].max()).date())
+        except Exception:   # série absente : pas bloquant
+            pass
+    return out
+
+
 def save_signals(res: dict[str, pd.DataFrame]) -> None:
     latest = {}
+    refs = _ref_dates()
     for key, df in res.items():
         df.to_parquet(SIGNALS_DIR / f"{key}.parquet")
         last = df.iloc[-1]
         latest[key] = {k: (None if (isinstance(v, float) and np.isnan(v)) else (v.item() if hasattr(v, "item") else v))
                        for k, v in last.items() if k not in ("asset",)}
         latest[key]["date"] = str(df.index[-1].date())
+        latest[key].update(_state_run(df))
+        if key != "btc":
+            latest[key].update(refs)
+            latest[key]["valuation_source"] = "S&P 500 (CAPE, excess CAPE yield, allocation des ménages américains)"
+            latest[key]["valuation_is_proxy"] = key != "sp500"
     (DOCS_DIR / "latest.json").write_text(json.dumps(latest, indent=1, default=str, ensure_ascii=False), encoding="utf-8")
 
 

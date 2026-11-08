@@ -71,10 +71,16 @@ def base_rates(asset: str) -> str:
     if not (f1 and f3 and dd):
         return ""
     fr = {"green": "vert", "orange": "orange", "red": "rouge"}[color]
+    try:
+        from .dashboard import episode_counts
+        n_ep = episode_counts(asset).get(color)
+    except Exception:
+        n_ep = None
+    eff = f" — sur {n_ep} épisodes seulement depuis le début de l'historique : des jours d'un même épisode ne sont pas indépendants" if n_ep else ""
     return (f"après un jour {fr} sur cet actif, le rendement médian a été de {100 * f1['médiane_annualisée']:+.1f} % à un an "
             f"(négatif dans {100 * f1['part_négative']:.0f} % des cas) et de {100 * f3['médiane_annualisée']:+.1f} %/an sur trois ans ; "
             f"la baisse médiane dans les 24 mois suivants a été de {100 * dd['drawdown_24m_médian']:.0f} % "
-            f"(plus de 20 % dans {100 * dd['part_drawdown_>20%']:.0f} % des cas).")
+            f"(plus de 20 % dans {100 * dd['part_drawdown_>20%']:.0f} % des cas){eff}.")
 
 
 def new(asset: str, action: str, amount: float, thesis: str, invalidation: str, answers: list[str]) -> dict:

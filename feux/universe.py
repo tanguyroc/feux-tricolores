@@ -20,6 +20,7 @@ from .config import DATA_DIR, RAW_DIR
 from .loaders import http_get, log
 
 SSGA_URL = "https://www.ssga.com/library-content/products/fund-data/etfs/emea/holdings-daily-emea-en-spyy-gy.xlsx"
+SPY_URL = "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx"
 YAHOO_SEARCH = "https://query2.finance.yahoo.com/v1/finance/search"
 SEC_TICKERS = "https://www.sec.gov/files/company_tickers_exchange.json"
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) feux-tricolores/0.1"}
@@ -57,6 +58,41 @@ def download_holdings() -> pd.DataFrame:
     return df[["isin", "name", "currency", "weight", "country", "sector", "industry", "local_price", "market_value_usd"]].reset_index(drop=True)
 
 
+# Marchés développés (MSCI World) : tout le reste de l'ACWI est « émergent »
+DEVELOPED = {"United States", "Canada", "Japan", "Australia", "New Zealand", "Hong Kong", "Singapore", "Israel", "United Kingdom",
+             "Switzerland", "Norway", "Sweden", "Denmark", "Finland", "Netherlands", "Belgium", "France", "Germany", "Austria", "Italy",
+             "Spain", "Portugal", "Ireland", "Luxembourg"}
+
+
+def sp500_weights() -> dict[str, float]:
+    """Composition officielle du S&P 500 (ticker → poids %) via les positions quotidiennes de l'ETF SPY (State Street)."""
+    try:
+        path = RAW_DIR / "spy_holdings.xlsx"
+        path.write_bytes(http_get(SPY_URL, headers=UA).content)
+        raw = pd.read_excel(path, header=None)
+        hdr = raw.index[raw.iloc[:, 1].astype(str).str.strip() == "Ticker"][0]
+        out = {}
+        for tk, w in zip(raw.iloc[hdr + 1:, 1], raw.iloc[hdr + 1:, 4]):
+            if isinstance(tk, str) and tk.strip() not in ("", "-") and pd.notna(pd.to_numeric(w, errors="coerce")):
+                out[tk.strip().replace(".", "-")] = float(w)
+        return out
+    except Exception as exc:   # pas bloquant : les drapeaux d'appartenance restent vides
+        log.warning("SPY (S&P 500) indisponible : %s", exc)
+        return {}
+
+
+def index_flags(df: pd.DataFrame) -> pd.DataFrame:
+    """Appartenance aux trois indices suivis : S&P 500 (positions SPY), Nasdaq-100 (règle : société américaine cotée au Nasdaq,
+    hors finance — c'est la définition de l'indice), MSCI World (pays développé)."""
+    spx = sp500_weights()
+    us_sym = df["us_symbol"].fillna(df["symbol"]).astype(str)
+    df["in_sp500"] = us_sym.isin(set(spx)) if spx else pd.NA
+    df["w_sp500"] = us_sym.map(spx) if spx else pd.NA
+    df["in_ndx"] = (df["country"] == "United States") & df["exchange"].isin(["NMS", "NGM", "NCM"]) & (df["sector"] != "Financials")
+    df["in_world"] = df["country"].isin(DEVELOPED)
+    return df
+
+
 def _yahoo_lookup(isin: str, name: str) -> dict:
     if isin in SYMBOL_OVERRIDES:
         return dict(SYMBOL_OVERRIDES[isin])
@@ -84,6 +120,7 @@ def map_symbols(df: pd.DataFrame) -> pd.DataFrame:
     MAP_CACHE.write_text(json.dumps(cache, indent=0))
     df["symbol"] = df["isin"].map(lambda i: cache.get(i, {}).get("symbol"))
     df["us_symbol"] = df["isin"].map(lambda i: cache.get(i, {}).get("us_symbol"))
+    df["exchange"] = df["isin"].map(lambda i: cache.get(i, {}).get("exchange"))
     return df
 
 
@@ -139,11 +176,14 @@ def build(top: int = 100) -> pd.DataFrame:
     df = map_symbols(df)
     df = map_sec(df)
     df["pea_eligible_approx"] = df["country"].isin(EEA)
+    df = index_flags(df)
     df["rank"] = range(1, len(df) + 1)
     df["as_of"] = as_of
     df.to_csv(UNIVERSE_CSV, index=False)
-    log.info("Univers : %d sociétés (positions SPDR MSCI ACWI au %s) ; %d symboles Yahoo, %d CIK, %d éligibles PEA (approx.)",
-             len(df), as_of, df["symbol"].notna().sum(), df["cik"].notna().sum(), int(df["pea_eligible_approx"].sum()))
+    log.info("Univers : %d sociétés (positions SPDR MSCI ACWI au %s) ; %d symboles Yahoo, %d CIK, %d éligibles PEA (approx.) ; "
+             "S&P 500 %s, Nasdaq-100 %d, MSCI World %d", len(df), as_of, df["symbol"].notna().sum(), df["cik"].notna().sum(),
+             int(df["pea_eligible_approx"].sum()), int(df["in_sp500"].sum()) if df["in_sp500"].notna().any() else "n.d.",
+             int(df["in_ndx"].sum()), int(df["in_world"].sum()))
     return df
 
 

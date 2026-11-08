@@ -154,5 +154,65 @@
   "drawdown": 0.16053997381043073,
   "trend_broken": false,
   "date": "2026-11-06"
+ },
+ "biotech": {
+  "price": 213.6300048828125,
+  "runup_24m": 0.4962180046872846,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": 0.14978412206586778,
+  "gap_ma200_pct": 86.212942301562,
+  "extended": false,
+  "drawdown": 0.03391669983444634,
+  "trend_broken": false,
+  "date": "2026-11-06"
+ },
+ "cleanenergy": {
+  "price": 26.239999771118164,
+  "runup_24m": 0.29070338758440806,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": -0.22604204204496148,
+  "gap_ma200_pct": 11.013886246908882,
+  "extended": false,
+  "drawdown": 0.8172702043466296,
+  "trend_broken": true,
+  "date": "2026-11-06"
+ },
+ "goldminers": {
+  "price": 87.5999984741211,
+  "runup_24m": 1.1982434586794084,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": -0.028474258239270744,
+  "gap_ma200_pct": 39.87878787878788,
+  "extended": false,
+  "drawdown": 0.24378451965240944,
+  "trend_broken": true,
+  "date": "2026-11-06"
+ },
+ "homebuilders": {
+  "price": 102.29000091552734,
+  "runup_24m": -0.1074170830933614,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": -0.02472324044948948,
+  "gap_ma200_pct": 29.48437188930918,
+  "extended": false,
+  "drawdown": 0.18519993492468056,
+  "trend_broken": true,
+  "date": "2026-11-06"
+ },
+ "defense": {
+  "price": 68.9800033569336,
+  "runup_24m": 0.4317144649233917,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": -0.093200405967654,
+  "gap_ma200_pct": 8.445877847208225,
+  "extended": false,
+  "drawdown": 0.18276596304320458,
+  "trend_broken": true,
+  "date": "2026-11-06"
  }
 }

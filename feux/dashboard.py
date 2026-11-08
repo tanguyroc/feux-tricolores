@@ -10,12 +10,16 @@ import pandas as pd
 
 from .config import DOCS_DIR, rules
 from .explain import conduct_text, explain_btc, explain_index
-from .plain import GLOSSARY, headline, monthly_actions, simple_btc, simple_index
+from .plain import GLOSSARY, headline, monthly_actions, simple_btc, simple_index, since_sentence
 from .signals import load_signals
 
 log = logging.getLogger("feux.dashboard")
 
 CSS = """
+.since-perf{font-size:13px;margin:6px 0;padding:6px 8px;background:#f6f6f2;border-radius:6px}
+.honest{margin:12px 0;padding:10px 14px;border-left:4px solid #b3261e;background:#fff7f6;font-size:13px}.honest ul{margin:6px 0 0 18px}
+td.ok{color:#2e7d32;font-weight:600}td.ko{color:#b3261e;font-weight:600}
+
 :root{--green:#1a7f37;--orange:#c7641a;--red:#b3261e;--bg:#fafaf8;--card:#fff;--ink:#1f2328;--muted:#656d76;--line:#e6e8eb}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 main{max-width:1180px;margin:0 auto;padding:24px 20px 60px}h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:36px 0 12px}
@@ -114,14 +118,41 @@ def _kv_html(kv: list[tuple[str, str]]) -> str:
     return "".join(out)
 
 
+def _latest_extras(key: str) -> dict:
+    """Champs calculés à l'enregistrement (début de l'état, performance depuis, dates de référence des séries en retard)."""
+    try:
+        return json.loads((DOCS_DIR / "latest.json").read_text(encoding="utf-8")).get(key, {})
+    except Exception:
+        return {}
+
+
+def _row_with_extras(key: str, df: pd.DataFrame) -> pd.Series:
+    row = df.iloc[-1].copy()
+    for k, v in _latest_extras(key).items():
+        if k not in row.index or k in ("state_since", "state_days", "perf_since_state"):
+            row[k] = v
+    return row
+
+
+def _fr(d) -> str:
+    try:
+        return pd.Timestamp(d).strftime("%d/%m/%Y")
+    except Exception:
+        return str(d)
+
+
 def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
-    row = df.iloc[-1]
+    row = _row_with_extras(key, df)
     c = row["color_confirmed"]
+    proxy = bool(row.get("valuation_is_proxy", False))
+    v_label = "Valorisation V (S&P 500, proxy)" if proxy else "Valorisation V"
+    aiae_when = f" · au {_fr(row['aiae_ref_date'])}" if row.get("aiae_ref_date") else ""
+    margin_when = f" · au {_fr(row['margin_ref_date'])}" if row.get("margin_ref_date") else ""
     kv = [
-        ("Valorisation V", _fmt(row["V"])), ("— CAPE (vivant)", _fmt(row["cape_live"], "{:.1f}") + f" · p{_fmt(row['cape_pct'])}"),
-        ("— Excess CAPE Yield", _fmt(row["ecy_live"], "{:.2f}", " %", 100)), ("— Allocation actions (AIAE)", _fmt(row["aiae"], "{:.1f}", " %", 100) + f" · p{_fmt(row['aiae_pct'])}"),
+        (v_label, _fmt(row["V"])), ("— CAPE (vivant" + (", S&P 500" if proxy else "") + ")", _fmt(row["cape_live"], "{:.1f}") + f" · p{_fmt(row['cape_pct'])}"),
+        ("— Excess CAPE Yield", _fmt(row["ecy_live"], "{:.2f}", " %", 100)), ("— Allocation actions (AIAE)", _fmt(row["aiae"], "{:.1f}", " %", 100) + f" · p{_fmt(row['aiae_pct'])}{aiae_when}"),
         ("Extension X", _fmt(row["X"])), ("— écart MM200 j", _fmt(row["gap_ma200"], "{:+.1f}", " %", 100)), ("— perf. 12 mois", _fmt(row["mom_12m"], "{:+.1f}", " %", 100)),
-        ("Euphorie E (dette sur marge)", _fmt(row["E"]) + f" · {_fmt(row['margin_yoy'], '{:+.0f}', ' %/an', 100)}"),
+        ("Achats à crédit E (dette sur marge)", _fmt(row["E"]) + f" · {_fmt(row['margin_yoy'], '{:+.0f}', ' %/an', 100)}{margin_when}"),
         ("Peur P", _fmt(row["P"]) + f" · VIX {_fmt(row['vix'], '{:.1f}')}"), ("Baisse depuis le plus haut", _fmt(row["drawdown"], "{:.1f}", " %", 100)),
         ("Prix", _fmt(row["price"], "{:,.0f}")),
     ]
@@ -132,6 +163,9 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>{html.escape(name)}</div>"
             f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
             f"<div class='plain simple-only'>{html.escape(simple_index(key, row))}</div>"
+            + (f"<div class='since-perf'>{html.escape(since_sentence(row))}</div>" if since_sentence(row) else "")
+            + (f"<div class='note'>Valorisation mesurée sur le S&P 500 (CAPE, excess CAPE yield, allocation des ménages américains) : proxy, faute d'équivalent long pour cet indice.</div>" if proxy else "")
+            + 
             f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>{_raw_note(row)}"
             f"<div class='detail-only'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
             f"<details class='detail-only'><summary>Explication chiffrée</summary><div class='expl'>{html.escape(explain_index(name, row))}</div></details>"
@@ -139,7 +173,7 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
 
 
 def _card_btc(df: pd.DataFrame) -> str:
-    row = df.iloc[-1]
+    row = _row_with_extras("btc", df)
     c = row["color_confirmed"]
     kv = [
         ("Valorisation V (σ)", _fmt(row["V"], "{:+.2f}")), ("— prix / MM200 semaines", _fmt(row["ratio_200w"], "{:.2f}", "x") + f" · z {_fmt(row['z_ratio_200w'], '{:+.2f}')}"),
@@ -154,6 +188,8 @@ def _card_btc(df: pd.DataFrame) -> str:
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>Bitcoin</div>"
             f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
             f"<div class='plain simple-only'>{html.escape(simple_btc(row))}</div>"
+            + (f"<div class='since-perf'>{html.escape(since_sentence(row, 'le Bitcoin'))}</div>" if since_sentence(row, 'le Bitcoin') else "")
+            + 
             f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>{_raw_note(row)}"
             f"<div class='detail-only'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
             f"<details class='detail-only'><summary>Explication chiffrée</summary><div class='expl'>{html.escape(explain_btc(row))}</div></details>"
@@ -225,27 +261,63 @@ def _conduct_table() -> str:
     return f"<table><tr><th style='width:140px'>Couleur</th><th>Règles de conduite (rules.yaml)</th></tr>{rows}</table>"
 
 
+def episode_counts(key: str, min_days: int = 20) -> dict[str, int]:
+    """Nombre d'épisodes distincts (séquences d'au moins `min_days` jours) par couleur confirmée : c'est l'effectif réel
+    derrière chaque statistique, pas le nombre de jours (les jours d'un même épisode ne sont pas indépendants)."""
+    try:
+        df = load_signals(key)
+    except Exception:
+        return {}
+    col = df["color_confirmed"] if "color_confirmed" in df else df["color"]
+    runs = (col != col.shift()).cumsum()
+    out = {"green": 0, "orange": 0, "red": 0}
+    for _, grp in col.groupby(runs):
+        if len(grp) >= min_days:
+            out[grp.iloc[0]] = out.get(grp.iloc[0], 0) + 1
+    return out
+
+
 def _validation_summary() -> str:
     p = DOCS_DIR / "backtest_summary.json"
     if not p.exists():
         return "<p>Backtest non exécuté.</p>"
     s = json.loads(p.read_text(encoding="utf-8"))
     names = {**{k: v["name"] for k, v in rules()["indices"]["assets"].items()}, "btc": "Bitcoin"}
-    rows = ""
+    rows, fails, notes = "", [], []
     for a, name in names.items():
         if a not in s:
             continue
         f3 = {r["couleur"]: r for r in s[a]["fwd"] if r["horizon"] == "3 ans"}
         dd = {r["couleur"]: r for r in s[a]["dd24"]}
-        eps = s[a]["checks"]["épisodes_ok"]
+        chk = s[a]["checks"]
+        eps = chk["épisodes_ok"]
+        spread = chk.get("écart_3ans_vert_moins_rouge", {})
+        ok = spread.get("ok")
+        if ok is False:
+            fails.append(f"{name} ({100 * spread['valeur']:.1f} pts)")
+        ne = episode_counts(a)
         rows += (f"<tr><td>{name}</td>"
-                 + "".join(f"<td class='c {c}'>{100 * s[a]['share'][c]:.0f} %</td>" for c in ["green", "orange", "red"])
+                 + "".join(f"<td class='c {c}'>{100 * s[a]['share'][c]:.0f} %<br><small>{ne.get(c, 0)} épisodes</small></td>" for c in ["green", "orange", "red"])
                  + "".join(f"<td>{100 * f3[c]['médiane_annualisée']:+.1f} %</td>" if c in f3 else "<td>–</td>" for c in ["green", "orange", "red"])
-                 + "".join(f"<td>{100 * dd[c]['drawdown_24m_médian']:.0f} %</td>" if c in dd else "<td>–</td>" for c in ["green", "orange", "red"])
+                 + (f"<td class='{'ok' if ok else 'ko'}'>{100 * spread['valeur']:+.1f} pts {'✓' if ok else '✗'}</td>" if spread else "<td>–</td>")
+                 + "".join(f"<td>{100 * dd[c]['drawdown_24m_médian']:.0f} %<br><small>p90 {100 * dd[c]['drawdown_24m_p90']:.0f} %</small></td>" if c in dd else "<td>–</td>" for c in ["green", "orange", "red"])
                  + f"<td>{eps['valeur']}/{eps['total']}</td></tr>")
-    return ("<table><tr><th rowspan='2'>Actif</th><th colspan='3'>Part du temps</th><th colspan='3'>Rendement médian annualisé, 3 ans suivants</th>"
-            "<th colspan='3'>Baisse médiane dans les 24 mois</th><th rowspan='2'>Épisodes reproduits</th></tr>"
-            "<tr>" + "".join(f"<th class='c {c}'>{LABEL[c]}</th>" for c in ["green", "orange", "red"]) * 3 + "</tr>" + rows + "</table>")
+        for e in s[a].get("episodes", []):
+            if "2007" in e.get("date", "") and e.get("obtenu") == "orange":
+                notes.append(f"{name} : sommet d'octobre 2007 <b>orange</b> (compté comme « attendu orange/rouge »)")
+    table = ("<table><tr><th rowspan='2'>Actif</th><th colspan='3'>Part du temps (et nombre d'épisodes ≥ 20 jours)</th><th colspan='3'>Rendement médian annualisé, 3 ans suivants</th>"
+             "<th rowspan='2'>Écart vert − rouge à 3 ans<br><small>critère pré-enregistré : ≥ 5 pts</small></th>"
+             "<th colspan='3'>Baisse médiane (et p90) dans les 24 mois</th><th rowspan='2'>Épisodes reproduits</th></tr>"
+             "<tr>" + "".join(f"<th class='c {c}'>{LABEL[c]}</th>" for c in ["green", "orange", "red"]) * 3 + "</tr>" + rows + "</table>")
+    honest = "<div class='honest'><b>Ce que ce tableau ne doit pas cacher.</b><ul>"
+    if fails:
+        honest += f"<li>Le critère d'acceptation « écart vert − rouge ≥ 5 points par an à 3 ans » <b>n'est pas atteint</b> pour : {', '.join(fails)}. Le protocole prévoyait de simplifier une règle qui échoue ; c'est l'objet de la refonte v1.0 en préparation.</li>"
+    for n in notes:
+        honest += f"<li>{n}.</li>"
+    honest += ("<li>Sur le S&P 500, la baisse à 24 mois au 90e percentile est plus profonde après un jour <b>orange</b> qu'après un jour rouge : le rouge n'a pas précédé les pires baisses de l'échantillon.</li>"
+               "<li>Les règles ont été écrites, gelées et testées le même jour (8 novembre 2026) par quelqu'un qui connaissait l'histoire : la « pré-inscription » n'a pas de valeur probante. Le seul test hors échantillon est le futur ; les états du jour sont archivés pour être jugés à dates fixes.</li>"
+               "<li>Les statistiques par couleur reposent sur quelques épisodes (colonne « part du temps ») : des jours d'un même épisode ne sont pas des observations indépendantes.</li></ul></div>")
+    return table + honest
 
 
 def _glossary() -> str:
