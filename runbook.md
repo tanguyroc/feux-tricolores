@@ -20,7 +20,10 @@
    - Le montant respecte-t-il le plafond de la couleur ?
    - Ai-je lu l'explication générée ?
    - Agirais-je identiquement si le marché avait baissé de 10 % demain ?
-4. Un ordre n'est passé qu'après les 48 heures et les cinq réponses.
+4. Un ordre n'est passé qu'après les 48 heures et les cinq réponses. L'outil l'impose :
+   `python -m feux decide new --asset ndx --action acheter --amount 5000 --thesis "..." --invalidation "..."`
+   enregistre l'intention avec l'état des feux du moment ; `python -m feux decide confirm --id <id>` est **refusé avant 48 h**
+   et redemande les cinq réponses ; `cancel` annule. Journal : `journal/decisions.md` (hors dépôt, personnel).
 
 Rappels : le vert signifie « décoté », pas « plus bas ». Sur le Nasdaq-100, après un jour vert, le rendement à 1 an a été
 négatif dans 32 % des cas (2000-2002) : d'où les tranches. Le rouge signifie « cher et tendu », pas « krach imminent » :
@@ -68,13 +71,21 @@ inconnu, l'actif ne peut pas être rouge (orange par défaut) et cela apparaît 
 - **Bitcoin** : amplitude des cycles décroissante ; novembre 2021 et octobre 2025 sont restés orange (0,99σ). L'orange interdit déjà tout achat exceptionnel : l'échec est « conservateur ». Si le Bitcoin cesse d'avoir des cycles, le module dégénère en orange quasi permanent.
 - **Données** : Yahoo non officiel ; `fredgraph` = dernier millésime (révisions) ; FINRA depuis 1997 seulement (la famille E est inconnue avant 2002 : le rouge de 2000 sur le S&P 500 n'est apparu qu'en mars 2000).
 
-## 7. Prochaines étapes (non construites en v1)
+## 7. Module actions (prototype v0.2)
 
-1. **Module actions individuelles** (≤ 10 valeurs) : EV/EBIT et P/FCF en percentile 10 ans (SEC EDGAR companyfacts),
-   DCF inversé (paramètres gelés : coût du capital 9 %, croissance terminale 2,5 %), extension, achats groupés d'initiés
-   (formulaires 4), filtre qualité éliminatoire (ROIC > 10 %, FCF/RN > 70 %, dette nette/EBITDA < 2). Il faut la liste des tickers.
-2. **Taux de financement des perpétuels** (OKX ou Bybit, API publiques) comme confirmation d'euphorie Bitcoin.
-3. **ALFRED** (millésimes) pour l'AIAE si l'on veut un point-in-time strict sur les révisions.
-4. **Explication par LLM** (option) : entrée = `docs/latest.json`, sortie ≤ 150 mots, validée par `explain.check_numbers`
-   (tout nombre absent des données fait rejeter le texte). Coût : quelques centimes par changement de couleur.
-5. **Revue de portefeuille** : exports CSV Trade Republic / Fortuneo → exposition réelle (x2 compté double), part thématique, écart aux bandes.
+- Liste dans `stocks.yaml` (≤ 10). Types : `operating` (comptes EDGAR), `crypto_proxy` (suit le feu Bitcoin et sa propre
+  tendance ; la prime sur la trésorerie BTC n'est pas calculée), `price_only` (société non américaine : extension seulement).
+- Valorisation = médiane des percentiles 10 ans d'EV/EBIT et P/FCF (TTM, première publication, datée du dépôt).
+  Rouge si ≥ 80 ET (GSY ou écart MM200 ≥ p90) ; vert si ≤ 30 ET filtre qualité (ROIC ≥ 10 %, FCF/RN ≥ 0,7, DN/EBITDA ≤ 2).
+- DCF inversé : croissance du FCF implicite sur 10 ans (WACC 9 %, terminal 2,5 %) comparée à la croissance réalisée 5 ans ;
+  un écart > 1,5× est un signal de prudence, pas une couleur.
+- Limites : concepts XBRL variables selon les sociétés (le chargeur essaie plusieurs noms ; vérifier `concepts` dans
+  `docs/stocks_latest.json`) ; pas d'achats d'initiés (formulaires 4) en v0.2 ; pas de backtest (anecdotique sur 10 ans).
+
+## 8. Prochaines étapes
+
+1. Achats groupés d'initiés (formulaires 4) comme drapeau d'information sur les actions suivies.
+2. Prime mNAV des proxys crypto (trésorerie BTC déclarée / capitalisation).
+3. ALFRED (millésimes) pour l'AIAE si l'on veut un point-in-time strict sur les révisions.
+4. Explication par LLM (option) : entrée = `docs/latest.json`, sortie ≤ 150 mots, validée par `explain.check_numbers`.
+5. Revue de portefeuille : exports CSV Trade Republic / Fortuneo → exposition réelle (x2 compté double), part thématique, écart aux bandes.

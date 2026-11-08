@@ -41,6 +41,15 @@ historique des modifications : `CHANGELOG.md`.
 
 Rendements de prix hors dividendes. Chaque jour est classé par sa couleur du jour. Rapport complet : `docs/backtest.html`.
 
+**Robustesse** (`docs/robustness.html`, v0.2) : l'écart vert − rouge à 3 ans est statistiquement solide sur le MSCI World
+(IC 90 % par bootstrap de blocs : [+4,5 ; +28,9] points) et le Bitcoin ([+16 ; +135]), **pas sur le S&P 500** ([−2,5 ; +11,6]) ;
+sur le Nasdaq-100 il tient presque entièrement à 2000-2002. Ce qui est stable partout : après un rouge, les baisses des
+24 mois suivants sont plus profondes. Les résultats bougent peu quand on déplace chaque seuil de ±5 points (tableau de
+sensibilité, aucun seuil retouché). 1987 n'a pas été signalé (orange) : krach hors conception, assumé.
+
+**Affichage confirmé** : une nouvelle couleur n'apparaît qu'après 5 jours de bourse consécutifs (changements par an
+divisés par ~3, rendements par couleur inchangés). L'état brut reste visible sur la carte.
+
 **Coût des faux positifs** (plan type 1 000 €/mois + 10 000 €/an, 1990-2026) : attendre le **vert** pour les montants
 exceptionnels aurait coûté −6 % de capital final sur le S&P 500 et −25 % sur le Nasdaq-100 (0 % sur le World), avec
 ~95 000 € jamais déployés depuis 2020. Différer **seulement en rouge** : −0,3 % (neutre). D'où la règle de conduite retenue.
@@ -48,6 +57,16 @@ exceptionnels aurait coûté −6 % de capital final sur le S&P 500 et −25 % s
 Le gain attendu de l'outil n'est **pas** sur le rendement des flux (≈ 0) ; il est sur (1) le contrôle du levier,
 (2) le comportement (pas d'achat exceptionnel ni de levier dans l'euphorie, achats effectifs dans la capitulation),
 (3) le Bitcoin, où la discrimination vert/rouge est forte.
+
+## Modules (v0.2)
+
+| Module | Commande | Données | État |
+|---|---|---|---|
+| Indices (S&P 500, Nasdaq-100, MSCI World) | `signals` | Shiller, FRED, Yahoo, FINRA | validé 1985-2026 |
+| Bitcoin | `signals` | Coin Metrics, alternative.me, Deribit (financement) | validé 2014-2026, confiance moyenne |
+| Actions suivies (≤ 10, `stocks.yaml`) | `stocks` | SEC EDGAR (point-in-time), Yahoo | prototype, non backtesté ; `SEC_USER_AGENT` requis |
+| Journal de décision (48 h) | `decide` | — | opérationnel, dossier `journal/` hors dépôt |
+| Validation et robustesse | `backtest`, `robustness` | — | rapports HTML |
 
 ## Installation et usage
 
@@ -58,6 +77,9 @@ python -m feux signals     # indicateurs + couleurs -> data/signals/, docs/lates
 python -m feux backtest    # validation -> docs/backtest.html
 python -m feux dashboard   # docs/index.html
 python -m feux alert       # Telegram si une couleur ou un drapeau a changé (sinon journal)
+python -m feux robustness  # sous-périodes, bootstrap, sensibilité -> docs/robustness.html
+SEC_USER_AGENT="Prenom Nom prenom.nom@example.com" python -m feux stocks   # actions suivies
+python -m feux decide new --asset ndx --action acheter --amount 5000 --thesis "..." --invalidation "..."
 python -m pytest -q tests
 ```
 
@@ -66,7 +88,8 @@ python -m pytest -q tests
 1. Créer un dépôt (public pour des minutes Actions illimitées et GitHub Pages ; aucune donnée personnelle n'y figure).
 2. Pousser ce dossier. Activer **Settings → Pages → Source : GitHub Actions**.
 3. Secrets (`Settings → Secrets and variables → Actions`) : `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-   (créer un bot via @BotFather, récupérer l'identifiant de conversation via `getUpdates`).
+   (créer un bot via @BotFather, récupérer l'identifiant de conversation via `getUpdates`) ; `SEC_USER_AGENT`
+   (« Prénom Nom adresse@email », exigé par la politique d'accès de la SEC) pour le module actions.
 4. Le workflow `daily.yml` tourne du lundi au vendredi à 22 h UTC, commite les données et le tableau de bord,
    envoie une alerte uniquement s'il y a un changement. `pages.yml` publie `docs/`.
 5. Note GitHub : les workflows planifiés d'un dépôt public sont désactivés après 60 jours sans activité ;
@@ -82,11 +105,13 @@ python -m pytest -q tests
 | Dette sur marge | FINRA, `margin-statistics.xlsx` | +25 jours |
 | Prix et MVRV Bitcoin | Coin Metrics Community API (CC BY-NC 4.0) | aucun |
 | Fear & Greed crypto | alternative.me | aucun |
+| Taux de financement du perpétuel BTC | Deribit (API publique, horaire depuis 06/2019) | aucun |
+| Comptes des sociétés suivies | SEC EDGAR companyfacts (XBRL) | date de dépôt réelle (`filed`), première publication |
 
 Limites connues : Yahoo est non officiel (prévoir EODHD ≈ 20 $/mois en secours si l'API change) ; `fredgraph.csv`
 renvoie le dernier millésime (révisions Z.1 : approximées par le décalage de 70 jours ; ALFRED possible plus tard) ;
-l'OAS haut rendement ICE n'est pas téléchargeable au-delà de 3 ans (remplacé par BAA10Y) ; les taux de financement
-des perpétuels Bitcoin (API Binance géobloquée) ne sont pas implémentés.
+l'OAS haut rendement ICE n'est pas téléchargeable au-delà de 3 ans (remplacé par BAA10Y) ; Binance et Bybit refusent
+les exécuteurs américains (Deribit utilisé à la place) ; le module actions ne couvre que les sociétés déposant à la SEC.
 
 ## Structure
 
@@ -94,7 +119,9 @@ des perpétuels Bitcoin (API Binance géobloquée) ne sont pas implémentés.
 rules.yaml          seuils gelés + règles de conduite      CHANGELOG.md   modifications des règles (datées, motivées)
 feux/loaders/       téléchargement, dates de disponibilité  feux/store.py  stockage point-in-time (ref_date, available_date)
 feux/indicators.py  percentiles, z-scores, GSY, CAPE PIT    feux/signals.py familles V/X/E/P et couleurs
-feux/backtest.py    validation, plan type, levier x2        feux/dashboard.py, alerts.py, explain.py
+feux/backtest.py    validation, plan type, levier x2        feux/robustness.py  sous-périodes, bootstrap, sensibilité
+feux/stocks.py      module actions (EDGAR, DCF inversé)     feux/journal.py     journal de décision 48 h
+feux/charts.py      graphiques SVG                          feux/dashboard.py, alerts.py, explain.py
 docs/               index.html, backtest.html, latest.json, state.json (publié par Pages)
 ```
 
