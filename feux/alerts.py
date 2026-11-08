@@ -14,6 +14,7 @@ import requests
 
 from .config import DOCS_DIR, rules
 from .explain import LABEL, conduct_text, explain_btc, explain_index
+from .plain import headline, monthly_actions, simple_btc, simple_index
 from .signals import load_signals
 
 log = logging.getLogger("feux.alerts")
@@ -48,18 +49,19 @@ def diff(prev: dict, cur: dict) -> list[str]:
     return msgs
 
 
-def compose(changes: list[str], cur: dict) -> str:
-    lines = ["🚦 Feux tricolores — changement d'état", ""] + [f"• {m}" for m in changes] + [""]
+def compose(changes: list[str], cur: dict, detailed: bool = True) -> str:
+    lines = ["🚦 Feux tricolores — changement d'état", ""] + [f"• {m}" for m in changes] + ["", headline(cur), ""]
+    rows = {key: load_signals(key).iloc[-1] for key in cur}
     for key, c in cur.items():
-        df = load_signals(key)
-        row = df.iloc[-1]
-        if key == "btc":
-            lines.append(explain_btc(row))
-        else:
-            lines.append(explain_index(c["name"], row))
-        lines.append("Conduite : " + " ".join(conduct_text(c["color"])))
+        lines.append(simple_btc(rows[key]) if key == "btc" else simple_index(key, rows[key]))
+    lines += ["", "Ce mois-ci, concrètement :"] + [f"• {a}" for a in monthly_actions(cur)]
+    if detailed:
         lines.append("")
-    lines.append("Rappel : versements réguliers maintenus ; check-list et délai de 48 h avant tout ordre exceptionnel.")
+        lines.append("— Détail chiffré —")
+        for key, c in cur.items():
+            lines.append(explain_btc(rows[key]) if key == "btc" else explain_index(c["name"], rows[key]))
+            lines.append("Conduite : " + " ".join(conduct_text(c["color"])))
+            lines.append("")
     return "\n".join(lines)
 
 
