@@ -1,0 +1,30 @@
+{
+ "sp500": {
+  "name": "S&P 500",
+  "color": "red",
+  "trend_broken": false,
+  "falling_knife": false,
+  "date": "2026-11-06"
+ },
+ "ndx": {
+  "name": "Nasdaq-100",
+  "color": "red",
+  "trend_broken": false,
+  "falling_knife": false,
+  "date": "2026-11-06"
+ },
+ "world": {
+  "name": "MSCI World (USD)",
+  "color": "red",
+  "trend_broken": false,
+  "falling_knife": false,
+  "date": "2026-11-08"
+ },
+ "btc": {
+  "name": "Bitcoin",
+  "color": "green",
+  "trend_broken": false,
+  "falling_knife": false,
+  "date": "2026-11-07"
+ }
+}

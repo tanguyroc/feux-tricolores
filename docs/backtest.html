@@ -1,0 +1,1040 @@
+<!doctype html><html lang='fr'><head><meta charset='utf-8'><title>Validation des feux</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#222}.t{border-collapse:collapse;margin:1rem 0;font-size:14px}.t td,.t th{border-bottom:1px solid #ddd;padding:4px 8px;text-align:right}.t th{background:#f5f5f5}.t td:first-child,.t th:first-child{text-align:left}b.green{color:#1a7f37}b.orange{color:#b35c00}b.red{color:#b3261e}pre{background:#f7f7f7;padding:8px;font-size:12px}</style></head><body><h1>Validation point-in-time des feux</h1>
+<p>Règles gelées le 2026-11-08 (version 1). Rendements de prix (hors dividendes) ; un jour est classé par sa couleur du jour, les rendements sont ceux des 1, 3 et 5 années suivantes.</p>
+<h2>S&P 500 (1990-01-02 → 2026-11-06)</h2>
+<p>Part du temps : <b class='green'>green</b> 12 %, <b class='orange'>orange</b> 78 %, <b class='red'>red</b> 11 % ; changements de couleur : 4.8 par an.</p>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>horizon</th>
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>médiane_annualisée</th>
+      <th>moyenne_annualisée</th>
+      <th>p10_annualisé</th>
+      <th>part_négative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 an</td>
+      <td>green</td>
+      <td>1081</td>
+      <td>+17.0 %</td>
+      <td>+16.3 %</td>
+      <td>-11.2 %</td>
+      <td>+13.6 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>orange</td>
+      <td>7193</td>
+      <td>+11.2 %</td>
+      <td>+9.7 %</td>
+      <td>-10.3 %</td>
+      <td>+18.4 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>red</td>
+      <td>755</td>
+      <td>+11.5 %</td>
+      <td>+6.1 %</td>
+      <td>-14.6 %</td>
+      <td>+35.1 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>green</td>
+      <td>1081</td>
+      <td>+12.8 %</td>
+      <td>+12.5 %</td>
+      <td>+3.0 %</td>
+      <td>+1.9 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>orange</td>
+      <td>6918</td>
+      <td>+9.6 %</td>
+      <td>+9.7 %</td>
+      <td>-7.6 %</td>
+      <td>+19.3 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>red</td>
+      <td>526</td>
+      <td>+8.5 %</td>
+      <td>+7.6 %</td>
+      <td>-14.6 %</td>
+      <td>+18.8 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>green</td>
+      <td>1081</td>
+      <td>+12.9 %</td>
+      <td>+12.5 %</td>
+      <td>+7.0 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>orange</td>
+      <td>6452</td>
+      <td>+9.2 %</td>
+      <td>+9.4 %</td>
+      <td>-2.6 %</td>
+      <td>+24.7 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>red</td>
+      <td>488</td>
+      <td>+10.5 %</td>
+      <td>+6.4 %</td>
+      <td>-4.2 %</td>
+      <td>+40.0 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>drawdown_24m_médian</th>
+      <th>drawdown_24m_p90</th>
+      <th>part_drawdown_&gt;20%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>green</td>
+      <td>1081</td>
+      <td>+6.4 %</td>
+      <td>+28.1 %</td>
+      <td>+19.9 %</td>
+    </tr>
+    <tr>
+      <td>orange</td>
+      <td>7059</td>
+      <td>+5.2 %</td>
+      <td>+35.9 %</td>
+      <td>+19.0 %</td>
+    </tr>
+    <tr>
+      <td>red</td>
+      <td>637</td>
+      <td>+13.1 %</td>
+      <td>+31.0 %</td>
+      <td>+24.5 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>date</th>
+      <th>épisode</th>
+      <th>attendu</th>
+      <th>obtenu</th>
+      <th>dominant_±3_mois</th>
+      <th>ok</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1999-12-31</td>
+      <td>fin 1999 (attendu rouge ou orange ; rouge via dette sur marge dès mars 2000)</td>
+      <td>orange/red</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2000-03-24</td>
+      <td>sommet mars 2000</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2007-10-09</td>
+      <td>sommet octobre 2007</td>
+      <td>orange/red</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2009-03-09</td>
+      <td>creux mars 2009</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2020-03-23</td>
+      <td>creux mars 2020</td>
+      <td>green</td>
+      <td>green</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2021-11-30</td>
+      <td>fin 2021</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2022-10-12</td>
+      <td>creux octobre 2022</td>
+      <td>green</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+<pre>{
+ "part_rouge": {
+  "valeur": 0.1085,
+  "seuil": 0.25,
+  "ok": true
+ },
+ "écart_3ans_vert_moins_rouge": {
+  "valeur": 0.04359490499824581,
+  "seuil": 0.05,
+  "ok": false
+ },
+ "drawdown24m_rouge_plus_profond": {
+  "rouge": 0.13104887388712572,
+  "vert": 0.06360574657343754,
+  "ok": true
+ },
+ "épisodes_ok": {
+  "valeur": 6,
+  "total": 7
+ },
+ "changements_par_an": 4.804135394218622
+}</pre>
+<h2>Nasdaq-100 (1990-01-02 → 2026-11-06)</h2>
+<p>Part du temps : <b class='green'>green</b> 16 %, <b class='orange'>orange</b> 71 %, <b class='red'>red</b> 14 % ; changements de couleur : 5.5 par an.</p>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>horizon</th>
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>médiane_annualisée</th>
+      <th>moyenne_annualisée</th>
+      <th>p10_annualisé</th>
+      <th>part_négative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 an</td>
+      <td>green</td>
+      <td>1466</td>
+      <td>+17.9 %</td>
+      <td>+10.3 %</td>
+      <td>-37.4 %</td>
+      <td>+32.3 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>orange</td>
+      <td>6546</td>
+      <td>+19.3 %</td>
+      <td>+20.2 %</td>
+      <td>-0.5 %</td>
+      <td>+10.7 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>red</td>
+      <td>1017</td>
+      <td>+16.3 %</td>
+      <td>+18.1 %</td>
+      <td>-29.2 %</td>
+      <td>+28.7 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>green</td>
+      <td>1466</td>
+      <td>+16.7 %</td>
+      <td>+13.3 %</td>
+      <td>-8.0 %</td>
+      <td>+16.6 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>orange</td>
+      <td>6153</td>
+      <td>+16.4 %</td>
+      <td>+19.4 %</td>
+      <td>+0.8 %</td>
+      <td>+9.0 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>red</td>
+      <td>906</td>
+      <td>+8.7 %</td>
+      <td>+14.0 %</td>
+      <td>-32.2 %</td>
+      <td>+35.2 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>green</td>
+      <td>1466</td>
+      <td>+16.0 %</td>
+      <td>+14.0 %</td>
+      <td>-2.5 %</td>
+      <td>+12.7 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>orange</td>
+      <td>5687</td>
+      <td>+16.2 %</td>
+      <td>+19.0 %</td>
+      <td>+1.0 %</td>
+      <td>+8.6 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>red</td>
+      <td>868</td>
+      <td>+9.9 %</td>
+      <td>+12.9 %</td>
+      <td>-15.0 %</td>
+      <td>+48.0 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>drawdown_24m_médian</th>
+      <th>drawdown_24m_p90</th>
+      <th>part_drawdown_&gt;20%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>green</td>
+      <td>1466</td>
+      <td>+7.8 %</td>
+      <td>+55.6 %</td>
+      <td>+36.2 %</td>
+    </tr>
+    <tr>
+      <td>orange</td>
+      <td>6404</td>
+      <td>+7.1 %</td>
+      <td>+27.7 %</td>
+      <td>+13.8 %</td>
+    </tr>
+    <tr>
+      <td>red</td>
+      <td>907</td>
+      <td>+20.0 %</td>
+      <td>+67.9 %</td>
+      <td>+50.1 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>date</th>
+      <th>épisode</th>
+      <th>attendu</th>
+      <th>obtenu</th>
+      <th>dominant_±3_mois</th>
+      <th>ok</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1999-12-31</td>
+      <td>fin 1999</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2000-03-24</td>
+      <td>sommet mars 2000</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2007-10-31</td>
+      <td>octobre 2007</td>
+      <td>orange/red</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2009-03-09</td>
+      <td>creux mars 2009</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2020-03-23</td>
+      <td>creux mars 2020</td>
+      <td>green</td>
+      <td>green</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2021-11-30</td>
+      <td>fin 2021</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2022-10-12</td>
+      <td>creux octobre 2022</td>
+      <td>green</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+<pre>{
+ "part_rouge": {
+  "valeur": 0.1367,
+  "seuil": 0.25,
+  "ok": true
+ },
+ "écart_3ans_vert_moins_rouge": {
+  "valeur": 0.08075458967287252,
+  "seuil": 0.05,
+  "ok": true
+ },
+ "drawdown24m_rouge_plus_profond": {
+  "rouge": 0.20012551474944595,
+  "vert": 0.07807411055900743,
+  "ok": true
+ },
+ "épisodes_ok": {
+  "valeur": 6,
+  "total": 7
+ },
+ "changements_par_an": 5.455543583265215
+}</pre>
+<h2>MSCI World (USD) (1990-01-02 → 2026-11-08)</h2>
+<p>Part du temps : <b class='green'>green</b> 13 %, <b class='orange'>orange</b> 79 %, <b class='red'>red</b> 8 % ; changements de couleur : 3.2 par an.</p>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>horizon</th>
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>médiane_annualisée</th>
+      <th>moyenne_annualisée</th>
+      <th>p10_annualisé</th>
+      <th>part_négative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 an</td>
+      <td>green</td>
+      <td>1179</td>
+      <td>+13.4 %</td>
+      <td>+13.4 %</td>
+      <td>-17.0 %</td>
+      <td>+23.8 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>orange</td>
+      <td>7403</td>
+      <td>+10.7 %</td>
+      <td>+7.4 %</td>
+      <td>-11.2 %</td>
+      <td>+25.1 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>red</td>
+      <td>542</td>
+      <td>-5.3 %</td>
+      <td>-1.4 %</td>
+      <td>-19.5 %</td>
+      <td>+52.0 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>green</td>
+      <td>1179</td>
+      <td>+10.0 %</td>
+      <td>+10.1 %</td>
+      <td>+2.9 %</td>
+      <td>+4.5 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>orange</td>
+      <td>7057</td>
+      <td>+7.9 %</td>
+      <td>+7.1 %</td>
+      <td>-7.7 %</td>
+      <td>+20.4 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>red</td>
+      <td>384</td>
+      <td>+5.2 %</td>
+      <td>+1.3 %</td>
+      <td>-17.5 %</td>
+      <td>+26.3 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>green</td>
+      <td>1179</td>
+      <td>+9.9 %</td>
+      <td>+10.6 %</td>
+      <td>+6.5 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>orange</td>
+      <td>6589</td>
+      <td>+6.2 %</td>
+      <td>+6.2 %</td>
+      <td>-3.5 %</td>
+      <td>+25.4 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>red</td>
+      <td>348</td>
+      <td>+9.5 %</td>
+      <td>+5.8 %</td>
+      <td>-3.5 %</td>
+      <td>+34.5 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>drawdown_24m_médian</th>
+      <th>drawdown_24m_p90</th>
+      <th>part_drawdown_&gt;20%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>green</td>
+      <td>1179</td>
+      <td>+9.1 %</td>
+      <td>+28.9 %</td>
+      <td>+23.7 %</td>
+    </tr>
+    <tr>
+      <td>orange</td>
+      <td>7263</td>
+      <td>+6.4 %</td>
+      <td>+37.3 %</td>
+      <td>+21.0 %</td>
+    </tr>
+    <tr>
+      <td>red</td>
+      <td>430</td>
+      <td>+21.5 %</td>
+      <td>+37.1 %</td>
+      <td>+56.7 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>date</th>
+      <th>épisode</th>
+      <th>attendu</th>
+      <th>obtenu</th>
+      <th>dominant_±3_mois</th>
+      <th>ok</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2000-03-24</td>
+      <td>sommet mars 2000</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2007-10-31</td>
+      <td>octobre 2007</td>
+      <td>orange/red</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2009-03-09</td>
+      <td>creux mars 2009</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2020-03-23</td>
+      <td>creux mars 2020</td>
+      <td>green</td>
+      <td>green</td>
+      <td>orange</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2021-11-30</td>
+      <td>fin 2021</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2022-10-12</td>
+      <td>creux octobre 2022</td>
+      <td>green</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+<pre>{
+ "part_rouge": {
+  "valeur": 0.0847,
+  "seuil": 0.25,
+  "ok": true
+ },
+ "écart_3ans_vert_moins_rouge": {
+  "valeur": 0.04762013240761154,
+  "seuil": 0.05,
+  "ok": false
+ },
+ "drawdown24m_rouge_plus_profond": {
+  "rouge": 0.21513572627751887,
+  "vert": 0.09106066023770887,
+  "ok": true
+ },
+ "épisodes_ok": {
+  "valeur": 5,
+  "total": 6
+ },
+ "changements_par_an": 3.2294189761497885
+}</pre>
+<h2>Bitcoin (2014-01-01 → 2026-11-07)</h2>
+<p>Part du temps : <b class='green'>green</b> 34 %, <b class='orange'>orange</b> 57 %, <b class='red'>red</b> 9 % ; changements de couleur : 8.5 par an.</p>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>horizon</th>
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>médiane_annualisée</th>
+      <th>moyenne_annualisée</th>
+      <th>p10_annualisé</th>
+      <th>part_négative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 an</td>
+      <td>green</td>
+      <td>1433</td>
+      <td>+99.1 %</td>
+      <td>+118.2 %</td>
+      <td>-22.0 %</td>
+      <td>+15.1 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>orange</td>
+      <td>2464</td>
+      <td>+32.0 %</td>
+      <td>+143.1 %</td>
+      <td>-57.4 %</td>
+      <td>+41.4 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>red</td>
+      <td>432</td>
+      <td>+12.4 %</td>
+      <td>+84.1 %</td>
+      <td>-69.5 %</td>
+      <td>+43.8 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>green</td>
+      <td>1433</td>
+      <td>+78.5 %</td>
+      <td>+132.5 %</td>
+      <td>+33.7 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>orange</td>
+      <td>1734</td>
+      <td>+49.5 %</td>
+      <td>+78.4 %</td>
+      <td>+16.6 %</td>
+      <td>+0.2 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>red</td>
+      <td>432</td>
+      <td>+33.1 %</td>
+      <td>+39.0 %</td>
+      <td>+3.9 %</td>
+      <td>+1.6 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>green</td>
+      <td>900</td>
+      <td>+79.7 %</td>
+      <td>+86.4 %</td>
+      <td>+57.3 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>orange</td>
+      <td>1537</td>
+      <td>+57.7 %</td>
+      <td>+96.8 %</td>
+      <td>+14.3 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>red</td>
+      <td>432</td>
+      <td>+24.2 %</td>
+      <td>+44.0 %</td>
+      <td>+3.5 %</td>
+      <td>+1.9 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>drawdown_24m_médian</th>
+      <th>drawdown_24m_p90</th>
+      <th>part_drawdown_&gt;20%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>green</td>
+      <td>1433</td>
+      <td>+14.4 %</td>
+      <td>+53.5 %</td>
+      <td>+38.8 %</td>
+    </tr>
+    <tr>
+      <td>orange</td>
+      <td>2099</td>
+      <td>+22.0 %</td>
+      <td>+69.7 %</td>
+      <td>+52.6 %</td>
+    </tr>
+    <tr>
+      <td>red</td>
+      <td>432</td>
+      <td>+50.5 %</td>
+      <td>+75.0 %</td>
+      <td>+80.8 %</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>date</th>
+      <th>épisode</th>
+      <th>attendu</th>
+      <th>obtenu</th>
+      <th>dominant_±3_mois</th>
+      <th>ok</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2017-12-17</td>
+      <td>sommet décembre 2017</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2018-12-15</td>
+      <td>creux décembre 2018</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2020-03-13</td>
+      <td>creux mars 2020</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2021-04-14</td>
+      <td>sommet avril 2021</td>
+      <td>red</td>
+      <td>red</td>
+      <td>red</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2021-11-10</td>
+      <td>sommet novembre 2021</td>
+      <td>red</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2022-11-21</td>
+      <td>creux novembre 2022</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2025-10-06</td>
+      <td>sommet octobre 2025</td>
+      <td>red</td>
+      <td>orange</td>
+      <td>orange</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2026-07-15</td>
+      <td>creux juillet 2026</td>
+      <td>green</td>
+      <td>green</td>
+      <td>green</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table>
+<pre>{
+ "part_rouge": {
+  "valeur": 0.092,
+  "seuil": 0.3,
+  "ok": true
+ },
+ "écart_3ans_vert_moins_rouge": {
+  "valeur": 0.4539264030150272,
+  "seuil": 0.05,
+  "ok": true
+ },
+ "drawdown24m_rouge_plus_profond": {
+  "rouge": 0.504514679939958,
+  "vert": 0.14391289727399148,
+  "ok": true
+ },
+ "épisodes_ok": {
+  "valeur": 6,
+  "total": 8
+ },
+ "changements_par_an": 8.483326230556147
+}</pre>
+<h2>Coût des faux positifs : plan type (1 000 €/mois + 10 000 €/an exceptionnels)</h2>
+<p><b>S&P 500</b> (1990-01-31 → 2026-11-30) : investi 813,000 € ; A (exceptionnel investi chaque janvier) = 5,666,691 € ; B (réserve déployée en vert) = 5,317,188 € ; B − A = -349,503 € (-6.2 %) ; C (différé seulement en rouge) = 5,648,652 € ; C − A = -18,039 € (-0.3 %) ; réserve B finale non déployée 94,851 € (max 161,867 €) ; drawdown max A +49.7 %, B +45.9 %, C +49.6 %.</p>
+<p><b>Nasdaq-100</b> (1990-01-31 → 2026-11-30) : investi 813,000 € ; A (exceptionnel investi chaque janvier) = 19,515,388 € ; B (réserve déployée en vert) = 14,668,646 € ; B − A = -4,846,742 € (-24.8 %) ; C (différé seulement en rouge) = 19,461,215 € ; C − A = -54,173 € (-0.3 %) ; réserve B finale non déployée 94,375 € (max 142,493 €) ; drawdown max A +80.0 %, B +76.5 %, C +79.9 %.</p>
+<p><b>MSCI World (USD)</b> (1990-01-31 → 2026-11-30) : investi 813,000 € ; A (exceptionnel investi chaque janvier) = 3,436,412 € ; B (réserve déployée en vert) = 3,438,494 € ; B − A = 2,082 € (+0.1 %) ; C (différé seulement en rouge) = 3,434,492 € ; C − A = -1,920 € (-0.1 %) ; réserve B finale non déployée 94,610 € (max 159,383 €) ; drawdown max A +52.4 %, B +48.9 %, C +52.4 %.</p>
+<h2>ETF Nasdaq-100 x2 quotidien (synthétique : 2× rendement − financement − 0,6 % de frais), depuis octobre 1985</h2>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>stratégie</th>
+      <th>multiple</th>
+      <th>cagr</th>
+      <th>drawdown_max</th>
+      <th>pire_année</th>
+      <th>drawdown_2000_2002</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Nasdaq-100 sans levier</td>
+      <td>240.68</td>
+      <td>+14.3 %</td>
+      <td>+82.9 %</td>
+      <td>-41.9 %</td>
+      <td>+81.3 %</td>
+    </tr>
+    <tr>
+      <td>x2 permanent</td>
+      <td>639.90</td>
+      <td>+17.0 %</td>
+      <td>+98.9 %</td>
+      <td>-73.0 %</td>
+      <td>+98.5 %</td>
+    </tr>
+    <tr>
+      <td>x2 seulement si tendance OK (MM10 mois)</td>
+      <td>1,314.72</td>
+      <td>+19.1 %</td>
+      <td>+89.8 %</td>
+      <td>-55.3 %</td>
+      <td>+88.1 %</td>
+    </tr>
+  </tbody>
+</table>
+<p>Part du temps avec tendance OK : 74 %.</p>
+<h2>Bitcoin : sensibilité du seuil rouge (1,5σ gelé contre 1,0σ candidat ; déc. 2013 = période non utilisée)</h2>
+<h3>seuil_1.0</h3><p>part rouge 9 % ; sommets : {'2013-12-04': 'red', '2017-12-17': 'red', '2021-04-14': 'red', '2021-11-10': 'orange', '2025-10-06': 'orange'}</p>
+<table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>horizon</th>
+      <th>couleur</th>
+      <th>n_jours</th>
+      <th>médiane_annualisée</th>
+      <th>moyenne_annualisée</th>
+      <th>p10_annualisé</th>
+      <th>part_négative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 an</td>
+      <td>green</td>
+      <td>1433</td>
+      <td>+99.1 %</td>
+      <td>+118.2 %</td>
+      <td>-22.0 %</td>
+      <td>+15.1 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>orange</td>
+      <td>2628</td>
+      <td>+41.1 %</td>
+      <td>+150.8 %</td>
+      <td>-57.1 %</td>
+      <td>+39.9 %</td>
+    </tr>
+    <tr>
+      <td>1 an</td>
+      <td>red</td>
+      <td>452</td>
+      <td>+9.7 %</td>
+      <td>+78.2 %</td>
+      <td>-68.7 %</td>
+      <td>+46.0 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>green</td>
+      <td>1433</td>
+      <td>+78.5 %</td>
+      <td>+132.5 %</td>
+      <td>+33.7 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>orange</td>
+      <td>1898</td>
+      <td>+55.0 %</td>
+      <td>+77.4 %</td>
+      <td>+15.3 %</td>
+      <td>+0.7 %</td>
+    </tr>
+    <tr>
+      <td>3 ans</td>
+      <td>red</td>
+      <td>452</td>
+      <td>+31.8 %</td>
+      <td>+37.7 %</td>
+      <td>+2.6 %</td>
+      <td>+4.4 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>green</td>
+      <td>900</td>
+      <td>+79.7 %</td>
+      <td>+86.4 %</td>
+      <td>+57.3 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>orange</td>
+      <td>1701</td>
+      <td>+59.9 %</td>
+      <td>+99.2 %</td>
+      <td>+15.4 %</td>
+      <td>+0.0 %</td>
+    </tr>
+    <tr>
+      <td>5 ans</td>
+      <td>red</td>
+      <td>452</td>
+      <td>+26.4 %</td>
+      <td>+44.1 %</td>
+      <td>+3.5 %</td>
+      <td>+1.8 %</td>
+    </tr>
+  </tbody>
+</table></body></html>

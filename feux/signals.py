@@ -184,7 +184,7 @@ def bitcoin_signals() -> pd.DataFrame:
     mvrv = store.to_indexed(store.load("btc_mvrv"))
     cal = px.index
     df = pd.DataFrame({"price": px})
-    df["mvrv"] = mvrv.reindex(cal)
+    df["mvrv"] = mvrv.reindex(cal).ffill(limit=3)   # MVRV publié avec un jour de retard sur le prix
     df["ma200w"] = px.rolling(1400, min_periods=1400).mean()          # 200 semaines ≈ 1400 jours calendaires
     df["ratio_200w"] = px / df["ma200w"]
     zw, zmin = 365 * w["btc_z_years"], 365 * w["btc_z_min_years"]
