@@ -16,7 +16,7 @@ def cmd_update(args) -> None:
     steps = {
         "shiller": shiller.update,
         "fred": fred.update,
-        "yahoo": lambda: yahoo.update(r["indices"]["assets"], extra={"vix_yahoo": "^VIX"}),
+        "yahoo": lambda: yahoo.update(r["indices"]["assets"], extra={"vix_yahoo": "^VIX", **{f"theme_{k}": v["ticker"] for k, v in r["themes"]["assets"].items()}}),
         "coinmetrics": coinmetrics.update,
         "fng": alternative_me.update,
         "deribit": deribit.update,
@@ -40,9 +40,11 @@ def cmd_update(args) -> None:
 
 def cmd_signals(args) -> None:
     from .signals import compute_all, save_signals
+    from .themes import compute_all as themes_all, save_all as themes_save
 
     res = compute_all()
     save_signals(res)
+    themes_save(themes_all())
     for asset, df in res.items():
         last = df.dropna(subset=["color"]).iloc[-1]
         log.info("%-8s %s  couleur=%s  V=%.0f X=%.0f E=%s P=%s dd=%.1f%% levier=%s",
@@ -56,6 +58,18 @@ def cmd_backtest(args) -> None:
     from .backtest import run_all
 
     run_all()
+
+
+def cmd_brief(args) -> None:
+    from .brief import run
+
+    run(dry_run=args.dry_run)
+
+
+def cmd_themes(args) -> None:
+    from .themes import compute_all, save_all
+
+    save_all(compute_all())
 
 
 def cmd_stocks(args) -> None:
@@ -77,6 +91,10 @@ def cmd_decide(args) -> None:
         return [input(f"  {q} ") for q in journal.QUESTIONS]
 
     if args.what == "new":
+        rates = journal.base_rates(args.asset)
+        if rates:
+            print("Avant d'enregistrer, ce que l'histoire dit de cette situation :")
+            print("  " + rates)
         item = journal.new(args.asset, args.action, args.amount, args.thesis or "", args.invalidation or "", ask_answers())
         print(f"Intention {item['id']} enregistrée. Confirmation possible après 48 h : python -m feux decide confirm {item['id']}")
     elif args.what == "confirm":
@@ -124,6 +142,11 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_signals)
     s = sub.add_parser("backtest", help="validation point-in-time")
     s.set_defaults(fn=cmd_backtest)
+    s = sub.add_parser("brief", help="brief mensuel en langage courant (Telegram)")
+    s.add_argument("--dry-run", action="store_true")
+    s.set_defaults(fn=cmd_brief)
+    s = sub.add_parser("themes", help="drapeaux de bulle sectorielle (SOX, IGV, XLK)")
+    s.set_defaults(fn=cmd_themes)
     s = sub.add_parser("stocks", help="module actions : liste de suivi stocks.yaml (EDGAR + prix)")
     s.set_defaults(fn=cmd_stocks)
     s = sub.add_parser("decide", help="journal de décision : intention → 48 h → confirmation")

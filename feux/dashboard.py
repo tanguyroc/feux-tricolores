@@ -160,6 +160,27 @@ def _card_btc(df: pd.DataFrame) -> str:
             f"{_timeline_svg(df, '2014-01-01')}</section>")
 
 
+def _themes_section() -> str:
+    from .themes import load_all, simple_sentence
+
+    res = load_all()
+    if not res:
+        return ""
+    r = rules()["themes"]["assets"]
+    lis = "".join(f"<li>{html.escape(simple_sentence(k, df.iloc[-1]))}</li>" for k, df in res.items())
+    rows = ""
+    for k, df in res.items():
+        row = df.iloc[-1]
+        rows += (f"<tr><td>{html.escape(r[k]['name'])}</td><td>{_fmt(row['runup_24m'], '{:+.0f}', ' %', 100)}</td>"
+                 f"<td>{'OUI' if row['gsy'] else 'non'}</td><td>{_fmt(row['gap_ma200'], '{:+.0f}', ' %', 100)} (p{_fmt(row['gap_ma200_pct'])})</td>"
+                 f"<td>{'cassée' if row['trend_broken'] else 'OK'}</td><td>{_fmt(row['drawdown'], '{:.0f}', ' %', 100)}</td><td>{df.index[-1]:%d/%m/%Y}</td></tr>")
+    table = ("<table class='detail-only'><tr><th>Thème</th><th>Hausse 2 ans</th><th>Bulle GSY</th><th>Écart MM200 (percentile 25 ans)</th>"
+             "<th>Tendance 10 mois</th><th>Baisse vs plus haut</th><th>Données au</th></tr>" + rows + "</table>")
+    return (f"<h2>Les thèmes de votre portefeuille</h2><p class='sub'>Semi-conducteurs, éditeurs de logiciels, technologie américaine : des drapeaux, pas des couleurs "
+            f"(sans mesure de valorisation sectorielle fiable, un thème n'est jamais « rouge »). Le critère de bulle a été établi sur des secteurs, c'est ici qu'il compte le plus.</p>"
+            f"<ul class='plain' style='padding-left:18px'>{lis}</ul>{table}")
+
+
 def _stocks_section() -> str:
     from .stocks import load_all, watchlist
 
@@ -267,6 +288,7 @@ def build() -> None:
 <div class="actions"><b>Ce mois-ci, concrètement</b><ul style="margin:6px 0 0;padding-left:18px">{acts}</ul></div>
 <h2>Lecture du jour</h2><div class="grid">{''.join(cards)}</div>
 <p class="legend"><i style="background:{HEX['green']}"></i>vert <i style="background:{HEX['orange']}"></i>orange <i style="background:{HEX['red']}"></i>rouge — frise mensuelle depuis 1990 (Bitcoin : 2014)</p>
+{_themes_section()}
 <h2>Actions suivies</h2>{_stocks_section()}
 <h2>Ce que chaque couleur autorise</h2>{_conduct_table()}
 <h2>Ce que les feux ont donné dans le passé (point-in-time)</h2>{_validation_summary()}

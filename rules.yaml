@@ -128,3 +128,13 @@ stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeur
     net_debt_to_ebitda_max: 2.0
     tax_rate: 0.21
   leverage_flag: {sma_days: 200}
+
+themes:   # drapeaux de bulle sectorielle (v0.3) — pas de couleur : sans valorisation, un secteur n'est jamais « rouge »
+  assets:
+    semis:    {ticker: "^SOX", name: "Semi-conducteurs (SOX)"}
+    software: {ticker: "IGV",  name: "Éditeurs de logiciels (IGV)"}
+    tech:     {ticker: "XLK",  name: "Technologie US (XLK)"}
+  gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You, mesuré sur des SECTEURS
+  extension_red_min: 90        # écart à la MM200 j en percentile 25 ans (min 10 ans) → « tendu »
+  runup_alert_min: 1.50        # hausse ≥ 150 % sur 2 ans : probabilité de krach ≈ 80 % dans GSY
+  leverage_flag: {sma_months: 10}

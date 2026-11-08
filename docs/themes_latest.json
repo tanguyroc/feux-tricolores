@@ -1,0 +1,38 @@
+{
+ "semis": {
+  "price": 9390.25,
+  "runup_24m": 0.8775129652856131,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": -0.13302977154680484,
+  "gap_ma200_pct": 10.857142857142858,
+  "extended": false,
+  "drawdown": 0.3583580570418178,
+  "trend_broken": true,
+  "date": "2026-11-06"
+ },
+ "software": {
+  "price": 98.87999725341797,
+  "runup_24m": 0.07175368484614242,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": 0.05125335923407759,
+  "gap_ma200_pct": 44.47867682827955,
+  "extended": false,
+  "drawdown": 0.16053997381043073,
+  "trend_broken": false,
+  "date": "2026-11-06"
+ },
+ "tech": {
+  "price": 164.74000549316406,
+  "runup_24m": 0.471484103423663,
+  "gsy": false,
+  "runup_alert": false,
+  "gap_ma200": -0.032086414854993084,
+  "gap_ma200_pct": 18.412698412698415,
+  "extended": false,
+  "drawdown": 0.18445541835067292,
+  "trend_broken": false,
+  "date": "2026-11-06"
+ }
+}
