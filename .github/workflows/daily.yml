@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: feux-daily
@@ -15,7 +17,10 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,3 +56,10 @@ jobs:
           git add data/universe.csv data/raw/isin_symbols.json docs
           git diff --cached --quiet || git commit -m "Mise à jour quotidienne $(date -u +%F)"
           git push
+      # Le push du bot (GITHUB_TOKEN) ne déclenche pas d'autre workflow : on publie le site ici même.
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4
