@@ -27,6 +27,11 @@ jobs:
         run: python -m feux update --strict
       - name: Signaux
         run: python -m feux signals
+      - name: Actions suivies (si SEC_USER_AGENT est défini)
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          if [ -n "$SEC_USER_AGENT" ]; then python -m feux stocks; else echo "SEC_USER_AGENT absent : module actions ignoré"; fi
       - name: Tableau de bord
         run: python -m feux dashboard
       - name: Alertes (changement de couleur ou de drapeau)
@@ -34,9 +39,9 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m feux alert
-      - name: Backtest (le vendredi, ou lancement manuel)
+      - name: Backtest et robustesse (le vendredi, ou lancement manuel)
         run: |
-          if [ "$(date -u +%u)" = "5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python -m feux backtest; fi
+          if [ "$(date -u +%u)" = "5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python -m feux backtest && python -m feux robustness; fi
       - name: Commit des données et du tableau de bord
         run: |
           git config user.name "feux-bot"

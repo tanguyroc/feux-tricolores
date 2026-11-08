@@ -65,6 +65,35 @@ def cmd_stocks(args) -> None:
     save_all(res)
 
 
+def cmd_decide(args) -> None:
+    from . import journal
+
+    def ask_answers() -> list[str]:
+        if args.answers:
+            parts = [a.strip() for a in args.answers.split("|")]
+            if len(parts) == len(journal.QUESTIONS):
+                return parts
+        print("Répondez par écrit aux cinq questions :")
+        return [input(f"  {q} ") for q in journal.QUESTIONS]
+
+    if args.what == "new":
+        item = journal.new(args.asset, args.action, args.amount, args.thesis or "", args.invalidation or "", ask_answers())
+        print(f"Intention {item['id']} enregistrée. Confirmation possible après 48 h : python -m feux decide confirm {item['id']}")
+    elif args.what == "confirm":
+        try:
+            item = journal.confirm(args.id, ask_answers())
+            print(f"Intention {item['id']} confirmée. L'ordre peut être passé manuellement chez le courtier.")
+        except PermissionError as exc:
+            print(f"REFUSÉ — {exc}")
+            sys.exit(2)
+    elif args.what == "cancel":
+        journal.cancel(args.id, args.why or "")
+        print("Intention annulée.")
+    else:
+        for i in journal.pending():
+            print(f"{i['id']}  {i['created']}  {i['action']} {i['asset']} {i['amount']:,.0f} €  [{i['status']}]")
+
+
 def cmd_robustness(args) -> None:
     from .robustness import run_all
 
@@ -97,6 +126,17 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_backtest)
     s = sub.add_parser("stocks", help="module actions : liste de suivi stocks.yaml (EDGAR + prix)")
     s.set_defaults(fn=cmd_stocks)
+    s = sub.add_parser("decide", help="journal de décision : intention → 48 h → confirmation")
+    s.add_argument("what", choices=["new", "list", "confirm", "cancel"])
+    s.add_argument("--asset", help="sp500, ndx, world, btc ou clé de stocks.yaml")
+    s.add_argument("--action", choices=["acheter", "vendre", "arbitrer"], default="acheter")
+    s.add_argument("--amount", type=float, default=0.0)
+    s.add_argument("--thesis")
+    s.add_argument("--invalidation", help="ce qui invaliderait la décision")
+    s.add_argument("--answers", help="cinq réponses séparées par | (sinon saisie interactive)")
+    s.add_argument("--id")
+    s.add_argument("--why")
+    s.set_defaults(fn=cmd_decide)
     s = sub.add_parser("robustness", help="sous-périodes, bootstrap, sensibilité, confirmation")
     s.set_defaults(fn=cmd_robustness)
     s = sub.add_parser("dashboard", help="générer docs/index.html")

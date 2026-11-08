@@ -22,3 +22,24 @@
    jamais déployés depuis 2020 ; différer seulement en rouge coûte −0,3 % (neutre). Le vert est rare (12-16 % du temps)
    et groupé sur quelques épisodes : on ne peut pas bâtir une politique de flux dessus.
    Les seuils des indicateurs n'ont PAS été modifiés par cette décision.
+
+## 2026-11-08 — v0.2 (approfondissement ; aucun seuil de règle modifié)
+- **Bitcoin — taux de financement** : implémentation de l'indicateur pré-enregistré (`funding_30d_pct_red_min: 90`)
+  avec l'historique Deribit (horaire depuis juin 2019 ; Binance et Bybit refusent les exécuteurs américains).
+  Résultat : confirme le rouge de janvier-avril 2021 (financement au 94-96e percentile) ; **ne change rien** pour
+  novembre 2021 (72e percentile) ni octobre 2025 (67e) : ces sommets se sont faits sans euphorie de levier.
+- **Couche de confirmation** (`confirmation_days: 5`) : une nouvelle couleur n'est affichée et alertée qu'après
+  5 jours de bourse consécutifs. Effet mesuré : changements par an divisés par ~3 (S&P 500 4,6 → 1,4 ; Nasdaq 5,2 → 1,5 ;
+  World 3,2 → 1,1 ; Bitcoin 8,5 → 3,0), rendements médians par couleur inchangés. La règle (`color`) n'est pas touchée ;
+  la colonne `color_confirmed` sert à l'affichage, aux alertes et au journal.
+- **Robustesse** (`docs/robustness.html`) : sous-périodes, bootstrap de blocs, sensibilité des seuils, 1985-1989.
+  Constats : l'écart vert − rouge à 3 ans est statistiquement robuste sur le MSCI World (IC 90 % [+4,5 ; +28,9] pts)
+  et le Bitcoin ([+16 ; +135]), **pas sur le S&P 500** ([−2,5 ; +11,6]) ; sur le Nasdaq-100 il dépend presque
+  entièrement de 2000-2002. La profondeur des baisses après un rouge est, elle, cohérente partout. 1987 : orange (CAPE à 18,
+  sous le 80e percentile de la fenêtre 1962-1987) — un krach non signalé, hors conception, assumé.
+- **Levier** : variantes de référence (Faber) et filtre 10 mois seul sur les trois indices ; graphique des courbes.
+- **Module actions (prototype)** : `stocks.yaml`, EDGAR companyfacts point-in-time (première publication, datée du dépôt),
+  EV/EBIT et P/FCF en percentile 10 ans, DCF inversé, filtre qualité éliminatoire, proxys crypto routés vers le feu Bitcoin.
+  Nécessite `SEC_USER_AGENT`. Non validé par backtest (10 ans de données, ≤ 10 valeurs : anecdotique).
+- **Journal de décision** (`python -m feux decide`) : intention écrite + cinq questions, confirmation refusée avant 48 h,
+  instantané des feux à l'intention et à la confirmation. Dossier `journal/` exclu du dépôt (personnel).
