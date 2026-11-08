@@ -1,0 +1,103 @@
+# Règles des feux tricolores — GELÉES avant le premier backtest.
+# Toute modification doit être commitée séparément, justifiée dans CHANGELOG.md,
+# et suivie d'un re-test sur une période non utilisée pour la décision.
+version: 1
+frozen_at: "2026-11-08"
+
+windows:
+  # Percentiles glissants (indices) : fenêtre de 25 ans, valeur produite dès 15 ans d'historique.
+  pct_years: 25
+  pct_min_years: 15
+  # Séries « rapides » à historique court (VIX, HY OAS, Nasdaq-100 splicé) : minimum 10 ans.
+  pct_min_years_fast: 10
+  # Dette sur marge (depuis 1997) : fenêtre croissante, minimum 5 ans.
+  margin_expanding_min_years: 5
+  # Bitcoin : z-score glissant 4 ans (un cycle), minimum 3 ans.
+  btc_z_years: 4
+  btc_z_min_years: 3
+
+lags:
+  # Point-in-time : date de disponibilité = date de référence + décalage.
+  shiller_earnings_months: 3        # bénéfices trimestriels connus ~3 mois après
+  cape_month_available_days: 0      # le CAPE du mois m est connu en fin de mois m
+  aiae_days_after_quarter_end: 70   # Z.1 publié ~10 semaines après le trimestre
+  margin_debt_days_after_month_end: 25  # FINRA publie ~3 semaines après le mois
+
+indices:
+  assets:
+    sp500:  {ticker: "^GSPC", name: "S&P 500", splice: null}
+    ndx:    {ticker: "^NDX",  name: "Nasdaq-100", splice: "^IXIC"}   # Composite avant 10/1985
+    world:  {ticker: "^990100-USD-STRD", name: "MSCI World (USD)", splice: null}
+  valuation:            # famille V — commune à tous les indices (plafond S&P 500)
+    indicators: [cape_pit_pct, ecy_pit_pct_inv, aiae_pct]
+    red_min: 80
+    green_max: 40
+  extension:            # famille X — propre à chaque indice
+    indicators: [gap_ma200_pct, mom_12m_pct]
+    red_min: 90
+    gsy:                # Greenwood-Shleifer-You : hausse ≥ 100 % sur 24 mois ET accélération
+      runup_months: 24
+      runup_min: 1.00
+      accel_short_months: 6   # pente annualisée 6 mois > pente annualisée 24 mois
+  euphoria:             # famille E — commune (marché US)
+    indicators: [margin_debt_yoy_pct]
+    red_min: 80
+    margin_debt_yoy_extreme: 0.50   # croissance annuelle ≥ 50 % → E = 100
+  fear:                 # famille P — confirmation du vert de capitulation
+    indicators: [vix_pct, hy_oas_pct]
+    green_min: 80
+    drawdown_min: 0.25
+  falling_knife:
+    sma_months: 10
+    mom_months: 3
+  leverage_flag:
+    sma_months: 10      # clôture mensuelle < moyenne 10 mois → drapeau « tendance cassée »
+
+bitcoin:
+  valuation:
+    indicators: [log_price_ma200w_z, log_mvrv_z]   # moyenne des deux z-scores
+    red_min_z: 1.5
+    green_max_z: -0.5
+  extension:
+    gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
+  euphoria:
+    # Taux de financement : non implémenté en v1 (API Binance géobloquée depuis l'exécuteur) ;
+    # le rouge Bitcoin repose donc sur V ET critère GSY. Documenté dans runbook.md.
+    funding_30d_pct_red_min: 90
+  capitulation:
+    drawdown_min: 0.50
+    fng_30d_max: 25
+  leverage_flag: {sma_days: 200}
+
+# Préséance quand plusieurs conditions sont vraies :
+# 1) vert de capitulation (drawdown + peur), 2) rouge, 3) vert de valorisation, 4) orange.
+precedence: [green_capitulation, red, green_valuation, orange]
+
+acceptance:   # critères de validation, évalués par backtest.py, non négociables
+  red_time_share_max_indices: 0.25
+  red_time_share_max_btc: 0.30
+  fwd3y_median_gap_min_annual: 0.05    # vert − rouge, rendement annualisé médian à 3 ans
+  drawdown24m_red_deeper_in: "2 of 3 episodes"
+  plan_type: {monthly_eur: 1000, exceptional_yearly_eur: 10000}
+
+conduct:
+  green:
+    regular_contribution: "maintenu"
+    reserve: "déploiement par tiers sur 3 mois (6 mois si couteau qui tombe)"
+    leverage_cap_share_equities: 0.15
+    leverage_requires_trend_ok: true
+    rebalance_band_pts: 10
+  orange:
+    regular_contribution: "maintenu"
+    reserve: "aucun déploiement ; la réserve s'accumule (cible ≤ 10 % du portefeuille)"
+    leverage_cap_share_equities: 0.10
+    rebalance_band_pts: 5
+  red:
+    regular_contribution: "maintenu"
+    reserve: "aucun déploiement"
+    leverage_cap_share_equities: 0.05
+    rebalance_band_pts: 5
+  trend_broken:
+    leverage_cap_share_equities: 0.05
+    action_within_trading_days: 5
+  exceptional_order_checklist_hours: 48
