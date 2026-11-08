@@ -230,6 +230,8 @@ def run_all() -> dict:
             ".t th{background:#f5f5f5}.t td:first-child,.t th:first-child{text-align:left}h3{margin-top:1.5rem;font-size:15px}</style></head><body>"
             + "\n".join(html) + "</body></html>")
     (DOCS_DIR / "robustness.html").write_text(page, encoding="utf-8")
+    (DOCS_DIR / "fragments").mkdir(exist_ok=True)
+    (DOCS_DIR / "fragments" / "robustness.html").write_text("\n".join(html), encoding="utf-8")
     (DOCS_DIR / "robustness_summary.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
     log.info("Rapport : %s", DOCS_DIR / "robustness.html")
     return summary

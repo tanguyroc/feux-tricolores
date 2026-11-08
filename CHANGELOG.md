@@ -55,3 +55,16 @@
 - **EDGAR** : concepts IFRS (déposants de 20-F : ASML, Novo Nordisk, TotalEnergies) et devises ; valeurs annuelles acceptées.
 - **Liste de suivi proposée** (`stocks.yaml`, à valider) : Oracle, Microsoft, Nvidia, Salesforce (à remplacer par l'éditeur détenu),
   Alphabet, ASML (PEA), Novo Nordisk (PEA), Visa, Strategy (proxy), SoftBank (prix seul).
+
+## 2026-11-08 — v0.4 (une application, pas des rapports ; actions = Top 100 mondial ; aucun seuil de règle modifié)
+- **Application monopage** `docs/index.html` : onglets Aujourd'hui · Actions Top 100 · Mon portefeuille · Journal · Validation ·
+  Règles & glossaire ; mode simple / détaillé global ; données embarquées (fonctionne hors ligne, publiée par GitHub Pages).
+  Les rapports de validation et de robustesse sont intégrés (plus de pages séparées à ouvrir).
+- **Mon portefeuille** (dans le navigateur, rien n'est transmis) : lignes avec levier et enveloppe, exposition réelle (x2 compté
+  double), part exposée à un feu rouge, part de levier contre le plafond de la couleur du jour, test de résistance en euros,
+  écart aux cibles avec les bandes de la couleur, répartition du versement mensuel vers les poches sous-pondérées non rouges.
+- **Journal** dans le navigateur : intention + cinq questions + rappel historique, confirmation verrouillée 48 h, export.
+- **Univers Top 100 mondial** : 100 premières pondérations du MSCI ACWI (positions quotidiennes publiques de l'ETF SPDR MSCI ACWI,
+  State Street), une ligne par société, symboles résolus par ISIN (Yahoo), éligibilité PEA approchée par le pays, CIK SEC par nom
+  et ticker quand `SEC_USER_AGENT` est défini. `stocks.yaml` ne sert plus qu'aux compléments et surcharges (Strategy, SoftBank, Oracle).
+- Module actions : conversion de devise prix/comptes (pence, dollars, euros), repli « prix seul » sans accès SEC.

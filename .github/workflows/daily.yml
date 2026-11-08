@@ -27,12 +27,13 @@ jobs:
         run: python -m feux update --strict
       - name: Signaux
         run: python -m feux signals
-      - name: Actions suivies (si SEC_USER_AGENT est défini)
+      - name: Univers Top 100 et actions (comptes SEC si SEC_USER_AGENT est défini, sinon prix seuls)
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
-          if [ -n "$SEC_USER_AGENT" ]; then python -m feux stocks; else echo "SEC_USER_AGENT absent : module actions ignoré"; fi
-      - name: Tableau de bord
+          python -m feux universe
+          python -m feux stocks
+      - name: Application (docs/index.html)
         run: python -m feux dashboard
       - name: Alertes (changement de couleur ou de drapeau)
         env:
@@ -46,6 +47,6 @@ jobs:
         run: |
           git config user.name "feux-bot"
           git config user.email "feux-bot@users.noreply.github.com"
-          git add data/series data/signals docs
+          git add data/series data/signals data/universe.csv data/raw/isin_symbols.json docs
           git diff --cached --quiet || git commit -m "Mise à jour quotidienne $(date -u +%F)"
           git push

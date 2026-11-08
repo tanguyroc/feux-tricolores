@@ -19,7 +19,8 @@ URL = ("https://query2.finance.yahoo.com/v8/finance/chart/{sym}"
        "?period1=0&period2=9999999999&interval=1d")
 
 
-def fetch_close(symbol: str) -> pd.Series:
+def fetch_close_meta(symbol: str) -> tuple[pd.Series, str | None]:
+    """Clôtures quotidiennes et devise de cotation (ex. « USD », « EUR », « GBp » = pence)."""
     r = http_get(URL.format(sym=urllib.parse.quote(symbol, safe="")),
                  headers={"User-Agent": "Mozilla/5.0 feux-tricolores/0.1"})
     res = r.json()["chart"]["result"][0]
@@ -27,7 +28,11 @@ def fetch_close(symbol: str) -> pd.Series:
     close = pd.Series(res["indicators"]["quote"][0]["close"], index=ts, dtype="float64")
     close = close.dropna()
     close = close[~close.index.duplicated(keep="last")].sort_index()
-    return close
+    return close, res.get("meta", {}).get("currency")
+
+
+def fetch_close(symbol: str) -> pd.Series:
+    return fetch_close_meta(symbol)[0]
 
 
 def spliced(primary: str, splice_with: str | None) -> pd.Series:

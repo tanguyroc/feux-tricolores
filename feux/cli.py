@@ -72,10 +72,16 @@ def cmd_themes(args) -> None:
     save_all(compute_all())
 
 
+def cmd_universe(args) -> None:
+    from .universe import build
+
+    build(top=args.top)
+
+
 def cmd_stocks(args) -> None:
     from .stocks import compute_all, save_all
 
-    res = compute_all()
+    res = compute_all(limit=args.limit)
     save_all(res)
 
 
@@ -119,9 +125,10 @@ def cmd_robustness(args) -> None:
 
 
 def cmd_dashboard(args) -> None:
-    from .dashboard import build
+    from .app import build
 
     build()
+    log.info("Application : %s", "docs/index.html")
 
 
 def cmd_alert(args) -> None:
@@ -147,7 +154,11 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_brief)
     s = sub.add_parser("themes", help="drapeaux de bulle sectorielle (SOX, IGV, XLK)")
     s.set_defaults(fn=cmd_themes)
-    s = sub.add_parser("stocks", help="module actions : liste de suivi stocks.yaml (EDGAR + prix)")
+    s = sub.add_parser("universe", help="univers Top 100 mondial (positions SPDR MSCI ACWI) et correspondances")
+    s.add_argument("--top", type=int, default=100)
+    s.set_defaults(fn=cmd_universe)
+    s = sub.add_parser("stocks", help="module actions : univers Top 100 + stocks.yaml (EDGAR + prix)")
+    s.add_argument("--limit", type=int, help="ne traiter que les N premières sociétés (tests)")
     s.set_defaults(fn=cmd_stocks)
     s = sub.add_parser("decide", help="journal de décision : intention → 48 h → confirmation")
     s.add_argument("what", choices=["new", "list", "confirm", "cancel"])

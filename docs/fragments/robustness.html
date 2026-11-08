@@ -1,0 +1,920 @@
+<h1>Robustesse des feux</h1><p>Toutes les analyses utilisent les couleurs point-in-time déjà calculées. Aucun seuil n'a été modifié à la suite de ces résultats (voir CHANGELOG.md).</p>
+<h2>S&P 500</h2>
+<h3>Stabilité par sous-période (rendement médian annualisé à 3 ans ; baisse médiane à 24 mois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>période</th>
+      <th>jours</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>dd24_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>dd24_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_red</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1985-1999</td>
+      <td>3791</td>
+      <td>12 %</td>
+      <td>+12.0 %</td>
+      <td>4 %</td>
+      <td>84 %</td>
+      <td>+11.3 %</td>
+      <td>4 %</td>
+      <td>5 %</td>
+      <td>+17.0 %</td>
+      <td>6 %</td>
+    </tr>
+    <tr>
+      <td>2000-2012</td>
+      <td>3269</td>
+      <td>31 %</td>
+      <td>+13.2 %</td>
+      <td>7 %</td>
+      <td>67 %</td>
+      <td>+0.8 %</td>
+      <td>12 %</td>
+      <td>3 %</td>
+      <td>-14.9 %</td>
+      <td>32 %</td>
+    </tr>
+    <tr>
+      <td>2013-2026</td>
+      <td>3484</td>
+      <td>2 %</td>
+      <td>+12.1 %</td>
+      <td>3 %</td>
+      <td>77 %</td>
+      <td>+10.7 %</td>
+      <td>6 %</td>
+      <td>21 %</td>
+      <td>+8.5 %</td>
+      <td>14 %</td>
+    </tr>
+    <tr>
+      <td>ensemble 1985-2026</td>
+      <td>10544</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>5 %</td>
+      <td>76 %</td>
+      <td>+9.6 %</td>
+      <td>5 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Écart vert − rouge (3 ans, annualisé) : bootstrap de blocs d'un an, 1 000 répliques</h3><p>Écart observé +4.0 % ; IC 90 % [-2.5 % ; +11.6 %] ; part des répliques où l'écart est ≤ 0 : 9 % (n = 2050 jours).</p>
+<h3>Règle de confirmation (5 jours consécutifs avant d'afficher une nouvelle couleur)</h3><p>Changements par an : 4.6 (brut) → 1.4 (confirmé). Part en rouge : 10 % → 9 %. Rendement médian à 3 ans par couleur : brut green +12.4 %, orange +9.6 %, red +8.5 % ; confirmé green +12.5 %, orange +9.6 %, red +8.5 %.</p>
+<h3>Sensibilité aux seuils (un paramètre à la fois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variante</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_rouge</th>
+      <th>écart_3a_vert_rouge</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>règles gelées</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>76 %</td>
+      <td>+9.6 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+4.0 %</td>
+    </tr>
+    <tr>
+      <td>V rouge ≥ 75</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>75 %</td>
+      <td>+9.6 %</td>
+      <td>10 %</td>
+      <td>+8.4 %</td>
+      <td>13 %</td>
+      <td>+4.0 %</td>
+    </tr>
+    <tr>
+      <td>V rouge ≥ 85</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>77 %</td>
+      <td>+9.6 %</td>
+      <td>9 %</td>
+      <td>+8.5 %</td>
+      <td>14 %</td>
+      <td>+4.0 %</td>
+    </tr>
+    <tr>
+      <td>X rouge ≥ 85</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>73 %</td>
+      <td>+9.5 %</td>
+      <td>12 %</td>
+      <td>+8.8 %</td>
+      <td>9 %</td>
+      <td>+3.6 %</td>
+    </tr>
+    <tr>
+      <td>X rouge ≥ 95</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>78 %</td>
+      <td>+9.7 %</td>
+      <td>7 %</td>
+      <td>+8.2 %</td>
+      <td>17 %</td>
+      <td>+4.3 %</td>
+    </tr>
+    <tr>
+      <td>E rouge ≥ 75</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>76 %</td>
+      <td>+9.6 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+4.0 %</td>
+    </tr>
+    <tr>
+      <td>E rouge ≥ 85</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>77 %</td>
+      <td>+9.6 %</td>
+      <td>9 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+3.9 %</td>
+    </tr>
+    <tr>
+      <td>V vert ≤ 35</td>
+      <td>9 %</td>
+      <td>+12.5 %</td>
+      <td>82 %</td>
+      <td>+10.0 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+4.0 %</td>
+    </tr>
+    <tr>
+      <td>V vert ≤ 45</td>
+      <td>19 %</td>
+      <td>+12.2 %</td>
+      <td>72 %</td>
+      <td>+9.4 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+3.8 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : baisse ≥ 20 %</td>
+      <td>15 %</td>
+      <td>+12.2 %</td>
+      <td>75 %</td>
+      <td>+9.7 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+3.7 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : baisse ≥ 30 %</td>
+      <td>14 %</td>
+      <td>+12.7 %</td>
+      <td>77 %</td>
+      <td>+9.5 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+4.2 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : peur ≥ 75</td>
+      <td>15 %</td>
+      <td>+12.4 %</td>
+      <td>76 %</td>
+      <td>+9.6 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+3.9 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : peur ≥ 85</td>
+      <td>14 %</td>
+      <td>+12.5 %</td>
+      <td>76 %</td>
+      <td>+9.6 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+4.0 %</td>
+    </tr>
+    <tr>
+      <td>sans critère GSY</td>
+      <td>14 %</td>
+      <td>+12.4 %</td>
+      <td>76 %</td>
+      <td>+9.6 %</td>
+      <td>10 %</td>
+      <td>+8.5 %</td>
+      <td>13 %</td>
+      <td>+4.0 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Observation hors conception : 1985-1989 (non utilisée pour fixer les règles)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>color</th>
+      <th>green</th>
+      <th>orange</th>
+    </tr>
+    <tr>
+      <th>ref_date</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1985</th>
+      <td>87 %</td>
+      <td>13 %</td>
+    </tr>
+    <tr>
+      <th>1986</th>
+      <td>85 %</td>
+      <td>15 %</td>
+    </tr>
+    <tr>
+      <th>1987</th>
+      <td>3 %</td>
+      <td>97 %</td>
+    </tr>
+    <tr>
+      <th>1988</th>
+      <td>0 %</td>
+      <td>100 %</td>
+    </tr>
+    <tr>
+      <th>1989</th>
+      <td>0 %</td>
+      <td>100 %</td>
+    </tr>
+  </tbody>
+</table><p>Couleur dominante par mois, juin 1987 → mars 1988 : 06/1987 orange, 07/1987 orange, 08/1987 orange, 09/1987 orange, 10/1987 orange, 11/1987 orange, 12/1987 orange, 01/1988 orange, 02/1988 orange, 03/1988 orange.</p>
+<h2>Nasdaq-100</h2>
+<h3>Stabilité par sous-période (rendement médian annualisé à 3 ans ; baisse médiane à 24 mois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>période</th>
+      <th>jours</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>dd24_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>dd24_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_red</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1985-1999</td>
+      <td>3791</td>
+      <td>12 %</td>
+      <td>+14.5 %</td>
+      <td>9 %</td>
+      <td>74 %</td>
+      <td>+19.5 %</td>
+      <td>7 %</td>
+      <td>15 %</td>
+      <td>+6.5 %</td>
+      <td>14 %</td>
+    </tr>
+    <tr>
+      <td>2000-2012</td>
+      <td>3269</td>
+      <td>42 %</td>
+      <td>+16.9 %</td>
+      <td>9 %</td>
+      <td>55 %</td>
+      <td>+6.0 %</td>
+      <td>11 %</td>
+      <td>3 %</td>
+      <td>-36.5 %</td>
+      <td>72 %</td>
+    </tr>
+    <tr>
+      <td>2013-2026</td>
+      <td>3484</td>
+      <td>2 %</td>
+      <td>+13.6 %</td>
+      <td>2 %</td>
+      <td>80 %</td>
+      <td>+17.8 %</td>
+      <td>6 %</td>
+      <td>18 %</td>
+      <td>+9.8 %</td>
+      <td>25 %</td>
+    </tr>
+    <tr>
+      <td>ensemble 1985-2026</td>
+      <td>10544</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>8 %</td>
+      <td>70 %</td>
+      <td>+15.7 %</td>
+      <td>8 %</td>
+      <td>12 %</td>
+      <td>+8.7 %</td>
+      <td>20 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Écart vert − rouge (3 ans, annualisé) : bootstrap de blocs d'un an, 1 000 répliques</h3><p>Écart observé +6.9 % ; IC 90 % [-12.2 % ; +35.0 %] ; part des répliques où l'écart est ≤ 0 : 8 % (n = 2815 jours).</p>
+<h3>Règle de confirmation (5 jours consécutifs avant d'afficher une nouvelle couleur)</h3><p>Changements par an : 5.2 (brut) → 1.5 (confirmé). Part en rouge : 12 % → 12 %. Rendement médian à 3 ans par couleur : brut green +15.6 %, orange +15.7 %, red +8.7 % ; confirmé green +15.4 %, orange +15.8 %, red +8.5 %.</p>
+<h3>Sensibilité aux seuils (un paramètre à la fois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variante</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_rouge</th>
+      <th>écart_3a_vert_rouge</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>règles gelées</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>70 %</td>
+      <td>+15.7 %</td>
+      <td>12 %</td>
+      <td>+8.7 %</td>
+      <td>20 %</td>
+      <td>+6.9 %</td>
+    </tr>
+    <tr>
+      <td>V rouge ≥ 75</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>69 %</td>
+      <td>+15.9 %</td>
+      <td>13 %</td>
+      <td>+8.1 %</td>
+      <td>20 %</td>
+      <td>+7.5 %</td>
+    </tr>
+    <tr>
+      <td>V rouge ≥ 85</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>71 %</td>
+      <td>+15.6 %</td>
+      <td>11 %</td>
+      <td>+8.2 %</td>
+      <td>23 %</td>
+      <td>+7.4 %</td>
+    </tr>
+    <tr>
+      <td>X rouge ≥ 85</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>67 %</td>
+      <td>+15.7 %</td>
+      <td>15 %</td>
+      <td>+9.6 %</td>
+      <td>16 %</td>
+      <td>+6.0 %</td>
+    </tr>
+    <tr>
+      <td>X rouge ≥ 95</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>71 %</td>
+      <td>+15.7 %</td>
+      <td>11 %</td>
+      <td>+8.0 %</td>
+      <td>23 %</td>
+      <td>+7.5 %</td>
+    </tr>
+    <tr>
+      <td>E rouge ≥ 75</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>69 %</td>
+      <td>+15.8 %</td>
+      <td>13 %</td>
+      <td>+8.8 %</td>
+      <td>20 %</td>
+      <td>+6.8 %</td>
+    </tr>
+    <tr>
+      <td>E rouge ≥ 85</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>70 %</td>
+      <td>+15.7 %</td>
+      <td>11 %</td>
+      <td>+8.4 %</td>
+      <td>20 %</td>
+      <td>+7.2 %</td>
+    </tr>
+    <tr>
+      <td>V vert ≤ 35</td>
+      <td>13 %</td>
+      <td>+16.4 %</td>
+      <td>75 %</td>
+      <td>+15.6 %</td>
+      <td>12 %</td>
+      <td>+8.7 %</td>
+      <td>20 %</td>
+      <td>+7.7 %</td>
+    </tr>
+    <tr>
+      <td>V vert ≤ 45</td>
+      <td>22 %</td>
+      <td>+15.7 %</td>
+      <td>66 %</td>
+      <td>+15.7 %</td>
+      <td>12 %</td>
+      <td>+8.7 %</td>
+      <td>20 %</td>
+      <td>+7.0 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : baisse ≥ 20 %</td>
+      <td>18 %</td>
+      <td>+15.4 %</td>
+      <td>70 %</td>
+      <td>+15.8 %</td>
+      <td>12 %</td>
+      <td>+8.8 %</td>
+      <td>20 %</td>
+      <td>+6.6 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : baisse ≥ 30 %</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>70 %</td>
+      <td>+15.7 %</td>
+      <td>12 %</td>
+      <td>+8.4 %</td>
+      <td>20 %</td>
+      <td>+7.2 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : peur ≥ 75</td>
+      <td>19 %</td>
+      <td>+15.1 %</td>
+      <td>69 %</td>
+      <td>+15.9 %</td>
+      <td>12 %</td>
+      <td>+8.7 %</td>
+      <td>20 %</td>
+      <td>+6.5 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : peur ≥ 85</td>
+      <td>17 %</td>
+      <td>+16.1 %</td>
+      <td>71 %</td>
+      <td>+15.5 %</td>
+      <td>12 %</td>
+      <td>+8.6 %</td>
+      <td>20 %</td>
+      <td>+7.4 %</td>
+    </tr>
+    <tr>
+      <td>sans critère GSY</td>
+      <td>18 %</td>
+      <td>+15.6 %</td>
+      <td>70 %</td>
+      <td>+15.7 %</td>
+      <td>12 %</td>
+      <td>+8.7 %</td>
+      <td>20 %</td>
+      <td>+6.9 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Observation hors conception : 1985-1989 (non utilisée pour fixer les règles)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>color</th>
+      <th>green</th>
+      <th>orange</th>
+    </tr>
+    <tr>
+      <th>ref_date</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1985</th>
+      <td>87 %</td>
+      <td>13 %</td>
+    </tr>
+    <tr>
+      <th>1986</th>
+      <td>85 %</td>
+      <td>15 %</td>
+    </tr>
+    <tr>
+      <th>1987</th>
+      <td>3 %</td>
+      <td>97 %</td>
+    </tr>
+    <tr>
+      <th>1988</th>
+      <td>0 %</td>
+      <td>100 %</td>
+    </tr>
+    <tr>
+      <th>1989</th>
+      <td>0 %</td>
+      <td>100 %</td>
+    </tr>
+  </tbody>
+</table><p>Couleur dominante par mois, juin 1987 → mars 1988 : 06/1987 orange, 07/1987 orange, 08/1987 orange, 09/1987 orange, 10/1987 orange, 11/1987 orange, 12/1987 orange, 01/1988 orange, 02/1988 orange, 03/1988 orange.</p>
+<h2>MSCI World (USD)</h2>
+<h3>Stabilité par sous-période (rendement médian annualisé à 3 ans ; baisse médiane à 24 mois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>période</th>
+      <th>jours</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>dd24_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>dd24_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_red</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1985-1999</td>
+      <td>3864</td>
+      <td>12 %</td>
+      <td>+24.2 %</td>
+      <td>1 %</td>
+      <td>88 %</td>
+      <td>+8.1 %</td>
+      <td>5 %</td>
+      <td>1 %</td>
+      <td>+12.2 %</td>
+      <td>9 %</td>
+    </tr>
+    <tr>
+      <td>2000-2012</td>
+      <td>3321</td>
+      <td>33 %</td>
+      <td>+10.1 %</td>
+      <td>10 %</td>
+      <td>64 %</td>
+      <td>+4.1 %</td>
+      <td>12 %</td>
+      <td>3 %</td>
+      <td>-17.3 %</td>
+      <td>37 %</td>
+    </tr>
+    <tr>
+      <td>2013-2026</td>
+      <td>3486</td>
+      <td>2 %</td>
+      <td>+9.7 %</td>
+      <td>2 %</td>
+      <td>78 %</td>
+      <td>+7.7 %</td>
+      <td>10 %</td>
+      <td>19 %</td>
+      <td>+5.6 %</td>
+      <td>20 %</td>
+    </tr>
+    <tr>
+      <td>ensemble 1985-2026</td>
+      <td>10671</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>5 %</td>
+      <td>77 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Écart vert − rouge (3 ans, annualisé) : bootstrap de blocs d'un an, 1 000 répliques</h3><p>Écart observé +7.4 % ; IC 90 % [+4.5 % ; +28.9 %] ; part des répliques où l'écart est ≤ 0 : 0 % (n = 2015 jours).</p>
+<h3>Règle de confirmation (5 jours consécutifs avant d'afficher une nouvelle couleur)</h3><p>Changements par an : 3.2 (brut) → 1.1 (confirmé). Part en rouge : 7 % → 7 %. Rendement médian à 3 ans par couleur : brut green +12.6 %, orange +7.2 %, red +5.2 % ; confirmé green +12.6 %, orange +7.2 %, red +5.3 %.</p>
+<h3>Sensibilité aux seuils (un paramètre à la fois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variante</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_rouge</th>
+      <th>écart_3a_vert_rouge</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>règles gelées</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>77 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+7.4 %</td>
+    </tr>
+    <tr>
+      <td>V rouge ≥ 75</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>76 %</td>
+      <td>+7.1 %</td>
+      <td>9 %</td>
+      <td>+5.4 %</td>
+      <td>20 %</td>
+      <td>+7.2 %</td>
+    </tr>
+    <tr>
+      <td>V rouge ≥ 85</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>78 %</td>
+      <td>+7.1 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>23 %</td>
+      <td>+7.5 %</td>
+    </tr>
+    <tr>
+      <td>X rouge ≥ 85</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>76 %</td>
+      <td>+7.2 %</td>
+      <td>9 %</td>
+      <td>+5.2 %</td>
+      <td>19 %</td>
+      <td>+7.5 %</td>
+    </tr>
+    <tr>
+      <td>X rouge ≥ 95</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>78 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>23 %</td>
+      <td>+7.5 %</td>
+    </tr>
+    <tr>
+      <td>E rouge ≥ 75</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>77 %</td>
+      <td>+7.2 %</td>
+      <td>8 %</td>
+      <td>+5.3 %</td>
+      <td>22 %</td>
+      <td>+7.4 %</td>
+    </tr>
+    <tr>
+      <td>E rouge ≥ 85</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>78 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>+5.3 %</td>
+      <td>22 %</td>
+      <td>+7.4 %</td>
+    </tr>
+    <tr>
+      <td>V vert ≤ 35</td>
+      <td>10 %</td>
+      <td>+11.9 %</td>
+      <td>82 %</td>
+      <td>+7.7 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+6.7 %</td>
+    </tr>
+    <tr>
+      <td>V vert ≤ 45</td>
+      <td>19 %</td>
+      <td>+11.4 %</td>
+      <td>73 %</td>
+      <td>+7.0 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+6.2 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : baisse ≥ 20 %</td>
+      <td>16 %</td>
+      <td>+12.1 %</td>
+      <td>77 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+6.9 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : baisse ≥ 30 %</td>
+      <td>15 %</td>
+      <td>+13.3 %</td>
+      <td>78 %</td>
+      <td>+7.1 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+8.0 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : peur ≥ 75</td>
+      <td>16 %</td>
+      <td>+12.3 %</td>
+      <td>77 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+7.1 %</td>
+    </tr>
+    <tr>
+      <td>capitulation : peur ≥ 85</td>
+      <td>15 %</td>
+      <td>+13.2 %</td>
+      <td>78 %</td>
+      <td>+7.1 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+7.9 %</td>
+    </tr>
+    <tr>
+      <td>sans critère GSY</td>
+      <td>15 %</td>
+      <td>+12.6 %</td>
+      <td>77 %</td>
+      <td>+7.2 %</td>
+      <td>7 %</td>
+      <td>+5.2 %</td>
+      <td>22 %</td>
+      <td>+7.4 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Observation hors conception : 1985-1989 (non utilisée pour fixer les règles)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>color</th>
+      <th>green</th>
+      <th>orange</th>
+    </tr>
+    <tr>
+      <th>ref_date</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1985</th>
+      <td>87 %</td>
+      <td>13 %</td>
+    </tr>
+    <tr>
+      <th>1986</th>
+      <td>85 %</td>
+      <td>15 %</td>
+    </tr>
+    <tr>
+      <th>1987</th>
+      <td>3 %</td>
+      <td>97 %</td>
+    </tr>
+    <tr>
+      <th>1988</th>
+      <td>0 %</td>
+      <td>100 %</td>
+    </tr>
+    <tr>
+      <th>1989</th>
+      <td>0 %</td>
+      <td>100 %</td>
+    </tr>
+  </tbody>
+</table><p>Couleur dominante par mois, juin 1987 → mars 1988 : 06/1987 orange, 07/1987 orange, 08/1987 orange, 09/1987 orange, 10/1987 orange, 11/1987 orange, 12/1987 orange, 01/1988 orange, 02/1988 orange, 03/1988 orange.</p>
+<h2>Bitcoin</h2>
+<h3>Stabilité par sous-période (rendement médian annualisé à 3 ans ; baisse médiane à 24 mois)</h3><table class="dataframe t">
+  <thead>
+    <tr style="text-align: right;">
+      <th>période</th>
+      <th>jours</th>
+      <th>part_green</th>
+      <th>3a_green</th>
+      <th>dd24_green</th>
+      <th>part_orange</th>
+      <th>3a_orange</th>
+      <th>dd24_orange</th>
+      <th>part_red</th>
+      <th>3a_red</th>
+      <th>dd24_red</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2014-2020</td>
+      <td>2557</td>
+      <td>35 %</td>
+      <td>+130.3 %</td>
+      <td>16 %</td>
+      <td>53 %</td>
+      <td>+75.5 %</td>
+      <td>20 %</td>
+      <td>12 %</td>
+      <td>+42.3 %</td>
+      <td>27 %</td>
+    </tr>
+    <tr>
+      <td>2021-2026</td>
+      <td>2137</td>
+      <td>33 %</td>
+      <td>+48.5 %</td>
+      <td>14 %</td>
+      <td>62 %</td>
+      <td>+22.4 %</td>
+      <td>24 %</td>
+      <td>6 %</td>
+      <td>+5.2 %</td>
+      <td>71 %</td>
+    </tr>
+    <tr>
+      <td>ensemble</td>
+      <td>4694</td>
+      <td>34 %</td>
+      <td>+78.5 %</td>
+      <td>14 %</td>
+      <td>57 %</td>
+      <td>+49.5 %</td>
+      <td>22 %</td>
+      <td>9 %</td>
+      <td>+33.1 %</td>
+      <td>50 %</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Écart vert − rouge (3 ans, annualisé) : bootstrap de blocs d'un an, 1 000 répliques</h3><p>Écart observé +45.4 % ; IC 90 % [+16.4 % ; +134.7 %] ; part des répliques où l'écart est ≤ 0 : 1 % (n = 1865 jours).</p>
+<h3>Règle de confirmation (5 jours consécutifs avant d'afficher une nouvelle couleur)</h3><p>Changements par an : 8.5 (brut) → 3.0 (confirmé). Part en rouge : 9 % → 9 %. Rendement médian à 3 ans par couleur : brut green +78.5 %, orange +49.5 %, red +33.1 % ; confirmé green +78.4 %, orange +50.5 %, red +32.9 %.</p>

@@ -3,4 +3,6 @@ __pycache__/
 .pytest_cache/
 data/raw/*.xls
 data/raw/*.xlsx
+data/raw/companyfacts_*.json
+data/raw/deribit_funding_hourly.json
 journal/

@@ -1,0 +1,507 @@
+{
+"US0378331005": {
+"symbol": "AAPL",
+"exchange": "NMS",
+"us_symbol": "AAPL"
+},
+"US67066G1040": {
+"symbol": "NVDA",
+"exchange": "NMS",
+"us_symbol": "NVDA"
+},
+"US5949181045": {
+"symbol": "MSFT",
+"exchange": "NMS",
+"us_symbol": "MSFT"
+},
+"US0231351067": {
+"symbol": "AMZN",
+"exchange": "NMS",
+"us_symbol": "AMZN"
+},
+"TW0002330008": {
+"symbol": "2330.TW",
+"exchange": "TAI",
+"us_symbol": null
+},
+"US02079K3059": {
+"symbol": "GOOGL",
+"exchange": "NMS",
+"us_symbol": "GOOGL"
+},
+"US30303M1027": {
+"symbol": "META",
+"exchange": "NMS",
+"us_symbol": "META"
+},
+"US11135F1012": {
+"symbol": "AVGO",
+"exchange": "NMS",
+"us_symbol": "AVGO"
+},
+"US02079K1079": {
+"symbol": "GOOG",
+"exchange": "NMS",
+"us_symbol": "GOOG"
+},
+"US5324571083": {
+"symbol": "LLY",
+"exchange": "NYQ",
+"us_symbol": "LLY"
+},
+"US88160R1014": {
+"symbol": "TSLA",
+"exchange": "NMS",
+"us_symbol": "TSLA"
+},
+"US46625H1005": {
+"symbol": "JPM",
+"exchange": "NYQ",
+"us_symbol": "JPM"
+},
+"US0846707026": {
+"symbol": "BRK-B",
+"exchange": "NYQ",
+"us_symbol": "BRK-B"
+},
+"US5951121038": {
+"symbol": "MU",
+"exchange": "NMS",
+"us_symbol": "MU"
+},
+"KR7005930003": {
+"symbol": "005930.KS",
+"exchange": "KSC",
+"us_symbol": null
+},
+"US92826C8394": {
+"symbol": "V",
+"exchange": "NYQ",
+"us_symbol": "V"
+},
+"US30233Q1085": {
+"symbol": "XOM",
+"exchange": "NYQ",
+"us_symbol": "XOM"
+},
+"US0079031078": {
+"symbol": "AMD",
+"exchange": "NMS",
+"us_symbol": "AMD"
+},
+"US4781601046": {
+"symbol": "JNJ",
+"exchange": "NYQ",
+"us_symbol": "JNJ"
+},
+"US9311421039": {
+"symbol": "WMT",
+"exchange": "NMS",
+"us_symbol": "WMT"
+},
+"NL0010273215": {
+"symbol": "ASML.AS",
+"exchange": "AMS",
+"us_symbol": null
+},
+"US57636Q1040": {
+"symbol": "MA",
+"exchange": "NYQ",
+"us_symbol": "MA"
+},
+"KR7000660001": {
+"symbol": "000660.KS",
+"exchange": "KSC",
+"us_symbol": null
+},
+"US00287Y1091": {
+"symbol": "ABBV",
+"exchange": "NYQ",
+"us_symbol": "ABBV"
+},
+"US22160K1051": {
+"symbol": "COST",
+"exchange": "NMS",
+"us_symbol": "COST"
+},
+"US1667641005": {
+"symbol": "CVX",
+"exchange": "NYQ",
+"us_symbol": "CVX"
+},
+"US7427181091": {
+"symbol": "PG",
+"exchange": "NYQ",
+"us_symbol": "PG"
+},
+"US17275R1023": {
+"symbol": "CSCO",
+"exchange": "NMS",
+"us_symbol": "CSCO"
+},
+"US1912161007": {
+"symbol": "KO",
+"exchange": "NYQ",
+"us_symbol": "KO"
+},
+"US58933Y1055": {
+"symbol": "MRK",
+"exchange": "NYQ",
+"us_symbol": "MRK"
+},
+"US91324P1021": {
+"symbol": "UNH",
+"exchange": "NYQ",
+"us_symbol": "UNH"
+},
+"US4370761029": {
+"symbol": "HD",
+"exchange": "NYQ",
+"us_symbol": "HD"
+},
+"KYG875721634": {
+"symbol": "0700.HK",
+"exchange": "HKG",
+"us_symbol": null
+},
+"US69608A1088": {
+"symbol": "PLTR",
+"exchange": "NMS",
+"us_symbol": "PLTR"
+},
+"CH1499059983": {
+"symbol": "ROP.SW",
+"exchange": "EBS",
+"us_symbol": null
+},
+"US3696043013": {
+"symbol": "GE",
+"exchange": "NYSE",
+"us_symbol": null
+},
+"US0605051046": {
+"symbol": "BAC",
+"exchange": "NYQ",
+"us_symbol": "BAC"
+},
+"US7181721090": {
+"symbol": "PM",
+"exchange": "NYQ",
+"us_symbol": "PM"
+},
+"CH0012005267": {
+"symbol": "NOVN.SW",
+"exchange": "EBS",
+"us_symbol": null
+},
+"GB0005405286": {
+"symbol": "HSBA.L",
+"exchange": "LSE",
+"us_symbol": null
+},
+"GB00BP6MXD84": {
+"symbol": "SHEL.L",
+"exchange": "LSE",
+"us_symbol": null
+},
+"GB0009895292": {
+"symbol": "AZN.L",
+"exchange": "LSE",
+"us_symbol": null
+},
+"CA7800871021": {
+"symbol": "RY.TO",
+"exchange": "TOR",
+"us_symbol": null
+},
+"CH0038863350": {
+"symbol": "NESN.SW",
+"exchange": "EBS",
+"us_symbol": null
+},
+"US64110L1061": {
+"symbol": "NFLX",
+"exchange": "NMS",
+"us_symbol": "NFLX"
+},
+"US75513E1010": {
+"symbol": "RTX",
+"exchange": "NYQ",
+"us_symbol": "RTX"
+},
+"US38141G1040": {
+"symbol": "GS",
+"exchange": "NYQ",
+"us_symbol": "GS"
+},
+"US6974351057": {
+"symbol": "PANW",
+"exchange": "NMS",
+"us_symbol": "PANW"
+},
+"US1491231015": {
+"symbol": "CAT",
+"exchange": "NYQ",
+"us_symbol": "CAT"
+},
+"US9497461015": {
+"symbol": "WFC",
+"exchange": "NYQ",
+"us_symbol": "WFC"
+},
+"US0382221051": {
+"symbol": "AMAT",
+"exchange": "NMS",
+"us_symbol": "AMAT"
+},
+"US8825081040": {
+"symbol": "TXN",
+"exchange": "NMS",
+"us_symbol": "TXN"
+},
+"US8835561023": {
+"symbol": "TMO",
+"exchange": "NYQ",
+"us_symbol": "TMO"
+},
+"DE0007164600": {
+"symbol": "SAP.DE",
+"exchange": "GER",
+"us_symbol": null
+},
+"US0311621009": {
+"symbol": "AMGN",
+"exchange": "NMS",
+"us_symbol": "AMGN"
+},
+"IE000S9YS762": {
+"symbol": "LIN",
+"exchange": "NMS",
+"us_symbol": "LIN"
+},
+"KYG017191142": {
+"symbol": "9988.HK",
+"exchange": "HKG",
+"us_symbol": null
+},
+"JP3902900004": {
+"symbol": "8306.T",
+"exchange": "JPX",
+"us_symbol": null
+},
+"US4592001014": {
+"symbol": "IBM",
+"exchange": "NYQ",
+"us_symbol": "IBM"
+},
+"US5128073062": {
+"symbol": "LRCX",
+"exchange": "NMS",
+"us_symbol": "LRCX"
+},
+"US4581401001": {
+"symbol": "INTC",
+"exchange": "NMS",
+"us_symbol": "INTC"
+},
+"DE0007236101": {
+"symbol": "SIE.DE",
+"exchange": "GER",
+"us_symbol": null
+},
+"US22788C1053": {
+"symbol": "CRWD",
+"exchange": "NMS",
+"us_symbol": "CRWD"
+},
+"US6174464486": {
+"symbol": "MS",
+"exchange": "NYQ",
+"us_symbol": "MS"
+},
+"JP3633400001": {
+"symbol": "7203.T",
+"exchange": "JPX",
+"us_symbol": null
+},
+"US3755581036": {
+"symbol": "GILD",
+"exchange": "NMS",
+"us_symbol": "GILD"
+},
+"US36828A1016": {
+"symbol": "GEV",
+"exchange": "NYQ",
+"us_symbol": "GEV"
+},
+"AU000000BHP4": {
+"symbol": "BHP.AX",
+"exchange": "ASX",
+"us_symbol": null
+},
+"US2546871060": {
+"symbol": "DIS",
+"exchange": "NYQ",
+"us_symbol": "DIS"
+},
+"US68389X1054": {
+"symbol": "ORCL",
+"exchange": "NYQ",
+"us_symbol": "ORCL"
+},
+"US1729674242": {
+"symbol": "C",
+"exchange": "NYQ",
+"us_symbol": "C"
+},
+"CA8911605092": {
+"symbol": "TD",
+"exchange": "NYQ",
+"us_symbol": "TD"
+},
+"US0028241000": {
+"symbol": "ABT",
+"exchange": "NYQ",
+"us_symbol": "ABT"
+},
+"DE0008404005": {
+"symbol": "ALV.DE",
+"exchange": "GER",
+"us_symbol": null
+},
+"US5801351017": {
+"symbol": "MCD",
+"exchange": "NYQ",
+"us_symbol": "MCD"
+},
+"AU000000CBA7": {
+"symbol": "CBA.AX",
+"exchange": "ASX",
+"us_symbol": null
+},
+"US7134481081": {
+"symbol": "PEP",
+"exchange": "NMS",
+"us_symbol": "PEP"
+},
+"US92343V1044": {
+"symbol": "VZ",
+"exchange": "NYQ",
+"us_symbol": "VZ"
+},
+"US65339F1012": {
+"symbol": "NEE",
+"exchange": "NYQ",
+"us_symbol": "NEE"
+},
+"FR0000120271": {
+"symbol": "TTE.PA",
+"exchange": "PAR",
+"us_symbol": null
+},
+"US79466L3024": {
+"symbol": "CRM",
+"exchange": "NYQ",
+"us_symbol": "CRM"
+},
+"US0320951017": {
+"symbol": "APH",
+"exchange": "NYQ",
+"us_symbol": "APH"
+},
+"US0326541051": {
+"symbol": "ADI",
+"exchange": "NMS",
+"us_symbol": "ADI"
+},
+"CA82509L1076": {
+"symbol": "SHOP",
+"exchange": "NMS",
+"us_symbol": "SHOP"
+},
+"ES0113900J37": {
+"symbol": "SAN.MC",
+"exchange": "MCE",
+"us_symbol": null
+},
+"US95040Q1040": {
+"symbol": "WELL",
+"exchange": "NYQ",
+"us_symbol": "WELL"
+},
+"US0258161092": {
+"symbol": "AXP",
+"exchange": "NYQ",
+"us_symbol": "AXP"
+},
+"US9078181081": {
+"symbol": "UNP",
+"exchange": "NYQ",
+"us_symbol": "UNP"
+},
+"US0404132054": {
+"symbol": "ANET",
+"exchange": "NYQ",
+"us_symbol": "ANET"
+},
+"US4824801009": {
+"symbol": "KLAC",
+"exchange": "NMS",
+"us_symbol": "KLAC"
+},
+"US09290D1019": {
+"symbol": "BLK",
+"exchange": "NYQ",
+"us_symbol": "BLK"
+},
+"US7170811035": {
+"symbol": "PFE",
+"exchange": "NYQ",
+"us_symbol": "PFE"
+},
+"US20825C1045": {
+"symbol": "COP",
+"exchange": "NYQ",
+"us_symbol": "COP"
+},
+"US7475251036": {
+"symbol": "QCOM",
+"exchange": "NMS",
+"us_symbol": "QCOM"
+},
+"IE00B4BNMY34": {
+"symbol": "ACN",
+"exchange": "NYQ",
+"us_symbol": "ACN"
+},
+"US46120E6023": {
+"symbol": "ISRG",
+"exchange": "NMS",
+"us_symbol": "ISRG"
+},
+"US2441991054": {
+"symbol": "DE",
+"exchange": "NYQ",
+"us_symbol": "DE"
+},
+"JP3435000009": {
+"symbol": "6758.T",
+"exchange": "JPX",
+"us_symbol": null
+},
+"ES0144580Y14": {
+"symbol": "IBE.MC",
+"exchange": "MCE",
+"us_symbol": null
+},
+"US8085131055": {
+"symbol": "SCHW",
+"exchange": "NYQ",
+"us_symbol": "SCHW"
+},
+"US00206R1023": {
+"symbol": "T",
+"exchange": "NYQ",
+"us_symbol": "T"
+}
+}

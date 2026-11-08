@@ -1,5 +1,7 @@
 # Feux tricolores — investissement long terme
 
+**Une application monopage** (`docs/index.html`, publiée par GitHub Pages) : Aujourd'hui · Actions Top 100 · Mon portefeuille · Journal · Validation · Règles & glossaire.
+
 Un feu **vert / orange / rouge** par actif (S&P 500, Nasdaq-100, MSCI World, Bitcoin), calculé chaque soir
 à partir de données publiques, **point-in-time** (aucune valeur n'est utilisée avant sa date de publication),
 par du code Python déterministe. Aucun LLM dans la chaîne de décision.
@@ -72,7 +74,8 @@ Le **mode détaillé** garde tous les chiffres, percentiles et z-scores. Le brie
 |---|---|---|---|
 | Indices (S&P 500, Nasdaq-100, MSCI World) | `signals` | Shiller, FRED, Yahoo, FINRA | validé 1985-2026 |
 | Bitcoin | `signals` | Coin Metrics, alternative.me, Deribit (financement) | validé 2014-2026, confiance moyenne |
-| Actions suivies (≤ 10, `stocks.yaml`) | `stocks` | SEC EDGAR (point-in-time), Yahoo | prototype, non backtesté ; `SEC_USER_AGENT` requis |
+| Actions : Top 100 mondial (MSCI ACWI) + `stocks.yaml` | `universe`, `stocks` | SPDR MSCI ACWI (positions), Yahoo, SEC EDGAR | prix seuls sans `SEC_USER_AGENT` ; valorisation et qualité avec |
+| Mon portefeuille, Journal | dans l'application | navigateur (localStorage) | rien n'est transmis |
 | Thèmes sectoriels (semis, logiciels, tech) | `signals` (ou `themes`) | Yahoo (^SOX, IGV, XLK) | drapeaux de bulle, pas de couleur |
 | Brief mensuel | `brief` | — | Telegram le 1er du mois |
 | Journal de décision (48 h) | `decide` | — | opérationnel, dossier `journal/` hors dépôt ; rappelle les statistiques historiques |
@@ -85,7 +88,9 @@ pip install -r requirements.txt
 python -m feux update      # télécharge Shiller, FRED, Yahoo, FINRA, Coin Metrics, Fear & Greed
 python -m feux signals     # indicateurs + couleurs -> data/signals/, docs/latest.json
 python -m feux backtest    # validation -> docs/backtest.html
-python -m feux dashboard   # docs/index.html
+python -m feux universe    # Top 100 mondial -> data/universe.csv
+python -m feux stocks      # actions : prix seuls, ou comptes EDGAR si SEC_USER_AGENT
+python -m feux dashboard   # l'application : docs/index.html (un seul fichier)
 python -m feux alert       # Telegram si une couleur ou un drapeau a changé (sinon journal)
 python -m feux robustness  # sous-périodes, bootstrap, sensibilité -> docs/robustness.html
 SEC_USER_AGENT="Prenom Nom prenom.nom@example.com" python -m feux stocks   # actions suivies

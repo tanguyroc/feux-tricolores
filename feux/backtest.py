@@ -375,6 +375,8 @@ def run_all() -> dict:
             "b.green{color:#1a7f37}b.orange{color:#b35c00}b.red{color:#b3261e}pre{background:#f7f7f7;padding:8px;font-size:12px}</style></head><body>"
             + "\n".join(html) + "</body></html>")
     (DOCS_DIR / "backtest.html").write_text(page, encoding="utf-8")
+    (DOCS_DIR / "fragments").mkdir(exist_ok=True)
+    (DOCS_DIR / "fragments" / "backtest.html").write_text("\n".join(html), encoding="utf-8")
     (DOCS_DIR / "backtest_summary.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
     log.info("Rapport : %s", DOCS_DIR / "backtest.html")
     return summary
