@@ -52,3 +52,14 @@ def test_implied_growth_round_trip():
     ev = (flows / disc).sum() + flows[-1] * (1 + gt) / (wacc - gt) / disc[-1]
     assert abs(implied_growth(ev, fcf, wacc, gt, n) - g) < 1e-6
     assert np.isnan(implied_growth(1000.0, -5.0, wacc, gt, n))
+
+
+def test_annual_only_fallback_for_20f_filers():
+    facts = []
+    for fy, v in [(2020, 10), (2021, 12), (2022, 15), (2023, 18), (2024, 20)]:
+        facts.append(_fact(f"{fy}-01-01", f"{fy}-12-31", v, f"{fy + 1}-03-01", "20-F", fy, "FY"))
+    cf = {"facts": {"ifrs-full": {"ProfitLossFromOperatingActivities": {"units": {"EUR": facts}}}}}
+    q = edgar.quarterly_flow(cf, {"us-gaap": ["OperatingIncomeLoss"], "ifrs-full": ["ProfitLossFromOperatingActivities"]})
+    assert q.attrs.get("annual_only") is True and q.attrs["unit"] == "EUR" and len(q) == 5
+    t = edgar.ttm(q)
+    assert list(t["val"]) == [10, 12, 15, 18, 20]      # inchangé : une année = déjà 12 mois

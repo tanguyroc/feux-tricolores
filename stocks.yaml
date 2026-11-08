@@ -1,13 +1,26 @@
-# Liste de suivi (au plus 10 valeurs). Modifier librement ; les règles sont dans rules.yaml → stocks.
+# Liste de suivi — PROPOSITION À VALIDER (au plus 10 valeurs). Les règles sont dans rules.yaml → stocks.
+#
+# Logique de la liste :
+#   1. ce que vous détenez déjà (pour gouverner les renforts : pas d'ajout en rouge) ;
+#   2. des sociétés de qualité éprouvée (ROIC et cash élevés depuis dix ans) où un feu vert serait une vraie occasion ;
+#   3. deux diversifiants hors technologie : ajouter d'autres valeurs tech/IA ne diversifie rien ;
+#   4. deux sociétés européennes éligibles au PEA dont les comptes sont dans EDGAR (dépôt 20-F : ASML, Novo Nordisk).
+# Remplacer CRM par l'éditeur de logiciels que vous détenez réellement (ServiceNow NOW/CIK 1373715, Adobe ADBE/CIK 796343...).
+# Variante pour le diversifiant : TotalEnergies (TTE, CIK 879764, 20-F, éligible PEA, FCF élevé) à la place de Visa.
+#
 # type :
-#   operating    société classique : valorisation (EV/EBIT, P/FCF) + DCF inversé + qualité + extension (SEC EDGAR + prix)
-#   crypto_proxy société dont la valeur suit le Bitcoin (trésorerie en BTC) : suit le feu Bitcoin + sa propre tendance
-#   price_only   pas de comptes dans EDGAR (société non américaine) : extension et critère GSY seulement
-# cik : identifiant SEC (10 chiffres sans les zéros), requis pour operating et crypto_proxy.
+#   operating    valorisation (EV/EBIT, P/FCF) + DCF inversé + qualité + extension (SEC EDGAR + prix)
+#   crypto_proxy la valeur suit le Bitcoin (trésorerie en BTC) : suit le feu Bitcoin + sa propre tendance
+#   price_only   pas de comptes dans EDGAR : extension et critère GSY seulement
+# cik : identifiant SEC (sans les zéros). Le ticker doit coter dans la devise des comptes (ASML.AS en EUR, NOVO-B.CO en DKK).
 stocks:
-  ORCL: {name: "Oracle", cik: 1341439, type: operating, ticker: "ORCL"}
-  MSFT: {name: "Microsoft", cik: 789019, type: operating, ticker: "MSFT"}
-  CRM:  {name: "Salesforce", cik: 1108524, type: operating, ticker: "CRM"}
-  NVDA: {name: "Nvidia", cik: 1045810, type: operating, ticker: "NVDA"}
-  MSTR: {name: "Strategy (ex-MicroStrategy)", cik: 1050446, type: crypto_proxy, ticker: "MSTR"}
-  9984: {name: "SoftBank Group", type: price_only, ticker: "9984.T"}
+  ORCL:  {name: "Oracle", cik: 1341439, type: operating, ticker: "ORCL", note: "détenue ; infra IA ; dette élevée → filtre qualité décisif"}
+  MSFT:  {name: "Microsoft", cik: 789019, type: operating, ticker: "MSFT", note: "logiciel + IA ; qualité de référence"}
+  NVDA:  {name: "Nvidia", cik: 1045810, type: operating, ticker: "NVDA", note: "baromètre de l'infra IA ; critère de bulle GSY"}
+  CRM:   {name: "Salesforce", cik: 1108524, type: operating, ticker: "CRM", note: "à remplacer par votre éditeur SaaS réel"}
+  GOOGL: {name: "Alphabet", cik: 1652044, type: operating, ticker: "GOOGL", note: "qualité ; souvent moins cher que ses pairs → candidat vert"}
+  ASML:  {name: "ASML", cik: 937966, type: operating, ticker: "ASML.AS", note: "éligible PEA ; monopole lithographie ; comptes IFRS (20-F)"}
+  NVO:   {name: "Novo Nordisk", cik: 353278, type: operating, ticker: "NOVO-B.CO", note: "éligible PEA ; diversifiant santé ; comptes IFRS (20-F)"}
+  V:     {name: "Visa", cik: 1403161, type: operating, ticker: "V", note: "diversifiant hors tech ; ROIC très élevé"}
+  MSTR:  {name: "Strategy (ex-MicroStrategy)", cik: 1050446, type: crypto_proxy, ticker: "MSTR", note: "détenue ; suit le feu Bitcoin"}
+  9984:  {name: "SoftBank Group", type: price_only, ticker: "9984.T", note: "détenue ; pas de comptes SEC"}
