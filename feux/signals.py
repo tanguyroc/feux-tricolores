@@ -200,14 +200,27 @@ def bitcoin_signals() -> pd.DataFrame:
     fng_s = store.to_indexed(fng)
     df["fng"] = store.as_of(fng, cal)
     df["fng_30d"] = store.as_of(store.make_series(fng_s.index, fng_s.rolling(30, min_periods=20).mean().to_numpy(), dropna=False), cal)
+    # taux de financement (Deribit, depuis 06/2019) : moyenne 30 j, percentile sur fenêtre croissante (min 18 mois)
+    if store.exists("btc_funding"):
+        fu = store.to_indexed(store.load("btc_funding"))
+        fu30 = fu.rolling(30, min_periods=20).mean()
+        fu_pct = ind.expanding_pct(fu30, 540)
+        df["funding_30d"] = store.as_of(store.make_series(fu30.index, fu30.to_numpy(), dropna=False), cal)
+        df["funding_pct"] = store.as_of(store.make_series(fu_pct.index, fu_pct.to_numpy(), dropna=False), cal)
+    else:
+        df["funding_30d"] = np.nan
+        df["funding_pct"] = np.nan
+    euphoric = df["gsy"] | (df["funding_pct"] >= b["euphoria"]["funding_30d_pct_red_min"])
 
-    red = (df["V"] >= b["valuation"]["red_min_z"]) & df["gsy"]
+    red = (df["V"] >= b["valuation"]["red_min_z"]) & euphoric
     green_cap = (df["drawdown"] >= b["capitulation"]["drawdown_min"]) & (df["fng_30d"] <= b["capitulation"]["fng_30d_max"])
     green_val = df["V"] <= b["valuation"]["green_max_z"]
     color = pd.Series("orange", index=cal, dtype=object)
     reason = pd.Series("", index=cal, dtype=object)
     color[green_val] = "green"; reason[green_val] = "valorisation basse (z ≤ −0,5)"
-    color[red] = "red"; reason[red] = "cher (z ≥ 1,5) et hausse ≥100 %/2 ans avec accélération"
+    color[red] = "red"
+    reason[red] = np.where(df["gsy"][red], f"cher (z ≥ {b['valuation']['red_min_z']}) et hausse ≥100 %/2 ans avec accélération",
+                           f"cher (z ≥ {b['valuation']['red_min_z']}) et financement des perpétuels extrême (≥ p90)")
     color[green_cap] = "green"; reason[green_cap] = "capitulation (baisse ≥ 50 % et peur extrême 30 j)"
     color[df["V"].isna() & ~green_cap] = "orange"
     df["color"], df["reason"] = color, reason

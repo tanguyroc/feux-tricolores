@@ -61,8 +61,8 @@ bitcoin:
   extension:
     gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
   euphoria:
-    # Taux de financement : non implémenté en v1 (API Binance géobloquée depuis l'exécuteur) ;
-    # le rouge Bitcoin repose donc sur V ET critère GSY. Documenté dans runbook.md.
+    # Taux de financement du perpétuel BTC (Deribit, horaire depuis 06/2019 ; Binance/Bybit géobloqués) :
+    # moyenne 30 jours, percentile sur fenêtre croissante (minimum 18 mois). Implémenté le 2026-11-08 (v0.2).
     funding_30d_pct_red_min: 90
   capitulation:
     drawdown_min: 0.50

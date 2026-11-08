@@ -10,7 +10,7 @@ log = logging.getLogger("feux")
 
 
 def cmd_update(args) -> None:
-    from .loaders import alternative_me, coinmetrics, finra, fred, shiller, yahoo
+    from .loaders import alternative_me, coinmetrics, deribit, finra, fred, shiller, yahoo
 
     r = rules()
     steps = {
@@ -19,6 +19,7 @@ def cmd_update(args) -> None:
         "yahoo": lambda: yahoo.update(r["indices"]["assets"], extra={"vix_yahoo": "^VIX"}),
         "coinmetrics": coinmetrics.update,
         "fng": alternative_me.update,
+        "deribit": deribit.update,
         "finra": finra.update,
     }
     only = set(args.only.split(",")) if args.only else set(steps)
