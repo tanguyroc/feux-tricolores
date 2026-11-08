@@ -44,7 +44,7 @@ indices:
     red_min: 80
     margin_debt_yoy_extreme: 0.50   # croissance annuelle ≥ 50 % → E = 100
   fear:                 # famille P — confirmation du vert de capitulation
-    indicators: [vix_pct, hy_oas_pct]
+    indicators: [vix_pct, credit_spread_pct]   # spread = Baa Moody's − Treasury 10 ans (BAA10Y)
     green_min: 80
     drawdown_min: 0.25
   falling_knife:
