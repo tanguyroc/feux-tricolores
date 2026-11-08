@@ -102,11 +102,14 @@ python -m pytest -q tests
 
 1. Créer un dépôt (public pour des minutes Actions illimitées et GitHub Pages ; aucune donnée personnelle n'y figure).
 2. Pousser ce dossier. Activer **Settings → Pages → Source : GitHub Actions**.
-3. Secrets (`Settings → Secrets and variables → Actions`) : `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-   (créer un bot via @BotFather, récupérer l'identifiant de conversation via `getUpdates`) ; `SEC_USER_AGENT`
-   (« Prénom Nom adresse@email », exigé par la politique d'accès de la SEC) pour le module actions.
-4. Le workflow `daily.yml` tourne du lundi au vendredi à 22 h UTC, commite les données et le tableau de bord,
-   envoie une alerte uniquement s'il y a un changement. `pages.yml` publie `docs/`.
+3. Secrets (`Settings → Secrets and variables → Actions → New repository secret`) :
+   - `SEC_USER_AGENT` : « Prénom Nom adresse@email » (exigé par la politique d'accès de la SEC) — sans lui, les 100 sociétés restent en prix seul ;
+   - `NTFY_TOPIC` : le sujet ntfy.sh auquel vous êtes abonné (alertes et brief mensuel, sans compte) ;
+   - ou `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` si vous préférez Telegram.
+4. Le workflow `daily.yml` tourne du lundi au vendredi à 22 h UTC (lancement manuel possible : Actions → Feux quotidiens → Run workflow),
+   régénère l'application et n'envoie une alerte qu'en cas de changement. `monthly.yml` envoie le brief le 1er du mois.
+   `pages.yml` active GitHub Pages tout seul au premier push et publie `docs/` : l'application est à
+   `https://<owner>.github.io/feux-tricolores/`.
 5. Note GitHub : les workflows planifiés d'un dépôt public sont désactivés après 60 jours sans activité ;
    le commit quotidien du bot devrait suffire, à vérifier le premier mois.
 
