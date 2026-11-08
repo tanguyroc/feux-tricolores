@@ -56,7 +56,7 @@ indices:
 bitcoin:
   valuation:
     indicators: [log_price_ma200w_z, log_mvrv_z]   # moyenne des deux z-scores
-    red_min_z: 1.5
+    red_min_z: 1.0    # 1,5 à l'origine ; ajustement unique du 2026-11-08, voir CHANGELOG.md
     green_max_z: -0.5
   extension:
     gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
@@ -83,18 +83,18 @@ acceptance:   # critères de validation, évalués par backtest.py, non négocia
 conduct:
   green:
     regular_contribution: "maintenu"
-    reserve: "déploiement par tiers sur 3 mois (6 mois si couteau qui tombe)"
+    reserve: "déploiement par tiers sur 3 mois (6 mois si couteau qui tombe) ; la réserve au-delà de la cible peut aussi être engagée"
     leverage_cap_share_equities: 0.15
     leverage_requires_trend_ok: true
     rebalance_band_pts: 10
   orange:
     regular_contribution: "maintenu"
-    reserve: "aucun déploiement ; la réserve s'accumule (cible ≤ 10 % du portefeuille)"
+    reserve: "montants exceptionnels déployés par tiers sur 3 mois (attendre le vert coûte cher : voir CHANGELOG 2026-11-08)"
     leverage_cap_share_equities: 0.10
     rebalance_band_pts: 5
   red:
     regular_contribution: "maintenu"
-    reserve: "aucun déploiement"
+    reserve: "aucun déploiement ; les montants exceptionnels attendent en réserve rémunérée (fonds euros, livret, monétaire)"
     leverage_cap_share_equities: 0.05
     rebalance_band_pts: 5
   trend_broken:
