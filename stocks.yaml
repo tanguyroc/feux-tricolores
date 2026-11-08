@@ -6,3 +6,6 @@ stocks:
   MSTR: {name: "Strategy (ex-MicroStrategy)", cik: 1050446, type: crypto_proxy, ticker: "MSTR", note: "détenue ; suit le feu Bitcoin"}
   9984: {name: "SoftBank Group", type: price_only, ticker: "9984.T", country: "Japan", note: "détenue ; pas de comptes SEC"}
   ORCL: {name: "Oracle", cik: 1341439, type: operating, ticker: "ORCL", note: "détenue ; infra IA ; dette élevée"}
+  # réorganisations en holding : l'historique des comptes reste sur l'ancien CIK, fusionné avec le nouveau
+  XOM: {name: "ExxonMobil", cik: 2115436, extra_ciks: [34088], type: operating, ticker: "XOM"}
+  BLK: {name: "BlackRock", cik: 2012383, extra_ciks: [1364742], type: operating, ticker: "BLK"}

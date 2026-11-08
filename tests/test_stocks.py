@@ -63,3 +63,47 @@ def test_annual_only_fallback_for_20f_filers():
     assert q.attrs.get("annual_only") is True and q.attrs["unit"] == "EUR" and len(q) == 5
     t = edgar.ttm(q)
     assert list(t["val"]) == [10, 12, 15, 18, 20]      # inchangé : une année = déjà 12 mois
+
+
+def _instant_facts(vals_by_end, filed_lag=40):
+    out = []
+    for end, v in vals_by_end.items():
+        e = pd.Timestamp(end)
+        out.append({"start": None, "end": str(e.date()), "val": v, "accn": "x", "fy": e.year, "fp": "FY", "form": "10-Q",
+                    "filed": str((e + pd.Timedelta(days=filed_lag)).date())})
+    return out
+
+
+def test_instant_merges_concepts_most_recent_first():
+    # StockholdersEquity abandonné fin 2019, remplacé par la variante « y compris minoritaires » (Qualcomm, Visa, Broadcom…)
+    old = _instant_facts({f"{y}-12-31": 100 + y - 2015 for y in range(2015, 2020)})
+    new = _instant_facts({f"{y}-12-31": 200 + y - 2018 for y in range(2018, 2026)})
+    cf = {"facts": {"us-gaap": {"StockholdersEquity": {"units": {"USD": old}},
+                                "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest": {"units": {"USD": new}}}}}
+    s = edgar.instant(cf, edgar.CONCEPTS["equity"][0])
+    assert str(s["end"].max().date()) == "2025-12-31"                    # la série ne s'arrête plus en 2019
+    assert s.loc[s["end"] == pd.Timestamp("2019-12-31"), "val"].item() == 201   # à date commune, le concept le plus récent l'emporte
+    assert s.loc[s["end"] == pd.Timestamp("2015-12-31"), "val"].item() == 100   # l'ancien concept comble le passé
+
+
+def test_summed_flow_adds_depreciation_and_amortization():
+    cf = _companyfacts()
+    dep = cf["facts"]["us-gaap"]["OperatingIncomeLoss"]["units"]["USD"]
+    amort = [dict(f, val=4 if f["fp"] == "FY" else 1) for f in dep]   # 1 par trimestre, 4 sur l'exercice
+    cf2 = {"facts": {"us-gaap": {"Depreciation": {"units": {"USD": dep}}, "AmortizationOfIntangibleAssets": {"units": {"USD": amort}}}}}
+    q_dep = edgar.quarterly_flow(cf2, {"us-gaap": ["Depreciation"]})
+    q_sum = edgar.summed_flow(cf2, edgar.DA_COMPONENTS)
+    assert len(q_sum) == len(q_dep)
+    assert (q_sum["val"].to_numpy() - q_dep["val"].to_numpy() == 1).all()
+    assert "Depreciation" in q_sum.attrs["concept"] and "Amortization" in q_sum.attrs["concept"]
+
+
+def test_asof_forgets_stale_values():
+    from feux.stocks import _asof
+
+    cal = pd.bdate_range("2015-01-01", "2026-11-06")
+    df = pd.DataFrame({"end": pd.to_datetime(["2015-03-31", "2015-06-30"]), "filed": pd.to_datetime(["2015-05-01", "2015-08-01"]), "val": [1.0, 2.0]})
+    s = _asof(df, cal)
+    assert s.loc["2015-09-01"] == 2.0                      # disponible après publication
+    assert s.loc["2016-01-04"] == 2.0                      # 6 mois plus tard : encore valable
+    assert np.isnan(s.iloc[-1])                            # dix ans plus tard : oubliée (KLA, résultat d'exploitation non publié depuis 2015)

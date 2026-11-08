@@ -1,5 +1,38 @@
 # Journal des modifications des règles
 
+## 2026-11-08 — v0.5 (actions : solidité pluriannuelle, dégradé de valorisation, secteurs ; règles des indices et du Bitcoin inchangées)
+Constat déclencheur : 92 actions orange sur 102 et 42 « échecs » qualité sur 86. Diagnostic : un tiers des échecs venait de défauts
+de données (concept XBRL abandonné et figé — KLA sans résultat d'exploitation depuis 2015, Qualcomm/Broadcom/UnitedHealth/Visa
+sans fonds propres depuis 2019 ; amortissements publiés en deux morceaux chez Abbott, Gilead, Merck ; flux de trésorerie
+« continuing operations » chez Disney, AT&T, RTX ; Visa capitalisée avec 469 M d'actions de 2010 au lieu de ~1,9 Md),
+un autre tiers de banques jugées comme des industrielles, le reste de la grille elle-même (instantanée et binaire).
+1. **Grille de solidité** (`stocks.quality`) : les trois tests sont désormais jugés sur des **moyennes pluriannuelles**
+   (rentabilité du capital et conversion en cash : moyenne 5 ans, au moins 3 ; dette nette / EBITDA : EBITDA moyen 3 ans).
+   Une année de capex exceptionnel ou une charge d'acquisition ne fait plus « échouer » une société solide à elle seule ;
+   inversement une rentabilité récente ne blanchit pas cinq ans de faiblesse (AstraZeneca, Salesforce, RTX restent non solides).
+   Seuil dette nette/EBITDA **2,0 → 2,5** (seuil Fundsmith, identique à Kairys Alpha). ROIC ≥ 10 % et FCF/RN ≥ 0,7 inchangés.
+   Les tests échoués sont **nommés** (« dette 3,1× », « cash 0,42× ») au lieu d'un « échec » global.
+2. **Modes par industrie** : banques, courtiers, assureurs, crédit à la consommation → P/E, P/B et rentabilité des fonds propres
+   (moyenne 5 ans), quelle que soit la disponibilité d'un « résultat d'exploitation » ; **réseaux de paiement et Berkshire
+   restent industriels** ; **foncières** : valorisation P/E-P/B, grille non applicable (jamais vertes).
+3. **Données** : une valeur comptable n'est plus reportée au-delà de 400 jours (730 pour les déposants annuels de 20-F, 800 pour
+   le nombre d'actions) ; fusion des concepts de bilan (le plus récent l'emporte) ; amortissements = dépréciation + amortissement
+   des incorporels à défaut de concept combiné ; résultat avant impôt = résultat net + impôt à défaut (TotalEnergies) ;
+   actions ≈ flottant déclaré / cours pour les sociétés à actions multi-classes sans décompte exploitable (Visa, Berkshire) ;
+   fusion de plusieurs CIK (ExxonMobil, BlackRock : nouvelles holdings) ; CIK sans comptes XBRL → prix seul (SK hynix).
+   La date des derniers comptes lus est affichée (TSMC, Toyota : le 20-F 2025/2026 n'est pas encore dans l'API).
+   Effet : 89 sociétés valorisées (86), 52 solides sur 89 (44 « OK » sur 86 avec l'ancienne grille, dont des faux positifs),
+   5 sociétés avec un test non calculable (pétrolières et NextEra sans concept de capex standard ; CrowdStrike en perte).
+4. **Dégradé** : le feu reste à trois couleurs et à ses règles de conjonction (inchangées) ; l'application ajoute une jauge
+   0-100 et cinq paliers de lecture (très bon marché ≤ 20, bon marché, dans sa moyenne, cher, très cher > 80), un filtre par
+   palier et la distribution de l'univers. Un orange « très cher mais pas tendu » se distingue ainsi d'un orange « bon marché
+   mais pas solide ». Aucune règle d'action n'est attachée aux paliers.
+5. **Secteurs et thèmes** (`themes`) : les onze secteurs GICS (ETF SPDR, VNQ et VOX pour l'historique long) remplacent les
+   trois « thèmes de votre portefeuille ». Pour chaque secteur : drapeaux de prix de l'ETF **et** valorisation médiane des
+   sociétés du Top 100 du secteur (au moins 3), combinées avec les règles de conjonction des indices. **Non backtesté** :
+   lecture de contexte, ne gouverne ni le levier ni les montants. Semi-conducteurs et éditeurs de logiciels restent des thèmes
+   (drapeaux seulement).
+
 ## 2026-11-08 — amendement pré-backtest (aucun backtest exécuté avant cette modification)
 - Famille « peur » : l'OAS haut rendement ICE BofA (BAMLH0A0HYM2) n'est téléchargeable sur FRED que
   sur les 3 dernières années (restriction de licence). Remplacé par le spread Baa − Treasury 10 ans

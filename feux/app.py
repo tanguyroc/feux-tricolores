@@ -18,7 +18,7 @@ from .explain import conduct_text
 from .plain import GLOSSARY, headline, monthly_actions
 from .signals import load_signals
 from .stocks import load_latest
-from .themes import load_all as themes_all, simple_sentence
+from .themes import overlay as themes_overlay
 
 APP_CSS = d.CSS + """
 nav.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:14px 0 18px}
@@ -36,6 +36,13 @@ button.btn[disabled]{opacity:.45;cursor:not-allowed}.kpis{display:grid;grid-temp
 .bar{height:8px;background:#eee;border-radius:4px;overflow:hidden}.bar i{display:block;height:100%}.note{font-size:13px;color:var(--muted)}
 .rowred td:first-child{border-left:3px solid var(--red)}.rowgreen td:first-child{border-left:3px solid var(--green)}
 .detail{background:#f6f7f9;border-radius:8px;padding:10px 12px;font-size:13px;margin:6px 0 12px}
+.vg{position:relative;height:6px;border-radius:3px;margin:4px 0 3px;min-width:90px;background:linear-gradient(90deg,#2e8b57 0%,#9acd32 30%,#f0c000 50%,#f08c00 70%,#b3261e 100%)}.vg i{position:absolute;top:-3px;width:3px;height:12px;margin-left:-1px;border-radius:2px;border:1px solid #fff}
+.pill.warnp{border-color:#b3261e;color:#b3261e;background:#fff5f4}
+.secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.sec{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:4px solid var(--line)}
+.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}
+.sec-head{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sec-flags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.sec-body{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:13px}.sec-body>span:first-child{min-width:150px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%}.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}
+.sec-sentence{font-size:13px;margin:6px 0 0}.mems{margin:6px 0 0;font-size:12px}.mem{display:inline-block;padding:0 5px;border-radius:4px;border:1px solid var(--line);margin:1px 0}.mem.red{border-color:var(--red)}.mem.green{border-color:var(--green)}
 @media (max-width:700px){.kv{grid-template-columns:1fr auto}table{font-size:12px}td,th{padding:5px}}
 """
 
@@ -64,23 +71,23 @@ def _payload() -> dict:
     for k, v in stocks.items():
         rows.append({kk: v.get(kk) for kk in ("name", "ticker", "country", "sector", "industry", "weight", "rank", "pea", "kind", "color_confirmed", "color",
                                             "V", "ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda", "quality_ok", "implied_growth",
+                                            "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "da_known",
                                             "fcf_cagr_5y", "gap_ma200", "gap_ma200_pct", "runup_24m", "gsy", "trend_broken", "drawdown", "mom_12m", "date", "since",
                                             "source", "accounts_currency", "price_currency", "mode", "ebit_source", "shares_ok", "pe", "pb", "roe", "note")} | {"key": k})
-    themes = []
-    for k, df in themes_all().items():
-        row = df.iloc[-1]
-        themes.append({"key": k, "name": r["themes"]["assets"][k]["name"], "sentence": simple_sentence(k, row),
-                       "runup_24m": float(row["runup_24m"]), "gsy": bool(row["gsy"]), "gap_ma200": float(row["gap_ma200"]),
-                       "gap_pct": None if pd.isna(row["gap_ma200_pct"]) else float(row["gap_ma200_pct"]), "trend_broken": bool(row["trend_broken"]),
-                       "drawdown": float(row["drawdown"]), "date": str(df.index[-1].date())})
+    themes = themes_overlay(stocks)
+    q = r["stocks"]["quality"]
     universe_as_of = None
     up = ROOT / "data" / "universe.csv"
     if up.exists():
         universe_as_of = str(pd.read_csv(up, nrows=1)["as_of"].iloc[0])
     return {
-        "generated": dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC"), "frozen_at": r["frozen_at"], "version": "0.4",
+        "generated": dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC"), "frozen_at": r["frozen_at"], "version": "0.5",
         "states": states, "headline": headline(states), "actions": monthly_actions(states), "base_rates": base,
         "stocks": rows, "universe_as_of": universe_as_of, "themes": themes,
+        "quality_rules": {"roic_min": q["roic_min"], "fcf_ni_min": q["fcf_to_net_income_min"], "nd_ebitda_max": q["net_debt_to_ebitda_max"],
+                          "avg_years": q.get("avg_years", 5), "ebitda_avg_years": q.get("ebitda_avg_years", 3)},
+        "stock_rules": {"red_min": r["stocks"]["valuation"]["red_min"], "green_max": r["stocks"]["valuation"]["green_max"],
+                        "ext_red_min": r["stocks"]["extension"]["red_min"]},
         "conduct": {c: conduct_text(c) for c in ("green", "orange", "red")} | {"bands": {c: r["conduct"][c]["rebalance_band_pts"] for c in ("green", "orange", "red")},
                                                                           "lev_cap": {c: r["conduct"][c]["leverage_cap_share_equities"] for c in ("green", "orange", "red")},
                                                                           "lev_cap_broken": r["conduct"]["trend_broken"]["leverage_cap_share_equities"],
@@ -116,14 +123,17 @@ def build() -> None:
 <div class="actions"><b>Ce mois-ci, concrètement</b><ul style="margin:6px 0 0;padding-left:18px">{acts}</ul></div>
 <h2>Lecture du jour</h2><div class="grid">{''.join(cards)}</div>
 <p class="legend"><i style="background:{d.HEX['green']}"></i>vert <i style="background:{d.HEX['orange']}"></i>orange <i style="background:{d.HEX['red']}"></i>rouge — frise mensuelle depuis 1990 (Bitcoin : 2014)</p>
-{d._themes_section()}
+<h2>Secteurs et thèmes</h2>
+<p class="sub">Les onze secteurs mondiaux et deux thèmes. Pour chaque secteur : les drapeaux de prix de son ETF (bulle, tension, tendance) et la valorisation médiane des sociétés du Top 100 qui le composent, combinées avec les mêmes règles que les indices (rouge = cher ET tendu ou en bulle ; vert = bon marché, ou capitulation). Lecture de contexte, non backtestée : elle ne gouverne ni le levier ni les montants.</p>
+<div id="sectors"></div>
 <div class="warn" style="margin-top:18px">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais.</div>
 </section>
 
 <section class="tab" id="tab-stocks">
 <h2>Les 100 plus grandes capitalisations mondiales</h2>
 <p class="sub">Univers = 100 premières pondérations du MSCI ACWI (positions publiées par l'ETF SPDR MSCI ACWI, au {html.escape(str(pay['universe_as_of']))}), une ligne par société, plus vos compléments de <code>stocks.yaml</code>.
-Rouge = valorisation ≥ 80e percentile de son propre historique 10 ans ET (hausse ≥ 100 %/2 ans avec accélération OU écart MM200 ≥ 90e percentile) ; vert = valorisation ≤ 30e percentile ET filtre qualité réussi. Sans comptes (hors SEC), une société reste orange : seuls les drapeaux de prix sont calculés.</p>
+Le <b>feu</b> reste à trois couleurs et ne change que sur une conjonction : rouge = valorisation ≥ 80e percentile de son propre historique 10 ans <b>et</b> (hausse ≥ 100 %/2 ans avec accélération <b>ou</b> écart MM200 ≥ 90e percentile) ; vert = valorisation ≤ 30e percentile <b>et</b> société solide. Entre les deux, la <b>jauge de valorisation</b> (0 = la moins chère de sa propre histoire, 100 = la plus chère) et la <b>solidité</b> (rentabilité, cash, dette, en moyennes pluriannuelles) donnent le dégradé. Sans comptes (hors SEC), une société reste orange : seuls les drapeaux de prix sont calculés.</p>
+<div id="stocks-summary" class="kpis"></div>
 <div id="stocks-notice"></div>
 <div class="filters">
 <input id="f-search" placeholder="Rechercher une société…">
@@ -133,7 +143,8 @@ Rouge = valorisation ≥ 80e percentile de son propre historique 10 ans ET (haus
 <label class="pill"><input type="checkbox" id="f-pea"> éligible PEA (approx.)</label>
 <label class="pill"><input type="checkbox" id="f-gsy"> bulle GSY</label>
 <label class="pill"><input type="checkbox" id="f-broken"> tendance cassée</label>
-<label class="pill"><input type="checkbox" id="f-quality"> qualité OK</label>
+<label class="pill"><input type="checkbox" id="f-quality"> solides seulement</label>
+<select id="f-vband"><option value="">Toute valorisation</option><option value="0">très bon marché (≤ 20)</option><option value="20">bon marché (20-40)</option><option value="40">dans sa moyenne (40-60)</option><option value="60">cher (60-80)</option><option value="80">très cher (&gt; 80)</option></select>
 <span class="note" id="f-count"></span></div>
 <div style="overflow-x:auto"><table class="stocks" id="stocks-table"></table></div>
 <div id="stock-detail"></div>
@@ -224,31 +235,58 @@ sel('#f-country',[...new Set(S.map(s=>s.country).filter(Boolean))]);sel('#f-sect
 const withAccounts=S.filter(s=>s.kind==='operating').length;
 $('#stocks-notice').innerHTML=withAccounts?`<p class="note">${withAccounts} sociétés avec comptes SEC (valorisation et qualité calculées), ${S.length-withAccounts} en prix seul.</p>`:
  `<div class="warn">Comptes SEC non configurés : toutes les sociétés sont pour l'instant en <b>prix seul</b> (extension, bulle, tendance, baisse). Valorisation, qualité et DCF inversé apparaîtront dès que la variable <code>SEC_USER_AGENT</code> sera définie.</div>`;
-const COLS=[['rank','#'],['name','Société'],['country','Pays'],['sector','Secteur'],['color_confirmed','Feu'],['V','Valorisation (p)'],['quality_ok','Qualité'],['implied_growth','Croissance implicite'],['gap_ma200','Écart MM200'],['runup_24m','Hausse 2 ans'],['gsy','Bulle GSY'],['trend_broken','Tendance'],['drawdown','Baisse vs plus haut'],['pea','PEA']];
+const COLS=[['rank','#'],['name','Société'],['country','Pays'],['sector','Secteur'],['color_confirmed','Feu'],['V','Valorisation (0-100)'],['quality_ok','Solidité'],['implied_growth','Croissance implicite'],['gap_ma200','Écart MM200'],['runup_24m','Hausse 2 ans'],['gsy','Bulle GSY'],['trend_broken','Tendance'],['drawdown','Baisse vs plus haut'],['pea','PEA']];
+const VLAB=v=>v==null?'n.d.':v<=20?'très bon marché':v<=40?'bon marché':v<=60?'dans sa moyenne':v<=80?'cher':'très cher';
+const VHUE=v=>`hsl(${Math.round(120-1.2*Math.max(0,Math.min(100,v)))},60%,42%)`;
+const vgauge=v=>v==null?'':`<div class="vg"><i style="left:${Math.max(0,Math.min(100,v))}%;background:${VHUE(v)}"></i></div>`;
+const QR=D.quality_rules||{};const TESTS={rentabilité:s=>s.mode==='financial'?`rentabilité des fonds propres ${pct(s.roe_avg,0)} (seuil ${pct(QR.roic_min,0)})`:`rentabilité du capital ${pct(s.roic_avg,0)} (seuil ${pct(QR.roic_min,0)})`,cash:s=>`cash libre = ${num(s.fcf_ni_avg,2)} × résultat net (seuil ${num(QR.fcf_ni_min,2)})`,dette:s=>`dette nette = ${num(s.nd_ebitda_avg,1)} × EBITDA (seuil ${num(QR.nd_ebitda_max,1)})`};
+const SHORT={rentabilité:s=>`rentabilité ${pct(s.mode==='financial'?s.roe_avg:s.roic_avg,0)}`,cash:s=>`cash ${num(s.fcf_ni_avg,2)}×`,dette:s=>`dette ${num(s.nd_ebitda_avg,1)}×`};
+function solidity(s){if(s.V==null)return '—';if(s.mode==='reit')return '<span class="note">hors grille (foncière)</span>';const f=s.quality_fails||[],u=s.quality_unknown||[];
+ if(s.quality_ok===true)return '<span class="pill on">solide</span>';
+ if(!f.length&&u.length)return `<span class="note">n.d. (${u.join(', ')})</span>`;
+ return f.map(k=>`<span class="pill warnp">⚠ ${SHORT[k](s)}</span>`).join(' ')+(u.length?`<br><small class="note">${u.join(', ')} : n.d.</small>`:'');}
 function fmtCell(k,s){switch(k){
  case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>`;
- case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `${Math.round(s.V)}<br><small>${s.mode==='financial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>`;
- case 'quality_ok':return s.V==null?'—':(s.quality_ok?'<span class="pill on">OK</span>':'<span class="pill" style="border-color:#b3261e;color:#b3261e">échec</span>')+(s.mode==='financial'?`<br><small>ROE ${pct(s.roe,0)}</small>`:'');
+ case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `<b>${Math.round(s.V)}</b> <small>${VLAB(s.V)}</small>${vgauge(s.V)}<small>${s.mode!=='industrial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>`;
+ case 'quality_ok':return solidity(s);
  case 'implied_growth':return s.implied_growth==null?'—':`${pct(s.implied_growth,0,true)}/an<br><small>réalisée 5 ans ${pct(s.fcf_cagr_5y,0,true)}</small>`;
  case 'gap_ma200':return `${pct(s.gap_ma200,0,true)}<br><small>p${s.gap_ma200_pct==null?'n.d.':Math.round(s.gap_ma200_pct)}</small>`;case 'runup_24m':return pct(s.runup_24m,0,true);
  case 'gsy':return s.gsy?'<b style="color:#b3261e">OUI</b>':'non';case 'trend_broken':return s.trend_broken?'<b style="color:#b3261e">cassée</b>':'OK';case 'drawdown':return pct(s.drawdown,0);
  case 'pea':return s.pea?'oui':'';default:return s[k]??'';}}
-function filtered(){const q=($('#f-search').value||'').toLowerCase();const c=$('#f-color').value,co=$('#f-country').value,se=$('#f-sector').value;
- return S.filter(s=>(!q||(s.name+' '+s.ticker).toLowerCase().includes(q))&&(!c||s.color_confirmed===c)&&(!co||s.country===co)&&(!se||s.sector===se)&&(!$('#f-pea').checked||s.pea)&&(!$('#f-gsy').checked||s.gsy)&&(!$('#f-broken').checked||s.trend_broken)&&(!$('#f-quality').checked||s.quality_ok));}
+function filtered(){const q=($('#f-search').value||'').toLowerCase();const c=$('#f-color').value,co=$('#f-country').value,se=$('#f-sector').value,vb=$('#f-vband').value;
+ const inBand=s=>vb===''||(s.V!=null&&(vb==='80'?s.V>80:(s.V>+vb&&s.V<=+vb+20)||(vb==='0'&&s.V<=20)));
+ return S.filter(s=>(!q||(s.name+' '+s.ticker).toLowerCase().includes(q))&&(!c||s.color_confirmed===c)&&(!co||s.country===co)&&(!se||s.sector===se)&&(!$('#f-pea').checked||s.pea)&&(!$('#f-gsy').checked||s.gsy)&&(!$('#f-broken').checked||s.trend_broken)&&(!$('#f-quality').checked||s.quality_ok===true)&&inBand(s));}
+function summary(){const v=S.filter(s=>s.V!=null);const bands=[['≤ 20','très bon marché',s=>s.V<=20],['20-40','bon marché',s=>s.V>20&&s.V<=40],['40-60','dans sa moyenne',s=>s.V>40&&s.V<=60],['60-80','cher',s=>s.V>60&&s.V<=80],['> 80','très cher',s=>s.V>80]];
+ const solid=v.filter(s=>s.quality_ok===true).length,reds=S.filter(s=>s.color_confirmed==='red').length,greens=S.filter(s=>s.color_confirmed==='green').length;
+ $('#stocks-summary').innerHTML=bands.map(([r,l,f])=>{const n=v.filter(f).length;return `<div class="kpi" style="border-top:3px solid ${VHUE(r==='≤ 20'?10:r==='20-40'?30:r==='40-60'?50:r==='60-80'?70:90)}"><b>${n}</b><span>${l} (${r})</span></div>`;}).join('')+`<div class="kpi"><b>${solid}/${v.length}</b><span>solides (3 tests réussis)</span></div><div class="kpi"><b>${reds} · ${greens}</b><span>feux rouges · feux verts</span></div>`;}
+summary();
 function renderStocks(){const rows=filtered().sort((a,b)=>{let x=a[sortKey],y=b[sortKey];if(x==null)return 1;if(y==null)return -1;if(typeof x==='string')return sortAsc?x.localeCompare(y):y.localeCompare(x);return sortAsc?x-y:y-x;});
  $('#f-count').textContent=rows.length+' sociétés';
  $('#stocks-table').innerHTML='<tr>'+COLS.map(([k,l])=>`<th data-k="${k}" class="${k===sortKey?'sorted':''}">${l}</th>`).join('')+'</tr>'+rows.map(s=>`<tr class="row${s.color_confirmed}" data-key="${s.key}">${COLS.map(([k])=>`<td>${fmtCell(k,s)}</td>`).join('')}</tr>`).join('');
  $$('#stocks-table th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=k==='name'||k==='country'||k==='sector'||k==='rank';}renderStocks();});
  $$('#stocks-table tr[data-key]').forEach(tr=>tr.onclick=()=>detail(tr.dataset.key));}
 function detail(key){const s=S.find(x=>x.key===key);if(!s)return;const body=s.V==null?`<p>${s.kind!=='operating'?'Suivi en <b>prix seul</b> (pas de comptes dans EDGAR).':(s.shares_ok===false?'Comptes disponibles mais <b>nombre d\'actions incohérent</b> (actions multi-classes ou ADS) : valorisation non calculée plutôt que fausse.':'Comptes disponibles mais <b>historique trop court</b> (moins de cinq ans de ratios) : valorisation non calculée.')} Drapeaux : écart MM200 ${pct(s.gap_ma200,0,true)} (percentile ${s.gap_ma200_pct==null?'n.d.':Math.round(s.gap_ma200_pct)}), hausse 2 ans ${pct(s.runup_24m,0,true)}, bulle GSY ${s.gsy?'active':'non'}, tendance ${s.trend_broken?'cassée':'OK'}, ${pct(s.drawdown,0)} sous le plus haut.</p>`:
- (s.mode==='financial'?`<p><b>Valorisation (banque / assureur)</b> : P/E ${num(s.pe)} , P/B ${num(s.pb,2)} → V = ${Math.round(s.V)} (percentiles 10 ans de son propre historique). EV/EBIT et FCF n'ont pas de sens pour une banque.<br>
- <b>Qualité</b> : rentabilité des fonds propres ${pct(s.roe,0)} → ${s.quality_ok?'filtre réussi':'<b>filtre échoué</b> (jamais vert)'}.<br>`:
- `<p><b>Valorisation</b> : EV/EBIT ${num(s.ev_ebit)} (percentile 10 ans ${s.ev_ebit_pct==null?'n.d.':Math.round(s.ev_ebit_pct)}), P/FCF ${num(s.p_fcf)} (p${s.p_fcf_pct==null?'n.d.':Math.round(s.p_fcf_pct)}) → V = ${Math.round(s.V)}.${s.ebit_source&&s.ebit_source.indexOf('approximation')>=0?' <small>(résultat d\'exploitation non publié : approché par résultat avant impôt + intérêts)</small>':''}<br>
- <b>Qualité</b> : ROIC ${pct(s.roic,0)}, FCF/résultat net ${num(s.fcf_ni,2)}, dette nette/EBITDA ${num(s.nd_ebitda,1)} → ${s.quality_ok?'filtre réussi':'<b>filtre échoué</b> (jamais vert)'}.<br>
+ (s.mode!=='industrial'?`<p><b>Valorisation (${s.mode==='reit'?'foncière':'banque / assureur'})</b> : P/E ${num(s.pe)} , P/B ${num(s.pb,2)} → V = ${Math.round(s.V)}, <b>${VLAB(s.V)}</b> par rapport à ses dix dernières années. EV/EBIT et FCF n'ont pas de sens ici.<br>
+ <b>Solidité</b> : ${s.mode==='reit'?'la grille (rentabilité du capital, cash, dette/EBITDA) ne s\'applique pas à une foncière : pas de test, donc jamais verte.':`rentabilité des fonds propres ${pct(s.roe_avg,0)} en moyenne ${QR.avg_years} ans (dernier exercice ${pct(s.roe,0)}) → ${s.quality_ok===true?'solide':'<b>test échoué</b> (jamais vert)'}.`}<br>`:
+ `<p><b>Valorisation</b> : EV/EBIT ${num(s.ev_ebit)} (percentile 10 ans ${s.ev_ebit_pct==null?'n.d.':Math.round(s.ev_ebit_pct)}), P/FCF ${num(s.p_fcf)} (p${s.p_fcf_pct==null?'n.d.':Math.round(s.p_fcf_pct)}) → V = ${Math.round(s.V)}, <b>${VLAB(s.V)}</b> par rapport à ses dix dernières années.${s.ebit_source&&s.ebit_source.indexOf('approximation')>=0?' <small>(résultat d\'exploitation non publié : approché par résultat avant impôt + intérêts)</small>':''}<br>
+ <b>Solidité</b> (moyennes ${QR.avg_years} ans) : ${['rentabilité','cash','dette'].map(k=>{const ok=!(s.quality_fails||[]).includes(k),unk=(s.quality_unknown||[]).includes(k);return `${TESTS[k](s)} ${unk?'→ n.d.':ok?'✓':'<b>✗</b>'}`;}).join(' · ')} → ${s.quality_ok===true?'<b>solide</b>':(s.quality_fails||[]).length?'<b>test(s) échoué(s)</b> : jamais vert tant que cela dure':'incomplet'}.${s.da_known===0?' <small>(amortissements non publiés : EBITDA approché par le résultat d\'exploitation)</small>':''}<br>
+ <small class="note">Dernier exercice glissant : rentabilité ${pct(s.roic,0)}, cash ${num(s.fcf_ni,2)}×, dette ${num(s.nd_ebitda,1)}×.</small><br>
  <b>DCF inversé</b> : le cours suppose ${pct(s.implied_growth,0,true)}/an de croissance du cash pendant dix ans ; réalisé sur cinq ans : ${pct(s.fcf_cagr_5y,0,true)}/an.<br>`)+`
  <b>Prix</b> : écart MM200 ${pct(s.gap_ma200,0,true)}, hausse 2 ans ${pct(s.runup_24m,0,true)}, bulle GSY ${s.gsy?'active':'non'}, tendance ${s.trend_broken?'cassée':'OK'}, ${pct(s.drawdown,0)} sous le plus haut. Comptes en ${s.accounts_currency||'?'}, cours en ${s.price_currency||'?'}.</p>`;
  $('#stock-detail').innerHTML=`<div class="detail"><b>${s.name}</b> (${s.ticker}, ${s.country||'—'}, ${s.sector||'—'}) — feu <span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]}</span> depuis le ${s.since||'—'} · données au ${s.date}${body}</div>`;$('#stock-detail').scrollIntoView({behavior:'smooth',block:'nearest'});}
-['#f-search','#f-color','#f-country','#f-sector','#f-pea','#f-gsy','#f-broken','#f-quality'].forEach(id=>$(id).addEventListener('input',renderStocks));renderStocks();
+['#f-search','#f-color','#f-country','#f-sector','#f-pea','#f-gsy','#f-broken','#f-quality','#f-vband'].forEach(id=>$(id).addEventListener('input',renderStocks));renderStocks();
+
+// ---- Secteurs et thèmes ----
+function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerHTML='<p class="note">Non calculé.</p>';return;}
+ const flag=(on,txt)=>on?`<span class="pill warnp">${txt}</span>`:'';
+ const row=t=>{const v=t.valuation||{};const med=v.v_median;const members=(v.members||[]).map(m=>`<span class="mem c ${m.color||'orange'}" title="${m.name}">${m.ticker}${m.V==null?'':' '+Math.round(m.V)}</span>`).join(' ');
+  return `<div class="sec row${t.color}"><div class="sec-head"><span class="dot ${t.color}"></span><b>${t.name}</b> <small class="note">${t.ticker}${t.kind==='theme'?' · thème (drapeaux seulement)':''}</small>
+  <span class="sec-flags">${flag(t.gsy,'bulle GSY')}${flag(t.extended,'tendu')}${flag(t.trend_broken,'tendance cassée')}${flag(t.drawdown>=0.25,`−${Math.round(100*t.drawdown)} % vs plus haut`)}</span></div>
+  <div class="sec-body">${t.kind==='sector'?(med==null?`<span class="note">valorisation sectorielle n.d. (${v.n||0} société${(v.n||0)>1?'s':''} valorisée${(v.n||0)>1?'s':''}, minimum 3)</span>`:`<span><b>${Math.round(med)}</b> <small>${VLAB(med)} · médiane de ${v.n} sociétés</small>${vgauge(med)}</span>`):''}
+  <span class="note">hausse 2 ans ${pct(t.runup_24m,0,true)} · écart MM200 ${pct(t.gap_ma200,0,true)}${t.gap_pct==null?'':' (p'+Math.round(t.gap_pct)+')'}</span></div>
+  <p class="sec-sentence">${t.sentence}</p>${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
+ $('#sectors').innerHTML=`<div class="secs">${T.filter(t=>t.kind==='sector').map(row).join('')}</div><h3 style="margin:14px 0 6px">Thèmes</h3><div class="secs">${T.filter(t=>t.kind!=='sector').map(row).join('')}</div>`;}
+renderSectors();
 
 // ---- Mon portefeuille ----
 let PF=store('feux-portfolio')||{lines:[],targets:{equity:60,stock:15,btc:10,safe:15,monthly:1000}};

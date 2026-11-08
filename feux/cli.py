@@ -152,7 +152,7 @@ def main(argv=None) -> None:
     s = sub.add_parser("brief", help="brief mensuel en langage courant (Telegram)")
     s.add_argument("--dry-run", action="store_true")
     s.set_defaults(fn=cmd_brief)
-    s = sub.add_parser("themes", help="drapeaux de bulle sectorielle (SOX, IGV, XLK)")
+    s = sub.add_parser("themes", help="secteurs et thèmes : drapeaux de prix des ETF (11 secteurs GICS, SOX, IGV)")
     s.set_defaults(fn=cmd_themes)
     s = sub.add_parser("universe", help="univers Top 100 mondial (positions SPDR MSCI ACWI) et correspondances")
     s.add_argument("--top", type=int, default=100)

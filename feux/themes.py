@@ -61,18 +61,72 @@ def load_all() -> dict[str, pd.DataFrame]:
     return {p.stem: pd.read_parquet(p) for p in sorted(d.glob("*.parquet"))} if d.exists() else {}
 
 
-def simple_sentence(key: str, row: pd.Series) -> str:
+def simple_sentence(key: str, row: pd.Series, valuation: dict | None = None) -> str:
     r = rules()["themes"]
     name = r["assets"][key]["name"]
     up = f"{100 * row['runup_24m']:+.0f} % en deux ans"
+    val = ""
+    if valuation and valuation.get("v_median") is not None:
+        val = f" Valorisation médiane de ses {valuation['n']} grandes sociétés : {v_label(valuation['v_median'])} (p{valuation['v_median']:.0f})."
     if bool(row["gsy"]) and bool(row["runup_alert"]):
         return (f"{name} : {up}, et la hausse s'accélère. Dans l'étude de référence, une chute d'au moins 40 % a suivi ce type de hausse "
-                f"dans environ 80 % des cas. Aucun renfort thématique, pas de levier sur ce thème.")
+                f"dans environ 80 % des cas. Aucun renfort, pas de levier sur ce secteur.{val}")
     if bool(row["gsy"]):
         return (f"{name} : {up}, et la hausse s'accélère. Dans l'étude de référence, une chute d'au moins 40 % a suivi ce type de hausse "
-                f"dans environ un cas sur deux. Prudence sur tout renfort thématique.")
+                f"dans environ un cas sur deux. Prudence sur tout renfort.{val}")
     if bool(row["extended"]):
-        return f"{name} : {up} ; les cours sont très au-dessus de leur moyenne des 200 jours (plus que 90 % du temps). Pas de renfort précipité."
+        return f"{name} : {up} ; les cours sont très au-dessus de leur moyenne des 200 jours (plus que 90 % du temps). Pas de renfort précipité.{val}"
     if bool(row["trend_broken"]):
-        return f"{name} : {up} ; tendance cassée (dernier mois sous la moyenne des 10 mois), à {100 * row['drawdown']:.0f} % sous le plus haut. Pas de levier thématique."
-    return f"{name} : {up}, rien d'extrême."
+        return f"{name} : {up} ; tendance cassée (dernier mois sous la moyenne des 10 mois), à {100 * row['drawdown']:.0f} % sous le plus haut. Pas de levier.{val}"
+    return f"{name} : {up}, rien d'extrême côté prix.{val}"
+
+
+def v_label(v: float) -> str:
+    """Cinq paliers de lecture d'un percentile de valorisation (le feu, lui, reste à trois couleurs)."""
+    if v is None or v != v:
+        return "n.d."
+    if v <= 20:
+        return "très bon marché"
+    if v <= 40:
+        return "bon marché"
+    if v <= 60:
+        return "dans sa moyenne"
+    if v <= 80:
+        return "cher"
+    return "très cher"
+
+
+def overlay(stocks_latest: dict) -> list[dict]:
+    """Lignes « secteurs et thèmes » prêtes pour l'application : drapeaux de prix de l'ETF + valorisation médiane des
+    sociétés du Top 100 du secteur + couleur (mêmes règles de conjonction que les indices). Non backtesté : lecture de contexte."""
+    r = rules()["themes"]
+    res = load_all()
+    rows = []
+    for key, spec in r["assets"].items():
+        df = res.get(key)
+        if df is None or df.empty:
+            continue
+        row = df.iloc[-1]
+        valuation = None
+        color = "orange"
+        if spec.get("kind") == "sector":
+            vs = [s["V"] for s in stocks_latest.values()
+                  if s.get("kind") == "operating" and s.get("V") is not None and s.get("sector") == spec.get("gics")]
+            n = len(vs)
+            med = float(pd.Series(vs).median()) if n >= int(r["sector_min_members"]) else None
+            members = sorted([s for s in stocks_latest.values() if s.get("sector") == spec.get("gics")], key=lambda s: (s.get("rank") or 999))
+            valuation = {"n": n, "v_median": med, "members": [{"ticker": s.get("ticker"), "name": s.get("name"), "V": s.get("V"),
+                                                                  "color": s.get("color_confirmed")} for s in members]}
+            gap_pct = None if pd.isna(row["gap_ma200_pct"]) else float(row["gap_ma200_pct"])
+            if med is not None and med >= r["sector_red_min_v"] and (bool(row["extended"]) or bool(row["gsy"])):
+                color = "red"
+            elif (med is not None and med <= r["sector_green_max_v"]) or \
+                 (float(row["drawdown"]) >= r["sector_capitulation_drawdown"] and gap_pct is not None and gap_pct <= r["sector_capitulation_gap_pct"]):
+                color = "green"
+        rows.append({"key": key, "name": spec["name"], "kind": spec.get("kind", "theme"), "ticker": spec["ticker"], "gics": spec.get("gics"),
+                     "color": color, "sentence": simple_sentence(key, row, valuation),
+                     "runup_24m": float(row["runup_24m"]), "gsy": bool(row["gsy"]), "extended": bool(row["extended"]),
+                     "gap_ma200": float(row["gap_ma200"]), "gap_pct": None if pd.isna(row["gap_ma200_pct"]) else float(row["gap_ma200_pct"]),
+                     "trend_broken": bool(row["trend_broken"]), "drawdown": float(row["drawdown"]), "date": str(df.index[-1].date()),
+                     "valuation": valuation})
+    return rows

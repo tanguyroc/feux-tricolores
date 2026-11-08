@@ -39,12 +39,43 @@ def extras() -> dict:
 
 
 # ----------------------------------------------------------------------------------------------
-def _asof(df: pd.DataFrame, cal: pd.DatetimeIndex) -> pd.Series:
+MAX_AGE_DAYS = 400          # au-delà, une valeur comptable n'est plus reportée : un concept abandonné ne fige pas le ratio
+MAX_AGE_DAYS_ANNUAL = 730   # déposants annuels (20-F) : un exercice reste lu jusqu'à deux ans (TSMC : le 20-F 2025 n'est pas encore dans l'API)
+MAX_AGE_DAYS_SHARES = 800   # nombre d'actions : varie lentement (rachats ~1-3 %/an), publié parfois une fois l'an
+
+
+def _asof(df: pd.DataFrame, cal: pd.DatetimeIndex, max_age_days: int = MAX_AGE_DAYS) -> pd.Series:
+    """Dernière valeur publiée à chaque date du calendrier, puis oubliée si sa période de référence date de plus de
+    `max_age_days` (ex. KLA n'a plus publié de « résultat d'exploitation » depuis 2015 : sans ce garde-fou la valeur
+    de 2015 aurait été reportée jusqu'à aujourd'hui)."""
     if df is None or df.empty:
         return pd.Series(np.nan, index=cal)
     s = store.make_series(df["end"], df["val"], available_dates=df["filed"])
     s = s.sort_values(["available_date", "ref_date"]).drop_duplicates("available_date", keep="last")
-    return store.as_of(s, cal)
+    v = store.as_of(s, cal)
+    ref = store.as_of(s.assign(value=pd.to_datetime(s["ref_date"]).astype("datetime64[ns]").astype("int64").astype("float64")), cal)
+    age_days = (pd.Series(pd.DatetimeIndex(cal).astype("datetime64[ns]").astype("int64").astype("float64"), index=cal) - ref) / 86_400e9
+    return v.where(age_days <= max_age_days)
+
+
+# Industries GICS pour lesquelles EV, EBIT et FCF n'ont pas de sens : P/E, P/B et rentabilité des fonds propres.
+# « Financial Services » (Visa, Mastercard, Berkshire) reste en mode industriel : réseaux de paiement = sociétés d'exploitation à FCF massif.
+FINANCIAL_INDUSTRIES = {"Banks", "Capital Markets", "Consumer Finance", "Insurance", "Diversified Financial Services",
+                        "Thrifts & Mortgage Finance", "Mortgage Real Estate Investment Trusts (Reits)"}
+
+
+def _mode(spec: dict, f: dict) -> str:
+    sector, industry = spec.get("sector") or "", spec.get("industry") or ""
+    if sector == "Real Estate" or "Reit" in industry or "REIT" in industry:
+        return "reit"
+    if industry in FINANCIAL_INDUSTRIES or (sector == "Financials" and industry != "Financial Services" and (f.get("ebit") is None or len(f["ebit"]) == 0)):
+        return "financial"
+    return "industrial"
+
+
+def _mean_years(s: pd.Series, years: float, min_years: float) -> pd.Series:
+    """Moyenne glissante sur `years` années de bourse (au moins `min_years` de valeurs ; lacunes ≤ 6 mois comblées)."""
+    return s.ffill(limit=TD // 2).rolling(int(TD * years), min_periods=int(TD * min_years)).mean()
 
 
 def implied_growth(ev: float, fcf: float, wacc: float, g_term: float, years: int) -> float:
@@ -106,19 +137,33 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     r = rules()["stocks"]
     px, px_ccy = yahoo.fetch_close_meta(spec["ticker"])
     cal = px.index
-    f = edgar.fundamentals(int(spec["cik"]))
+    f = edgar.fundamentals(int(spec["cik"]), tuple(int(c) for c in (spec.get("extra_ciks") or [])))
     df = price_block(px)
-    unit = next((v.attrs.get("unit") for v in f.values() if v.attrs.get("unit") and v.attrs.get("unit") != "shares"), px_ccy)
+    shares_source = f["shares"].attrs.get("concept") if len(f["shares"]) else None
+    if f.get("shares_stale") and len(f.get("public_float", [])) >= 3:
+        # actions multi-classes sans nombre d'actions exploitable (Visa, Berkshire) : actions ≈ flottant déclaré / cours du jour du flottant
+        pf = f["public_float"].copy()
+        pf["px"] = px.reindex(pd.DatetimeIndex(pf["end"]), method="ffill").to_numpy()
+        pf = pf.dropna(subset=["px"])
+        pf["val"] = pf["val"] / pf["px"]
+        f["shares"] = pf[["end", "filed", "val"]].reset_index(drop=True)
+        f["shares"].attrs.update({"concept": "flottant déclaré / cours (approximation)", "unit": "shares"})
+        shares_source = f["shares"].attrs["concept"]
+    unit = next((v.attrs.get("unit") for k, v in f.items() if hasattr(v, "attrs") and k != "public_float" and v.attrs.get("unit") and v.attrs.get("unit") != "shares"), px_ccy)
     df["price_in_accounts_ccy"] = px * fx_series(px_ccy, unit, cal) if unit and px_ccy and unit != px_ccy else px
     for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt_lt", "debt_st", "equity", "shares",
               "assets", "pretax", "interest"):
-        df[k] = _asof(f.get(k), cal)
-    # résultat d'exploitation absent (pétrole, pharma, banques) : résultat avant impôt + charges d'intérêts
+        # déposants de 20-F (valeurs annuelles publiées 3 à 4 mois après la clôture) : tolérance plus longue avant d'oublier une valeur
+        annual = f.get(k) is not None and bool(getattr(f[k], "attrs", {}).get("annual_only"))
+        age = MAX_AGE_DAYS_SHARES if k == "shares" else MAX_AGE_DAYS_ANNUAL if annual else MAX_AGE_DAYS
+        df[k] = _asof(f.get(k), cal, max_age_days=age)
+    accounts_as_of = None if f["net_income"].empty else str(pd.Timestamp(f["net_income"]["end"].max()).date())
+    # résultat d'exploitation absent ou plus publié (pétrole, pharma, banques, KLA depuis 2015) : résultat avant impôt + intérêts
     ebit_source = "résultat d'exploitation"
-    if df["ebit"].isna().all() or df["ebit"].last_valid_index() is None or df["ebit"].last_valid_index() < cal[-1] - pd.DateOffset(years=2):
-        if df["pretax"].notna().any():
-            df["ebit"] = df["pretax"] + df["interest"].fillna(0.0)
-            ebit_source = "résultat avant impôt + intérêts (approximation)"
+    if pd.isna(df["ebit"].iloc[-1]) and df["pretax"].notna().any():
+        # on comble aussi les trous intermédiaires (concept abandonné puis repris) pour garder des moyennes calculables
+        df["ebit"] = df["ebit"].fillna(df["pretax"] + df["interest"].fillna(0.0))
+        ebit_source = "résultat avant impôt + intérêts (approximation)"
     has_capex = f.get("capex") is not None and len(f["capex"]) > 0
     df["fcf"] = df["cfo"] - (df["capex"].ffill() if has_capex else np.nan)   # sans capex connu : FCF inconnu (pas CFO)
     df["debt"] = df["debt_lt"].fillna(0.0) + df["debt_st"].fillna(0.0)
@@ -132,18 +177,27 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df["ev"] = df["mcap"] + df["debt"] - df["liquidity"]
     w, mn = TD * r["valuation"]["pct_years"], TD * r["valuation"]["pct_min_years"]
     q = r["quality"]
-    financial = (spec.get("sector") == "Financials") and f.get("ebit") is not None and len(f["ebit"]) == 0
-    if financial:
-        # banques et assureurs : EV et FCF n'ont pas de sens → P/E et P/B, qualité = rentabilité des fonds propres
+    ay, amy = q.get("avg_years", 5), q.get("avg_min_years", 3)
+    mode = _mode(spec, f)
+    fails = pd.DataFrame(index=cal)   # une colonne par test de solidité : True = test échoué
+    for c in ("ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda", "roic_avg", "fcf_ni_avg", "nd_ebitda_avg",
+              "pe", "pb", "pe_pct", "pb_pct", "roe", "roe_avg", "da_known"):
+        df[c] = np.nan
+    if mode in ("financial", "reit"):
+        # banques, assureurs, foncières : EV et FCF n'ont pas de sens → P/E et P/B contre leur propre historique
         df["pe"] = (df["mcap"] / df["net_income"]).where(df["net_income"] > 0)
         df["pb"] = (df["mcap"] / df["equity"]).where(df["equity"] > 0)
         df["pe_pct"] = ind.rolling_pct(df["pe"], w, mn)
         df["pb_pct"] = ind.rolling_pct(df["pb"], w, mn)
         df["V"] = df[["pe_pct", "pb_pct"]].median(axis=1, skipna=True)
         df["roe"] = (df["net_income"] / df["equity"]).where(df["equity"] > 0)
-        df["quality_ok"] = df["roe"] >= q["roic_min"]
-        for c in ("ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda"):
-            df[c] = np.nan
+        df["roe_avg"] = _mean_years(df["roe"], ay, amy)
+        if mode == "financial":
+            fails["rentabilité"] = ~(df["roe_avg"] >= q["roic_min"])
+            df["quality_ok"] = ~fails.any(axis=1) & df["roe_avg"].notna()
+        else:
+            # foncières : la grille (ROIC, FCF, dette/EBITDA) ne s'applique pas ; pas de test, donc jamais vertes
+            df["quality_ok"] = np.nan
     else:
         df["ev_ebit"] = (df["ev"] / df["ebit"]).where(df["ebit"] > 0)
         df["p_fcf"] = (df["mcap"] / df["fcf"]).where(df["fcf"] > 0)
@@ -154,10 +208,21 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
         invested = (df["equity"] + df["debt"] - df["liquidity"]).clip(lower=0.25 * df["assets"].fillna(0.0))
         df["roic"] = (df["ebit"] * (1 - q["tax_rate"]) / invested).where(invested > 0)
         df["fcf_ni"] = (df["fcf"] / df["net_income"]).where(df["net_income"] > 0)
+        df["da_known"] = df["da"].notna().astype(float)
         ebitda = df["ebit"] + df["da"].fillna(0.0)
         df["nd_ebitda"] = ((df["debt"] - df["liquidity"]) / ebitda).where(ebitda > 0)
-        df["quality_ok"] = (df["roic"] >= q["roic_min"]) & (df["fcf_ni"] >= q["fcf_to_net_income_min"]) & (df["nd_ebitda"] <= q["net_debt_to_ebitda_max"])
-        df["pe"] = df["pb"] = df["roe"] = np.nan
+        # solidité jugée sur plusieurs années (moyennes 5 ans) : un exercice de forte dépense d'investissement
+        # ou une charge exceptionnelle (acquisition de pharma) ne fait pas « échouer » une société solide à elle seule
+        df["roic_avg"] = _mean_years(df["roic"], ay, amy)
+        ni_avg, fcf_avg = _mean_years(df["net_income"], ay, amy), _mean_years(df["fcf"], ay, amy)
+        df["fcf_ni_avg"] = (fcf_avg / ni_avg).where(ni_avg > 0)
+        ebitda_avg = _mean_years(ebitda, q.get("ebitda_avg_years", 3), min(amy, q.get("ebitda_avg_years", 3)))
+        df["nd_ebitda_avg"] = ((df["debt"] - df["liquidity"]) / ebitda_avg).where(ebitda_avg > 0)
+        fails["rentabilité"] = ~(df["roic_avg"] >= q["roic_min"])
+        fails["cash"] = ~(df["fcf_ni_avg"] >= q["fcf_to_net_income_min"])
+        fails["dette"] = ~(df["nd_ebitda_avg"] <= q["net_debt_to_ebitda_max"])
+        df["quality_ok"] = ~fails.any(axis=1) & df["roic_avg"].notna() & df["fcf_ni_avg"].notna() & df["nd_ebitda_avg"].notna()
+    financial = mode == "financial"
     d = r["reverse_dcf"]
     fcf_5y = df["fcf"].shift(5 * TD)
     df["fcf_cagr_5y"] = ((df["fcf"] / fcf_5y) ** 0.2 - 1.0).where((df["fcf"] > 0) & (fcf_5y > 0))
@@ -165,7 +230,7 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df["implied_growth"] = np.nan
     df.loc[df.index[-1], "implied_growth"] = implied_growth(last["ev"], last["fcf"], d["wacc"], d["terminal_growth"], d["years"])
     red = (df["V"] >= r["valuation"]["red_min"]) & ((df["gap_ma200_pct"] >= r["extension"]["red_min"]) | df["gsy"])
-    green = (df["V"] <= r["valuation"]["green_max"]) & df["quality_ok"]
+    green = (df["V"] <= r["valuation"]["green_max"]) & (df["quality_ok"] == True)   # noqa: E712 — NaN (foncières) n'est jamais vert
     color = pd.Series("orange", index=cal, dtype=object)
     color[green] = "green"
     color[red] = "red"
@@ -173,8 +238,14 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df["color"] = color
     df["color_confirmed"] = confirmed_color(df["color"], int(rules().get("confirmation_days", 5)))
     df["kind"] = "operating"
-    df.attrs["mode"] = "financial" if financial else "industrial"
+    last_fails = fails.iloc[-1] if len(fails.columns) else pd.Series(dtype=bool)
+    known = {"rentabilité": df["roe_avg" if mode == "financial" else "roic_avg"].iloc[-1], "cash": df["fcf_ni_avg"].iloc[-1], "dette": df["nd_ebitda_avg"].iloc[-1]}
+    df.attrs["quality_fails"] = [k for k, v in last_fails.items() if bool(v) and pd.notna(known.get(k))]
+    df.attrs["quality_unknown"] = [k for k in last_fails.index if pd.isna(known.get(k))]
+    df.attrs["mode"] = mode
     df.attrs["ebit_source"] = ebit_source
+    df.attrs["shares_source"] = shares_source
+    df.attrs["accounts_as_of"] = accounts_as_of
     df.attrs["shares_ok"] = bool(shares_ok)
     df.attrs["concepts"] = {k: v.attrs.get("concept") for k, v in f.items() if hasattr(v, "attrs")}
     df.attrs["accounts_currency"] = unit
@@ -224,7 +295,7 @@ def targets() -> list[dict]:
                     "source": "top100"}
             over = next((v for v in ex.values() if v.get("ticker") == row.symbol), None)
             if over:
-                spec.update({k: over[k] for k in ("type", "cik", "name") if k in over})
+                spec.update({k: over[k] for k in ("type", "cik", "name", "extra_ciks") if k in over})
             out.append(spec)
             seen.add(row.symbol)
     for k, v in ex.items():
@@ -232,7 +303,8 @@ def targets() -> list[dict]:
             continue
         out.append({"key": k, "name": v.get("name", k), "ticker": v["ticker"], "country": v.get("country"), "sector": v.get("sector"),
                     "industry": None, "weight": None, "rank": None, "pea": v.get("pea"), "cik": v.get("cik"),
-                    "type": v.get("type", "operating" if v.get("cik") else "price_only"), "source": "stocks.yaml"})
+                    "type": v.get("type", "operating" if v.get("cik") else "price_only"), "source": "stocks.yaml",
+                    "extra_ciks": v.get("extra_ciks")})
     return out
 
 
@@ -250,6 +322,9 @@ def compute_all(limit: int | None = None) -> dict[str, pd.DataFrame]:
         try:
             if kind == "operating" and spec.get("cik") and sec_ok:
                 df = analyse_operating(spec["key"], spec)
+                if df.attrs.get("accounts_as_of") is None:   # CIK sans comptes XBRL (SK hynix : simple déposant de formulaires) → prix seul
+                    df = analyse_price_only(spec["key"], spec)
+                    df.attrs["note"] = "CIK sans comptes XBRL : prix seul"
             elif kind == "crypto_proxy":
                 df = analyse_crypto_proxy(spec["key"], spec)
             else:

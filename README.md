@@ -74,9 +74,9 @@ Le **mode détaillé** garde tous les chiffres, percentiles et z-scores. Le brie
 |---|---|---|---|
 | Indices (S&P 500, Nasdaq-100, MSCI World) | `signals` | Shiller, FRED, Yahoo, FINRA | validé 1985-2026 |
 | Bitcoin | `signals` | Coin Metrics, alternative.me, Deribit (financement) | validé 2014-2026, confiance moyenne |
-| Actions : Top 100 mondial (MSCI ACWI) + `stocks.yaml` | `universe`, `stocks` | SPDR MSCI ACWI (positions), Yahoo, SEC EDGAR | prix seuls sans `SEC_USER_AGENT` ; valorisation et qualité avec |
+| Actions : Top 100 mondial (MSCI ACWI) + `stocks.yaml` | `universe`, `stocks` | SPDR MSCI ACWI (positions), Yahoo, SEC EDGAR | prix seuls sans `SEC_USER_AGENT` ; valorisation (jauge 0-100), solidité pluriannuelle et feu avec |
 | Mon portefeuille, Journal | dans l'application | navigateur (localStorage) | rien n'est transmis |
-| Thèmes sectoriels (semis, logiciels, tech) | `signals` (ou `themes`) | Yahoo (^SOX, IGV, XLK) | drapeaux de bulle, pas de couleur |
+| Secteurs (11 GICS) et thèmes (semis, logiciels) | `signals` (ou `themes`) | Yahoo (ETF SPDR, VNQ, VOX, ^SOX, IGV) + V médian des sociétés du secteur | couleur de contexte, non backtestée |
 | Brief mensuel | `brief` | — | Telegram le 1er du mois |
 | Journal de décision (48 h) | `decide` | — | opérationnel, dossier `journal/` hors dépôt ; rappelle les statistiques historiques |
 | Validation et robustesse | `backtest`, `robustness` | — | rapports HTML |

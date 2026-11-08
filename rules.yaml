@@ -122,18 +122,38 @@ stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeur
     terminal_growth: 0.025
     years: 10
     red_if_implied_over_realized: 1.5           # croissance implicite > 1,5 × croissance réalisée 5 ans → drapeau
-  quality:   # éliminatoire : une valeur qui échoue ne peut jamais être verte
-    roic_min: 0.10
-    fcf_to_net_income_min: 0.70
-    net_debt_to_ebitda_max: 2.0
+  quality:   # « solidité », éliminatoire : une valeur qui échoue ne peut jamais être verte (v0.5 : moyennes pluriannuelles)
+    roic_min: 0.10               # rentabilité du capital investi (moyenne 5 ans) ; banques : rentabilité des fonds propres
+    fcf_to_net_income_min: 0.70  # part du résultat net transformée en cash libre (moyenne 5 ans)
+    net_debt_to_ebitda_max: 2.5  # dette nette du jour / EBITDA moyen 3 ans (2,0 → 2,5 en v0.5, seuil Fundsmith / Kairys Alpha)
+    avg_years: 5                 # fenêtre des moyennes (au moins avg_min_years de données)
+    avg_min_years: 3
+    ebitda_avg_years: 3
     tax_rate: 0.21
+    # hors grille : foncières (REIT) — jamais vertes, valorisation P/E et P/B seulement
   leverage_flag: {sma_days: 200}
 
-themes:   # drapeaux de bulle sectorielle (v0.3) — pas de couleur : sans valorisation, un secteur n'est jamais « rouge »
+themes:   # secteurs et thèmes (v0.5). Drapeaux de prix sur l'ETF ; pour les 11 secteurs GICS, valorisation = médiane des V
+          # des sociétés du Top 100 appartenant au secteur (au moins sector_min_members) → couleur avec les mêmes règles de conjonction
   assets:
-    semis:    {ticker: "^SOX", name: "Semi-conducteurs (SOX)"}
-    software: {ticker: "IGV",  name: "Éditeurs de logiciels (IGV)"}
-    tech:     {ticker: "XLK",  name: "Technologie US (XLK)"}
+    it:        {ticker: "XLK", name: "Technologie de l'information", kind: sector, gics: "Information Technology"}
+    financials: {ticker: "XLF", name: "Finance", kind: sector, gics: "Financials"}
+    health:    {ticker: "XLV", name: "Santé", kind: sector, gics: "Health Care"}
+    discretionary: {ticker: "XLY", name: "Consommation discrétionnaire", kind: sector, gics: "Consumer Discretionary"}
+    staples:   {ticker: "XLP", name: "Consommation de base", kind: sector, gics: "Consumer Staples"}
+    industrials: {ticker: "XLI", name: "Industrie", kind: sector, gics: "Industrials"}
+    energy:    {ticker: "XLE", name: "Énergie", kind: sector, gics: "Energy"}
+    materials: {ticker: "XLB", name: "Matériaux", kind: sector, gics: "Materials"}
+    utilities: {ticker: "XLU", name: "Services aux collectivités", kind: sector, gics: "Utilities"}
+    communication: {ticker: "VOX", name: "Communication", kind: sector, gics: "Communication Services"}
+    realestate: {ticker: "VNQ", name: "Immobilier coté", kind: sector, gics: "Real Estate"}
+    semis:     {ticker: "^SOX", name: "Semi-conducteurs (thème)", kind: theme}
+    software:  {ticker: "IGV",  name: "Éditeurs de logiciels (thème)", kind: theme}
+  sector_min_members: 3        # en dessous, pas de valorisation sectorielle → orange (drapeaux seulement)
+  sector_red_min_v: 80         # médiane des V ≥ 80 ET (tendu OU bulle GSY) → rouge
+  sector_green_max_v: 40       # médiane des V ≤ 40 → vert ; ou capitulation : baisse ≥ 25 % ET écart MM200 ≤ 10e percentile
+  sector_capitulation_drawdown: 0.25
+  sector_capitulation_gap_pct: 10
   gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You, mesuré sur des SECTEURS
   extension_red_min: 90        # écart à la MM200 j en percentile 25 ans (min 10 ans) → « tendu »
   runup_alert_min: 1.50        # hausse ≥ 150 % sur 2 ans : probabilité de krach ≈ 80 % dans GSY

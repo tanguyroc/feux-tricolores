@@ -25,15 +25,21 @@ URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 CONCEPTS = {
     "revenue": ({"us-gaap": ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet"], "ifrs-full": ["Revenue"]}, "flow"),
     "ebit": ({"us-gaap": ["OperatingIncomeLoss"], "ifrs-full": ["ProfitLossFromOperatingActivities", "ProfitLossBeforeTax"]}, "flow"),
-    "net_income": ({"us-gaap": ["NetIncomeLoss"], "ifrs-full": ["ProfitLossAttributableToOwnersOfParent", "ProfitLoss"]}, "flow"),
-    "cfo": ({"us-gaap": ["NetCashProvidedByUsedInOperatingActivities"], "ifrs-full": ["CashFlowsFromUsedInOperatingActivities"]}, "flow"),
+    "net_income": ({"us-gaap": ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss",
+                            "NetIncomeLossIncludingPortionAttributableToNonredeemableNoncontrollingInterest", "IncomeLossFromContinuingOperations"],
+                "ifrs-full": ["ProfitLossAttributableToOwnersOfParent", "ProfitLoss"]}, "flow"),
+    "cfo": ({"us-gaap": ["NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
+            "ifrs-full": ["CashFlowsFromUsedInOperatingActivities"]}, "flow"),
     "capex": ({"us-gaap": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsToAcquireOtherPropertyPlantAndEquipment",
                            "PaymentsForCapitalImprovements"],
                "ifrs-full": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
                              "PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets",
                              "PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"]}, "flow"),
-    "da": ({"us-gaap": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "DepreciationAmortizationAndAccretionNet"],
-            "ifrs-full": ["DepreciationAndAmortisationExpense"]}, "flow"),
+    "da": ({"us-gaap": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "DepreciationAmortizationAndAccretionNet",
+                     "DepreciationAmortizationAndOther"],
+            "ifrs-full": ["DepreciationAndAmortisationExpense", "AdjustmentsForDepreciationAndAmortisationExpense",
+                          "AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss",
+                          "DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss"]}, "flow"),
     "cash": ({"us-gaap": ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
               "ifrs-full": ["CashAndCashEquivalents"]}, "instant"),
     "st_investments": ({"us-gaap": ["ShortTermInvestments", "MarketableSecuritiesCurrent", "AvailableForSaleSecuritiesDebtSecuritiesCurrent"],
@@ -50,6 +56,16 @@ CONCEPTS = {
                 "ifrs-full": ["ProfitLossBeforeTax"]}, "flow"),
     "interest": ({"us-gaap": ["InterestExpense", "InterestExpenseNonoperating", "InterestExpenseDebt"], "ifrs-full": ["InterestExpense", "FinanceCosts"]}, "flow"),
 }
+# Amortissements publiés en deux morceaux (Abbott, Gilead, Merck...) : dépréciation des immobilisations corporelles
+# + amortissement des incorporels. Utilisés quand aucun concept « D&A » combiné n'existe ou n'est plus publié.
+DA_COMPONENTS = (
+    {"us-gaap": ["Depreciation", "DepreciationNonproduction"], "ifrs-full": ["DepreciationPropertyPlantAndEquipment", "DepreciationExpense"]},
+    {"us-gaap": ["AmortizationOfIntangibleAssets", "AdjustmentForAmortization"], "ifrs-full": ["AmortisationIntangibleAssetsOtherThanGoodwill", "AmortisationExpense"]},
+)
+PRETAX_COMPONENTS = (
+    {"us-gaap": ["ProfitLoss", "NetIncomeLoss"], "ifrs-full": ["ProfitLoss"]},
+    {"us-gaap": ["IncomeTaxExpenseBenefit"], "ifrs-full": ["IncomeTaxExpenseContinuingOperations"]},
+)
 WEIGHTED_SHARES = {"us-gaap": ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfSharesOutstandingBasic"],
                    "ifrs-full": ["WeightedAverageShares", "AdjustedWeightedAverageShares"]}
 SHARES_CONCEPTS = {"dei": ["EntityCommonStockSharesOutstanding"], "us-gaap": ["CommonStockSharesOutstanding"],
@@ -177,18 +193,53 @@ def quarterly_flow(cf: dict, concepts) -> pd.DataFrame:
     return out
 
 
+def summed_flow(cf: dict, groups) -> pd.DataFrame:
+    """Somme de plusieurs flux trimestriels (ex. dépréciation + amortissement des incorporels), alignés sur la fin
+    de période. Le premier groupe est obligatoire ; les suivants valent 0 quand ils manquent à une date."""
+    parts = [quarterly_flow(cf, g) for g in groups]
+    base = parts[0]
+    if base.empty:
+        return base
+    out = base.copy()
+    concepts = [base.attrs.get("concept", "")]
+    for p in parts[1:]:
+        if p.empty or p.attrs.get("annual_only") != base.attrs.get("annual_only"):
+            continue
+        add = p[["end", "filed", "val"]].rename(columns={"filed": "filed_b", "val": "val_b"})
+        out = out.merge(add, on="end", how="left")
+        out["val"] = out["val"] + out["val_b"].fillna(0.0)
+        out["filed"] = out[["filed", "filed_b"]].max(axis=1)
+        out = out.drop(columns=["filed_b", "val_b"])
+        concepts.append(p.attrs.get("concept", ""))
+    out = out.reset_index(drop=True)
+    out.attrs.update(base.attrs)
+    out.attrs["concept"] = " + ".join(c for c in concepts if c)
+    return out
+
+
 def instant(cf: dict, concepts, taxonomy: str | None = None) -> pd.DataFrame:
+    """Valeurs de bilan datées du dépôt. Comme pour les flux, les concepts sont FUSIONNÉS : Qualcomm, Broadcom, Visa ou
+    UnitedHealth ont abandonné StockholdersEquity pour la variante « y compris minoritaires » ; prendre le premier concept
+    disponible figerait la série à sa dernière publication."""
     pairs = [(taxonomy, c) for c in concepts] if taxonomy else _iter_concepts(concepts)
+    parts = []
     for tax, concept in pairs:
         df = _facts(cf, tax, concept)
         if df.empty:
             continue
-        out = _first_reported(df, ["end"])[["end", "filed", "val"]].sort_values("end")
+        out = _first_reported(df, ["end"])[["end", "filed", "val"]].sort_values("end").copy()
         if len(out) >= 4:
-            out.attrs["concept"] = f"{tax}:{concept}"
-            out.attrs["unit"] = df["unit"].iloc[0]
-            return out.reset_index(drop=True)
-    return pd.DataFrame(columns=["end", "filed", "val"])
+            out["concept"] = f"{tax}:{concept}"
+            out["unit"] = df["unit"].iloc[0]
+            parts.append(out)
+    if not parts:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    parts = sorted(parts, key=lambda d: d["end"].max(), reverse=True)   # le plus récent d'abord
+    merged = pd.concat(parts).sort_values("end").drop_duplicates("end", keep="first")
+    res = merged[["end", "filed", "val"]].reset_index(drop=True)
+    res.attrs["concept"] = " + ".join(dict.fromkeys(d["concept"].iloc[0] for d in parts))
+    res.attrs["unit"] = parts[0]["unit"].iloc[0]
+    return res
 
 
 def ttm(q: pd.DataFrame) -> pd.DataFrame:
@@ -269,13 +320,51 @@ def implied_shares(net_income_ttm: pd.DataFrame, cf: dict) -> pd.DataFrame:
     return out
 
 
-def fundamentals(cik: int) -> dict[str, pd.DataFrame]:
+def merge_companyfacts(cfs: list[dict]) -> dict:
+    """Concatène les faits de plusieurs CIK (réorganisation en holding : l'historique reste sur l'ancien CIK)."""
+    out = {"facts": {}}
+    for cf in cfs:
+        for taxo, tags in cf.get("facts", {}).items():
+            dst = out["facts"].setdefault(taxo, {})
+            for tag, body in tags.items():
+                d = dst.setdefault(tag, {"units": {}})
+                for unit, arr in body.get("units", {}).items():
+                    d["units"].setdefault(unit, []).extend(arr)
+    return out
+
+
+def public_float(cf: dict) -> pd.DataFrame:
+    """Flottant en dollars déclaré en couverture du 10-K (dei:EntityPublicFloat), daté du dépôt."""
+    df = _facts(cf, "dei", "EntityPublicFloat")
+    if df.empty:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    out = _first_reported(df, ["end"])[["end", "filed", "val"]].sort_values("end").reset_index(drop=True)
+    out.attrs["concept"] = "dei:EntityPublicFloat"
+    out.attrs["unit"] = df["unit"].iloc[0]
+    return out
+
+
+def fundamentals(cik: int, extra_ciks: tuple[int, ...] = ()) -> dict[str, pd.DataFrame]:
     """Toutes les séries (TTM pour les flux, dernière valeur pour les stocks), chacune avec end/filed/val."""
     cf = fetch_companyfacts(cik)
+    if extra_ciks:
+        cf = merge_companyfacts([cf] + [fetch_companyfacts(int(c)) for c in extra_ciks])
     out = {}
     for key, (concepts, kind) in CONCEPTS.items():
         if kind == "flow":
             q = quarterly_flow(cf, concepts)
+            ref_end = out["net_income"]["end"].max() if "net_income" in out and not out["net_income"].empty else None
+            stale = q.empty or (ref_end is not None and q["end"].max() < ref_end - pd.Timedelta(days=400))
+            if key == "da" and stale:
+                # concept combiné absent, ou abandonné depuis plus d'un an : dépréciation + amortissement des incorporels
+                parts = summed_flow(cf, DA_COMPONENTS)
+                if not parts.empty and (q.empty or parts["end"].max() > q["end"].max()):
+                    q = parts
+            if key == "pretax" and stale:
+                # ni résultat d'exploitation ni résultat avant impôt publiés : résultat net + impôt sur les bénéfices
+                parts = summed_flow(cf, PRETAX_COMPONENTS)
+                if not parts.empty and len(parts) >= 2 and (q.empty or parts["end"].max() > q["end"].max()):
+                    q = parts
             t = ttm(q)
             t.attrs.update(q.attrs)
             out[key] = t
@@ -287,9 +376,12 @@ def fundamentals(cik: int) -> dict[str, pd.DataFrame]:
         implied = implied_shares(out["net_income"], cf)
         if not implied.empty and (out["shares"].empty or implied["end"].max() > out["shares"]["end"].max()):
             out["shares"] = implied
-    units = {v.attrs.get("unit") for v in out.values() if v.attrs.get("unit") and v.attrs.get("unit") != "shares"}
+    out["public_float"] = public_float(cf)
+    out["shares_stale"] = out["shares"].empty or out["shares"]["end"].max() < pd.Timestamp.now() - pd.DateOffset(years=2)
+    units = {v.attrs.get("unit") for k, v in out.items()
+             if hasattr(v, "attrs") and k != "public_float" and v.attrs.get("unit") and v.attrs.get("unit") != "shares"}
     if len(units) > 1:
         log.warning("CIK %d : plusieurs devises dans les comptes (%s) ; vérifier la cohérence avec la devise du cours", cik, units)
-    log.info("EDGAR CIK %d : %s%s", cik, ", ".join(f"{k}={len(v)}" for k, v in out.items()),
-             " (annuel seulement : déposant 20-F)" if any(v.attrs.get("annual_only") for v in out.values()) else "")
+    log.info("EDGAR CIK %d : %s%s", cik, ", ".join(f"{k}={len(v)}" for k, v in out.items() if hasattr(v, "attrs")),
+             " (annuel seulement : déposant 20-F)" if any(hasattr(v, "attrs") and v.attrs.get("annual_only") for v in out.values()) else "")
     return out
