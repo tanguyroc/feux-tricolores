@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
-from .alerts import current_state, send_telegram
+from .alerts import current_state, send
 from .config import DOCS_DIR
 from .plain import headline, monthly_actions, simple_btc, simple_index
 from .signals import load_signals
@@ -34,5 +34,5 @@ def run(dry_run: bool = False) -> str:
     (DOCS_DIR / "brief.md").write_text(text, encoding="utf-8")
     log.info("Brief :\n%s", text)
     if not dry_run:
-        send_telegram(text)
+        send(text, "Feux tricolores — le point du mois")
     return text

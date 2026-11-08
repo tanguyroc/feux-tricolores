@@ -65,16 +65,43 @@ def compose(changes: list[str], cur: dict, detailed: bool = True) -> str:
     return "\n".join(lines)
 
 
+def send_ntfy(text: str, title: str = "Feux tricolores") -> bool:
+    """ntfy.sh : notification push sans compte. Le sujet (NTFY_TOPIC) est le seul secret : qui le connaît peut
+    lire et envoyer sur ce canal, d'où un nom long et aléatoire, stocké en secret GitHub."""
+    topic = os.environ.get("NTFY_TOPIC", "").strip()
+    if not topic:
+        return False
+    server = os.environ.get("NTFY_SERVER", "https://ntfy.sh").rstrip("/")
+    body = text if len(text) <= 3800 else text[:3700] + "\n… (suite dans l'application)"
+    r = requests.post(f"{server}/{topic}", data=body.encode("utf-8"),
+                      headers={"Title": title.encode("utf-8").decode("latin-1", "ignore"), "Tags": "vertical_traffic_light", "Priority": "default",
+                               "Content-Type": "text/plain; charset=utf-8"}, timeout=30)
+    r.raise_for_status()
+    return True
+
+
 def send_telegram(text: str) -> bool:
     token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat:
-        log.warning("TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID absents : alerte non envoyée")
         return False
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     for chunk in [text[i:i + 3900] for i in range(0, len(text), 3900)]:
         r = requests.post(url, json={"chat_id": chat, "text": chunk, "disable_web_page_preview": True}, timeout=30)
         r.raise_for_status()
     return True
+
+
+def send(text: str, title: str = "Feux tricolores") -> bool:
+    """Envoie sur tous les canaux configurés (ntfy et/ou Telegram) ; journalise si aucun ne l'est."""
+    sent = False
+    for fn in (lambda: send_ntfy(text, title), lambda: send_telegram(text)):
+        try:
+            sent = fn() or sent
+        except Exception as exc:  # noqa: BLE001
+            log.error("Envoi d'alerte en échec : %s", exc)
+    if not sent:
+        log.warning("Aucun canal d'alerte configuré (NTFY_TOPIC ou TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID) : message non envoyé")
+    return sent
 
 
 def notify_changes(dry_run: bool = False) -> list[str]:
@@ -85,7 +112,7 @@ def notify_changes(dry_run: bool = False) -> list[str]:
         text = compose(changes, cur)
         log.info("Changements détectés :\n%s", text)
         if not dry_run:
-            send_telegram(text)
+            send(text, "Feux tricolores — changement d'état")
     else:
         log.info("Aucun changement de couleur ni de drapeau.")
     if not dry_run:

@@ -110,26 +110,54 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df = price_block(px)
     unit = next((v.attrs.get("unit") for v in f.values() if v.attrs.get("unit") and v.attrs.get("unit") != "shares"), px_ccy)
     df["price_in_accounts_ccy"] = px * fx_series(px_ccy, unit, cal) if unit and px_ccy and unit != px_ccy else px
-    for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt_lt", "debt_st", "equity", "shares"):
+    for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt_lt", "debt_st", "equity", "shares",
+              "assets", "pretax", "interest"):
         df[k] = _asof(f.get(k), cal)
-    df["fcf"] = df["cfo"] - df["capex"].fillna(0.0)
+    # résultat d'exploitation absent (pétrole, pharma, banques) : résultat avant impôt + charges d'intérêts
+    ebit_source = "résultat d'exploitation"
+    if df["ebit"].isna().all() or df["ebit"].last_valid_index() is None or df["ebit"].last_valid_index() < cal[-1] - pd.DateOffset(years=2):
+        if df["pretax"].notna().any():
+            df["ebit"] = df["pretax"] + df["interest"].fillna(0.0)
+            ebit_source = "résultat avant impôt + intérêts (approximation)"
+    has_capex = f.get("capex") is not None and len(f["capex"]) > 0
+    df["fcf"] = df["cfo"] - (df["capex"].ffill() if has_capex else np.nan)   # sans capex connu : FCF inconnu (pas CFO)
     df["debt"] = df["debt_lt"].fillna(0.0) + df["debt_st"].fillna(0.0)
     df["liquidity"] = df["cash"].fillna(0.0) + df["st_investments"].fillna(0.0)
     df["mcap"] = df["price_in_accounts_ccy"] * df["shares"]
+    # garde-fou : un nombre d'actions exprimé en ADS ou dans une autre unité rend la capitalisation absurde
+    last_rev, last_ni = df["revenue"].iloc[-1], df["net_income"].iloc[-1]
+    shares_ok = not (pd.notna(last_rev) and pd.notna(last_ni) and last_ni > 0 and df["mcap"].iloc[-1] < 0.2 * last_rev)
+    if not shares_ok:
+        df["mcap"] = np.nan
     df["ev"] = df["mcap"] + df["debt"] - df["liquidity"]
-    df["ev_ebit"] = (df["ev"] / df["ebit"]).where(df["ebit"] > 0)
-    df["p_fcf"] = (df["mcap"] / df["fcf"]).where(df["fcf"] > 0)
     w, mn = TD * r["valuation"]["pct_years"], TD * r["valuation"]["pct_min_years"]
-    df["ev_ebit_pct"] = ind.rolling_pct(df["ev_ebit"], w, mn)
-    df["p_fcf_pct"] = ind.rolling_pct(df["p_fcf"], w, mn)
-    df["V"] = df[["ev_ebit_pct", "p_fcf_pct"]].median(axis=1, skipna=True)
     q = r["quality"]
-    invested = df["equity"] + df["debt"] - df["liquidity"]
-    df["roic"] = (df["ebit"] * (1 - q["tax_rate"]) / invested).where(invested > 0)
-    df["fcf_ni"] = (df["fcf"] / df["net_income"]).where(df["net_income"] > 0)
-    ebitda = df["ebit"] + df["da"].fillna(0.0)
-    df["nd_ebitda"] = ((df["debt"] - df["liquidity"]) / ebitda).where(ebitda > 0)
-    df["quality_ok"] = (df["roic"] >= q["roic_min"]) & (df["fcf_ni"] >= q["fcf_to_net_income_min"]) & (df["nd_ebitda"] <= q["net_debt_to_ebitda_max"])
+    financial = (spec.get("sector") == "Financials") and f.get("ebit") is not None and len(f["ebit"]) == 0
+    if financial:
+        # banques et assureurs : EV et FCF n'ont pas de sens → P/E et P/B, qualité = rentabilité des fonds propres
+        df["pe"] = (df["mcap"] / df["net_income"]).where(df["net_income"] > 0)
+        df["pb"] = (df["mcap"] / df["equity"]).where(df["equity"] > 0)
+        df["pe_pct"] = ind.rolling_pct(df["pe"], w, mn)
+        df["pb_pct"] = ind.rolling_pct(df["pb"], w, mn)
+        df["V"] = df[["pe_pct", "pb_pct"]].median(axis=1, skipna=True)
+        df["roe"] = (df["net_income"] / df["equity"]).where(df["equity"] > 0)
+        df["quality_ok"] = df["roe"] >= q["roic_min"]
+        for c in ("ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda"):
+            df[c] = np.nan
+    else:
+        df["ev_ebit"] = (df["ev"] / df["ebit"]).where(df["ebit"] > 0)
+        df["p_fcf"] = (df["mcap"] / df["fcf"]).where(df["fcf"] > 0)
+        df["ev_ebit_pct"] = ind.rolling_pct(df["ev_ebit"], w, mn)
+        df["p_fcf_pct"] = ind.rolling_pct(df["p_fcf"], w, mn)
+        df["V"] = df[["ev_ebit_pct", "p_fcf_pct"]].median(axis=1, skipna=True)
+        # capital investi plancher à 25 % du total de bilan : évite les ROIC absurdes des sociétés à fonds propres quasi nuls
+        invested = (df["equity"] + df["debt"] - df["liquidity"]).clip(lower=0.25 * df["assets"].fillna(0.0))
+        df["roic"] = (df["ebit"] * (1 - q["tax_rate"]) / invested).where(invested > 0)
+        df["fcf_ni"] = (df["fcf"] / df["net_income"]).where(df["net_income"] > 0)
+        ebitda = df["ebit"] + df["da"].fillna(0.0)
+        df["nd_ebitda"] = ((df["debt"] - df["liquidity"]) / ebitda).where(ebitda > 0)
+        df["quality_ok"] = (df["roic"] >= q["roic_min"]) & (df["fcf_ni"] >= q["fcf_to_net_income_min"]) & (df["nd_ebitda"] <= q["net_debt_to_ebitda_max"])
+        df["pe"] = df["pb"] = df["roe"] = np.nan
     d = r["reverse_dcf"]
     fcf_5y = df["fcf"].shift(5 * TD)
     df["fcf_cagr_5y"] = ((df["fcf"] / fcf_5y) ** 0.2 - 1.0).where((df["fcf"] > 0) & (fcf_5y > 0))
@@ -145,6 +173,9 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df["color"] = color
     df["color_confirmed"] = confirmed_color(df["color"], int(rules().get("confirmation_days", 5)))
     df["kind"] = "operating"
+    df.attrs["mode"] = "financial" if financial else "industrial"
+    df.attrs["ebit_source"] = ebit_source
+    df.attrs["shares_ok"] = bool(shares_ok)
     df.attrs["concepts"] = {k: v.attrs.get("concept") for k, v in f.items() if hasattr(v, "attrs")}
     df.attrs["accounts_currency"] = unit
     df.attrs["price_currency"] = px_ccy

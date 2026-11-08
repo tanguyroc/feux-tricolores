@@ -24,10 +24,14 @@ URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 # étrangères déposant un 20-F : ASML, Novo Nordisk, TotalEnergies...). flow = sur une période ; instant = à une date.
 CONCEPTS = {
     "revenue": ({"us-gaap": ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet"], "ifrs-full": ["Revenue"]}, "flow"),
-    "ebit": ({"us-gaap": ["OperatingIncomeLoss"], "ifrs-full": ["ProfitLossFromOperatingActivities"]}, "flow"),
+    "ebit": ({"us-gaap": ["OperatingIncomeLoss"], "ifrs-full": ["ProfitLossFromOperatingActivities", "ProfitLossBeforeTax"]}, "flow"),
     "net_income": ({"us-gaap": ["NetIncomeLoss"], "ifrs-full": ["ProfitLossAttributableToOwnersOfParent", "ProfitLoss"]}, "flow"),
     "cfo": ({"us-gaap": ["NetCashProvidedByUsedInOperatingActivities"], "ifrs-full": ["CashFlowsFromUsedInOperatingActivities"]}, "flow"),
-    "capex": ({"us-gaap": ["PaymentsToAcquirePropertyPlantAndEquipment"], "ifrs-full": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities"]}, "flow"),
+    "capex": ({"us-gaap": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsToAcquireOtherPropertyPlantAndEquipment",
+                           "PaymentsForCapitalImprovements"],
+               "ifrs-full": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+                             "PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets",
+                             "PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"]}, "flow"),
     "da": ({"us-gaap": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "DepreciationAmortizationAndAccretionNet"],
             "ifrs-full": ["DepreciationAndAmortisationExpense"]}, "flow"),
     "cash": ({"us-gaap": ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
@@ -38,8 +42,18 @@ CONCEPTS = {
     "debt_st": ({"us-gaap": ["LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings"], "ifrs-full": ["ShorttermBorrowings", "CurrentPortionOfLongtermBorrowings"]}, "instant"),
     "equity": ({"us-gaap": ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
                 "ifrs-full": ["EquityAttributableToOwnersOfParent", "Equity"]}, "instant"),
+    "assets": ({"us-gaap": ["Assets"], "ifrs-full": ["Assets"]}, "instant"),
+    # repli quand le résultat d'exploitation n'est pas publié (pétrole, pharma, banques) : résultat avant impôt + intérêts
+    "pretax": ({"us-gaap": ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+                            "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+                            "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic"],
+                "ifrs-full": ["ProfitLossBeforeTax"]}, "flow"),
+    "interest": ({"us-gaap": ["InterestExpense", "InterestExpenseNonoperating", "InterestExpenseDebt"], "ifrs-full": ["InterestExpense", "FinanceCosts"]}, "flow"),
 }
-SHARES_CONCEPTS = ["EntityCommonStockSharesOutstanding"]  # taxonomie dei (10-K, 10-Q et 20-F)
+WEIGHTED_SHARES = {"us-gaap": ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfSharesOutstandingBasic"],
+                   "ifrs-full": ["WeightedAverageShares", "AdjustedWeightedAverageShares"]}
+SHARES_CONCEPTS = {"dei": ["EntityCommonStockSharesOutstanding"], "us-gaap": ["CommonStockSharesOutstanding"],
+                   "ifrs-full": ["NumberOfSharesOutstanding", "NumberOfSharesIssued"]}
 CURRENCY_UNIT = re.compile(r"^[A-Z]{3}$")
 
 
@@ -93,41 +107,74 @@ def _iter_concepts(concepts) -> list[tuple[str, str]]:
     return [("us-gaap", c) for c in concepts]
 
 
+def _quarterize(df: pd.DataFrame) -> pd.DataFrame:
+    """Transforme des faits de flux (trimestriels, cumulés depuis le début d'exercice, annuels) en valeurs
+    TRIMESTRIELLES datées du dépôt. Première publication conservée. Attribut annual_only si rien de trimestriel."""
+    df = df.dropna(subset=["start"]).copy()
+    df["days"] = (df["end"] - df["start"]).dt.days
+    df = _first_reported(df, ["start", "end"]).sort_values(["start", "end"])
+    rows = []
+    # 1) trimestres explicites (≈ 90 jours)
+    expl = df[(df["days"] >= 80) & (df["days"] <= 100)]
+    for r in expl.itertuples():
+        rows.append({"end": r.end, "filed": r.filed, "val": float(r.val), "kind": "explicit"})
+    # 2) cumuls depuis le même début de période : différences successives (6M−3M, 9M−6M, 12M−9M)
+    for _, g in df.groupby("start"):
+        g = g.sort_values("end")
+        prev = None
+        for r in g.itertuples():
+            if prev is not None and 80 <= (r.end - prev.end).days <= 100:
+                rows.append({"end": r.end, "filed": max(r.filed, prev.filed), "val": float(r.val - prev.val), "kind": "derived"})
+            prev = r
+    # 3) annuel − trois trimestres explicites (sociétés sans cumuls)
+    q_by_end = {r.end: (float(r.val), r.filed) for r in expl.itertuples()}
+    for r in df[(df["days"] >= 350) & (df["days"] <= 380)].itertuples():
+        inside = [e for e in q_by_end if r.start < e < r.end]
+        if len(inside) == 3 and r.end not in q_by_end:
+            rows.append({"end": r.end, "filed": r.filed, "val": float(r.val) - sum(q_by_end[e][0] for e in inside), "kind": "derived"})
+    if not rows:
+        a = df[(df["days"] >= 350) & (df["days"] <= 380)]
+        if len(a) >= 4:
+            out = a[["end", "filed", "val"]].copy()
+            out["val"] = out["val"].astype(float)
+            out.attrs["annual_only"] = True
+            return out.sort_values("end").reset_index(drop=True)
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    out = pd.DataFrame(rows)
+    out["rank"] = (out["kind"] != "explicit").astype(int)
+    out = out.sort_values(["end", "rank", "filed"]).drop_duplicates("end", keep="first")[["end", "filed", "val"]]
+    return out.reset_index(drop=True)
+
+
 def quarterly_flow(cf: dict, concepts) -> pd.DataFrame:
-    """Valeurs trimestrielles (≈ 90 jours) datées du dépôt ; le T4 est déduit de l'annuel moins les trois
-    trimestres déjà publiés. Les déposants de 20-F n'ont que des valeurs annuelles : on les garde alors
-    telles quelles (période de 12 mois = déjà un « TTM »), avec l'attribut annual_only. Colonnes : end, filed, val."""
-    annual_fallback = None
+    """Valeurs trimestrielles datées du dépôt. Les sociétés changent de concept XBRL au fil du temps
+    (Revenues → RevenueFromContract...) : les séries des différents concepts sont FUSIONNÉES, le concept le plus
+    récent l'emportant pour une même date. Déposants de 20-F : valeurs annuelles (attribut annual_only)."""
+    parts = []
     for taxonomy, concept in _iter_concepts(concepts):
         df = _facts(cf, taxonomy, concept)
         if df.empty or df["start"].isna().all():
             continue
-        df = df.dropna(subset=["start"])
-        df["days"] = (df["end"] - df["start"]).dt.days
-        q = _first_reported(df[(df["days"] >= 80) & (df["days"] <= 100)], ["end"])
-        a = _first_reported(df[(df["days"] >= 350) & (df["days"] <= 380)], ["end"])
-        rows = [{"end": r.end, "filed": r.filed, "val": float(r.val)} for r in q.itertuples()]
-        q_by_end = {r.end: float(r.val) for r in q.itertuples()}
-        for r in a.itertuples():
-            # trimestres de l'exercice : fins de trimestre dans les 12 mois précédant la fin d'exercice
-            prev = [e for e in q_by_end if r.start < e < r.end]
-            if len(prev) == 3 and r.end not in q_by_end:
-                rows.append({"end": r.end, "filed": r.filed, "val": float(r.val) - sum(q_by_end[e] for e in prev)})
-        out = pd.DataFrame(rows).sort_values(["end", "filed"]).drop_duplicates("end", keep="first") if rows else pd.DataFrame(columns=["end", "filed", "val"])
-        if len(out) >= 8:
-            out.attrs["concept"] = f"{taxonomy}:{concept}"
-            out.attrs["unit"] = df["unit"].iloc[0]
-            return out.reset_index(drop=True)
-        if annual_fallback is None and len(a) >= 4:
-            ann = a[["end", "filed", "val"]].copy()
-            ann["val"] = ann["val"].astype(float)
-            ann.attrs["concept"] = f"{taxonomy}:{concept}"
-            ann.attrs["unit"] = df["unit"].iloc[0]
-            ann.attrs["annual_only"] = True
-            annual_fallback = ann.sort_values("end").reset_index(drop=True)
-    if annual_fallback is not None:
-        return annual_fallback
-    return pd.DataFrame(columns=["end", "filed", "val"])
+        q = _quarterize(df)
+        if q.empty:
+            continue
+        q = q.copy()
+        q["concept"] = f"{taxonomy}:{concept}"
+        q["unit"] = df["unit"].iloc[0]
+        q["annual"] = bool(q.attrs.get("annual_only"))
+        parts.append(q)
+    if not parts:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    quarterly = [q for q in parts if not q["annual"].iloc[0]]
+    use = quarterly if quarterly else parts
+    use = sorted(use, key=lambda q: q["end"].max(), reverse=True)   # le plus récent d'abord
+    merged = pd.concat(use).sort_values("end").drop_duplicates("end", keep="first")
+    out = merged[["end", "filed", "val"]].reset_index(drop=True)
+    out.attrs["concept"] = " + ".join(dict.fromkeys(q["concept"].iloc[0] for q in use))
+    out.attrs["unit"] = use[0]["unit"].iloc[0]
+    if not quarterly:
+        out.attrs["annual_only"] = True
+    return out
 
 
 def instant(cf: dict, concepts, taxonomy: str | None = None) -> pd.DataFrame:
@@ -157,6 +204,71 @@ def ttm(q: pd.DataFrame) -> pd.DataFrame:
     return out.reset_index(drop=True)
 
 
+def weighted_shares(cf: dict) -> pd.DataFrame:
+    """Nombre moyen d'actions (dilué) par période EXPLICITE (trimestre ≈ 90 j, ou exercice), daté du dépôt.
+    Une moyenne ne se dé-cumule pas : on ne garde que les périodes publiées telles quelles."""
+    for taxonomy, concept in _iter_concepts(WEIGHTED_SHARES):
+        df = _facts(cf, taxonomy, concept)
+        if df.empty or df["start"].isna().all():
+            continue
+        df = df.dropna(subset=["start"]).copy()
+        df["days"] = (df["end"] - df["start"]).dt.days
+        q = df[(df["days"] >= 80) & (df["days"] <= 100)]
+        a = df[(df["days"] >= 350) & (df["days"] <= 380)]
+        use = q if len(q) >= 4 else a
+        if len(use) >= 4:
+            out = _first_reported(use, ["end"])[["end", "filed", "val"]].sort_values("end").reset_index(drop=True)
+            out.attrs["concept"] = f"{taxonomy}:{concept} (moyenne pondérée)"
+            out.attrs["unit"] = "shares"
+            return out
+    return pd.DataFrame(columns=["end", "filed", "val"])
+
+
+def shares_series(cf: dict) -> pd.DataFrame:
+    """Nombre d'actions : fusion de toutes les sources (page de garde dei, bilan us-gaap/ifrs, moyennes pondérées),
+    la source la plus récente l'emportant pour une même date. Les sociétés changent de concept au fil du temps
+    et certaines (Exxon) n'ont la page de garde que depuis peu."""
+    parts = []
+    for tax, concepts in SHARES_CONCEPTS.items():
+        for concept in concepts:
+            df = _facts(cf, tax, concept)
+            if df.empty:
+                continue
+            out = _first_reported(df, ["end"])[["end", "filed", "val"]]
+            out = out.assign(src=f"{tax}:{concept}")
+            parts.append(out)
+    ws = weighted_shares(cf)
+    if not ws.empty:
+        parts.append(ws.assign(src=ws.attrs.get("concept", "moyenne pondérée")))
+    if not parts:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    use = sorted(parts, key=lambda d: d["end"].max(), reverse=True)
+    merged = pd.concat(use).sort_values("end").drop_duplicates("end", keep="first")
+    out = merged[["end", "filed", "val"]].reset_index(drop=True)
+    out["val"] = out["val"].astype(float)
+    out.attrs["concept"] = " + ".join(dict.fromkeys(d["src"].iloc[0] for d in use))
+    out.attrs["unit"] = "shares"
+    return out
+
+
+def implied_shares(net_income_ttm: pd.DataFrame, cf: dict) -> pd.DataFrame:
+    """Dernier recours (Visa, Berkshire : actions multi-classes) : actions implicites = résultat net / BPA dilué,
+    tous deux sur 12 mois glissants."""
+    eps_q = quarterly_flow(cf, {"us-gaap": ["EarningsPerShareDiluted", "EarningsPerShareBasic"], "ifrs-full": ["DilutedEarningsLossPerShare", "BasicEarningsLossPerShare"]})
+    if eps_q.empty or net_income_ttm is None or net_income_ttm.empty:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    eps_ttm = ttm(eps_q)
+    m = net_income_ttm.merge(eps_ttm, on="end", suffixes=("_ni", "_eps"))
+    m = m[m["val_eps"].abs() > 1e-9]
+    if m.empty:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    out = pd.DataFrame({"end": m["end"], "filed": m[["filed_ni", "filed_eps"]].max(axis=1), "val": (m["val_ni"] / m["val_eps"]).astype(float)})
+    out = out.sort_values("end").reset_index(drop=True)
+    out.attrs["concept"] = "résultat net / BPA dilué (actions implicites)"
+    out.attrs["unit"] = "shares"
+    return out
+
+
 def fundamentals(cik: int) -> dict[str, pd.DataFrame]:
     """Toutes les séries (TTM pour les flux, dernière valeur pour les stocks), chacune avec end/filed/val."""
     cf = fetch_companyfacts(cik)
@@ -169,7 +281,12 @@ def fundamentals(cik: int) -> dict[str, pd.DataFrame]:
             out[key] = t
         else:
             out[key] = instant(cf, concepts)
-    out["shares"] = instant(cf, SHARES_CONCEPTS, taxonomy="dei")
+    out["shares"] = shares_series(cf)
+    stale = out["shares"].empty or out["shares"]["end"].max() < pd.Timestamp.now() - pd.DateOffset(years=2)
+    if stale:
+        implied = implied_shares(out["net_income"], cf)
+        if not implied.empty and (out["shares"].empty or implied["end"].max() > out["shares"]["end"].max()):
+            out["shares"] = implied
     units = {v.attrs.get("unit") for v in out.values() if v.attrs.get("unit") and v.attrs.get("unit") != "shares"}
     if len(units) > 1:
         log.warning("CIK %d : plusieurs devises dans les comptes (%s) ; vérifier la cohérence avec la devise du cours", cik, units)

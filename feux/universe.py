@@ -111,6 +111,8 @@ def map_sec(df: pd.DataFrame) -> pd.DataFrame:
         by_name.setdefault(_norm(r["name"]), r["cik"])
     ciks = []
     for name, sym, us in zip(df["name"], df["symbol"], df["us_symbol"]):
+        sym = sym if isinstance(sym, str) else None
+        us = us if isinstance(us, str) else None
         cik = SEC_OVERRIDES.get(name)
         if cik is None and us:
             cik = by_ticker.get(us.upper().replace("-", "."))
