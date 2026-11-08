@@ -230,16 +230,33 @@ def bitcoin_signals() -> pd.DataFrame:
 
 
 # ----------------------------------------------------------------------------------------------
+def confirmed_color(color: pd.Series, days: int) -> pd.Series:
+    """Une nouvelle couleur n'est affichée/alertée qu'après `days` jours consécutifs (anti-clignotement).
+    La règle de couleur elle-même (colonne `color`) n'est pas modifiée."""
+    out, cur, run_color, run_len = [], None, None, 0
+    for c in color:
+        if c == run_color:
+            run_len += 1
+        else:
+            run_color, run_len = c, 1
+        if cur is None or (run_color != cur and run_len >= days):
+            cur = run_color
+        out.append(cur)
+    return pd.Series(out, index=color.index)
+
+
 def compute_all() -> dict[str, pd.DataFrame]:
     r = rules()
     res = {}
     sp = store.to_indexed(store.load("px_sp500"))
     common = {"V": common_valuation(sp.index, sp), "E": common_euphoria(sp.index), "P": common_fear(sp.index)}
+    days = int(r.get("confirmation_days", 5))
     for key in r["indices"]["assets"]:
         res[key] = index_signals(key, common={k: v for k, v in common.items()})
-        log.info("%s : %d jours, dernier %s = %s", key, len(res[key]), res[key].index[-1].date(), res[key]["color"].iloc[-1])
     res["btc"] = bitcoin_signals()
-    log.info("btc : %d jours, dernier %s = %s", len(res["btc"]), res["btc"].index[-1].date(), res["btc"]["color"].iloc[-1])
+    for key, df in res.items():
+        df["color_confirmed"] = confirmed_color(df["color"], days)
+        log.info("%s : %d jours, dernier %s = %s (brut %s)", key, len(df), df.index[-1].date(), df["color_confirmed"].iloc[-1], df["color"].iloc[-1])
     return res
 
 

@@ -27,6 +27,7 @@
   "color": "red",
   "reason": "cher (V ≥ 80) et euphorie (dette sur marge, E ≥ 80)",
   "falling_knife": false,
+  "color_confirmed": "red",
   "date": "2026-11-06"
  },
  "ndx": {
@@ -57,6 +58,7 @@
   "color": "red",
   "reason": "cher (V ≥ 80) et euphorie (dette sur marge, E ≥ 80)",
   "falling_knife": false,
+  "color_confirmed": "red",
   "date": "2026-11-06"
  },
  "world": {
@@ -87,6 +89,7 @@
   "color": "red",
   "reason": "cher (V ≥ 80) et euphorie (dette sur marge, E ≥ 80)",
   "falling_knife": false,
+  "color_confirmed": "red",
   "date": "2026-11-08"
  },
  "btc": {
@@ -103,9 +106,12 @@
   "trend_broken": false,
   "fng": 25.0,
   "fng_30d": 49.666666666666664,
+  "funding_30d": 0.00014243641355776547,
+  "funding_pct": 54.81838398813936,
   "color": "green",
   "reason": "valorisation basse (z ≤ −0,5)",
   "falling_knife": false,
+  "color_confirmed": "green",
   "date": "2026-11-07"
  }
 }

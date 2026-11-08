@@ -58,6 +58,12 @@ def cmd_backtest(args) -> None:
     run_all()
 
 
+def cmd_robustness(args) -> None:
+    from .robustness import run_all
+
+    run_all()
+
+
 def cmd_dashboard(args) -> None:
     from .dashboard import build
 
@@ -82,6 +88,8 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_signals)
     s = sub.add_parser("backtest", help="validation point-in-time")
     s.set_defaults(fn=cmd_backtest)
+    s = sub.add_parser("robustness", help="sous-périodes, bootstrap, sensibilité, confirmation")
+    s.set_defaults(fn=cmd_robustness)
     s = sub.add_parser("dashboard", help="générer docs/index.html")
     s.set_defaults(fn=cmd_dashboard)
     s = sub.add_parser("alert", help="alerter si une couleur ou un drapeau a changé")

@@ -25,10 +25,10 @@ def current_state() -> dict:
     state = {}
     for key, spec in r["indices"]["assets"].items():
         row = load_signals(key).iloc[-1]
-        state[key] = {"name": spec["name"], "color": row["color"], "trend_broken": bool(row["trend_broken"]),
+        state[key] = {"name": spec["name"], "color": row["color_confirmed"], "trend_broken": bool(row["trend_broken"]),
                       "falling_knife": bool(row.get("falling_knife", False)), "date": str(row.name.date())}
     row = load_signals("btc").iloc[-1]
-    state["btc"] = {"name": "Bitcoin", "color": row["color"], "trend_broken": bool(row["trend_broken"]),
+    state["btc"] = {"name": "Bitcoin", "color": row["color_confirmed"], "trend_broken": bool(row["trend_broken"]),
                     "falling_knife": bool(row.get("falling_knife", False)), "date": str(row.name.date())}
     return state
 

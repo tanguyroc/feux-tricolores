@@ -25,7 +25,7 @@ def _f(x, fmt="{:.0f}", suffix=""):
 
 def explain_index(name: str, row: pd.Series) -> str:
     r = rules()["indices"]
-    parts = [f"{name} : {LABEL[row['color']]}."]
+    parts = [f"{name} : {LABEL[row.get('color_confirmed', row['color'])]}."]
     if row["reason"]:
         parts.append(f"Motif : {row['reason']}.")
     parts.append(
@@ -50,7 +50,7 @@ def explain_index(name: str, row: pd.Series) -> str:
 
 
 def explain_btc(row: pd.Series) -> str:
-    parts = [f"Bitcoin : {LABEL[row['color']]}."]
+    parts = [f"Bitcoin : {LABEL[row.get('color_confirmed', row['color'])]}."]
     if row["reason"]:
         parts.append(f"Motif : {row['reason']}.")
     parts.append(

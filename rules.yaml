@@ -69,6 +69,11 @@ bitcoin:
     fng_30d_max: 25
   leverage_flag: {sma_days: 200}
 
+# Confirmation (couche d'affichage et d'alerte, pas la règle) : une nouvelle couleur n'est affichée
+# qu'après N jours de bourse consécutifs. Ajouté le 2026-11-08 (v0.2) : divise par ~3 les changements
+# par an sans modifier les rendements par couleur (docs/robustness.html).
+confirmation_days: 5
+
 # Préséance quand plusieurs conditions sont vraies :
 # 1) vert de capitulation (drawdown + peur), 2) rouge, 3) vert de valorisation, 4) orange.
 precedence: [green_capitulation, red, green_valuation, orange]

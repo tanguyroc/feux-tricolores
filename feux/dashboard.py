@@ -41,7 +41,7 @@ HEX = {"green": "#1a7f37", "orange": "#c7641a", "red": "#b3261e"}
 
 
 def _since(df: pd.DataFrame) -> str:
-    col = df["color"]
+    col = df["color_confirmed"]
     last = col.iloc[-1]
     changes = col[col != last]
     start = col.index[0] if changes.empty else col.index[col.index.get_loc(changes.index[-1]) + 1]
@@ -49,7 +49,7 @@ def _since(df: pd.DataFrame) -> str:
 
 
 def _timeline_svg(df: pd.DataFrame, start: str) -> str:
-    d = df[df.index >= start]["color"].resample("ME").last().dropna()
+    d = df[df.index >= start]["color_confirmed"].resample("ME").last().dropna()
     n = len(d)
     if n == 0:
         return ""
@@ -70,9 +70,15 @@ def _fmt(x, fmt="{:.0f}", suffix="", scale=1.0):
         return "n.d."
 
 
+def _raw_note(row) -> str:
+    if row["color"] != row["color_confirmed"]:
+        return f"<div class='since'>état brut du jour : <b>{LABEL[row['color']]}</b> (confirmé après 5 jours consécutifs)</div>"
+    return ""
+
+
 def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
     row = df.iloc[-1]
-    c = row["color"]
+    c = row["color_confirmed"]
     kv = [
         ("Valorisation V", _fmt(row["V"])), ("— CAPE (vivant)", _fmt(row["cape_live"], "{:.1f}") + f" · p{_fmt(row['cape_pct'])}"),
         ("— Excess CAPE Yield", _fmt(row["ecy_live"], "{:.2f}", " %", 100)), ("— Allocation actions (AIAE)", _fmt(row["aiae"], "{:.1f}", " %", 100) + f" · p{_fmt(row['aiae_pct'])}"),
@@ -87,7 +93,7 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
              + (f"<span class='flag on'>couteau qui tombe</span>" if row.get("falling_knife", False) else ""))
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>{html.escape(name)}</div>"
             f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
-            f"<div class='reason'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>"
+            f"<div class='reason'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>{_raw_note(row)}"
             f"<div>{flags}</div><div class='kv'>{kvh}</div>"
             f"<details><summary>Explication</summary><div class='expl'>{html.escape(explain_index(name, row))}</div></details>"
             f"{_timeline_svg(df, '1990-01-01')}</section>")
@@ -95,7 +101,7 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
 
 def _card_btc(df: pd.DataFrame) -> str:
     row = df.iloc[-1]
-    c = row["color"]
+    c = row["color_confirmed"]
     kv = [
         ("Valorisation V (σ)", _fmt(row["V"], "{:+.2f}")), ("— prix / MM200 semaines", _fmt(row["ratio_200w"], "{:.2f}", "x") + f" · z {_fmt(row['z_ratio_200w'], '{:+.2f}')}"),
         ("— MVRV", _fmt(row["mvrv"], "{:.2f}") + f" · z {_fmt(row['z_mvrv'], '{:+.2f}')}"),
@@ -107,7 +113,7 @@ def _card_btc(df: pd.DataFrame) -> str:
              f"<span class='flag {'on' if row['gsy'] else ''}'>bulle GSY {'ACTIVE' if row['gsy'] else 'non'}</span>")
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>Bitcoin</div>"
             f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
-            f"<div class='reason'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>"
+            f"<div class='reason'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>{_raw_note(row)}"
             f"<div>{flags}</div><div class='kv'>{kvh}</div>"
             f"<details><summary>Explication</summary><div class='expl'>{html.escape(explain_btc(row))}</div></details>"
             f"{_timeline_svg(df, '2014-01-01')}</section>")
