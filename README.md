@@ -58,14 +58,24 @@ Le gain attendu de l'outil n'est **pas** sur le rendement des flux (≈ 0) ; il 
 (2) le comportement (pas d'achat exceptionnel ni de levier dans l'euphorie, achats effectifs dans la capitulation),
 (3) le Bitcoin, où la discrimination vert/rouge est forte.
 
-## Modules (v0.2)
+## Pour qui ne lit pas les bilans
+
+Le tableau de bord s'ouvre en **mode simple** : une phrase par feu (« Feu rouge sur les grandes entreprises américaines :
+les actions se paient cher par rapport aux bénéfices des dix dernières années ; les investisseurs empruntent beaucoup pour
+acheter… Ce n'est pas le moment de placer une grosse somme d'un coup. Les versements habituels continuent. »), un encadré
+« Ce mois-ci, concrètement » et un glossaire où chaque indicateur est expliqué en langage courant avec ce que la règle en fait.
+Le **mode détaillé** garde tous les chiffres, percentiles et z-scores. Le brief mensuel (Telegram) reprend la version simple.
+
+## Modules (v0.3)
 
 | Module | Commande | Données | État |
 |---|---|---|---|
 | Indices (S&P 500, Nasdaq-100, MSCI World) | `signals` | Shiller, FRED, Yahoo, FINRA | validé 1985-2026 |
 | Bitcoin | `signals` | Coin Metrics, alternative.me, Deribit (financement) | validé 2014-2026, confiance moyenne |
 | Actions suivies (≤ 10, `stocks.yaml`) | `stocks` | SEC EDGAR (point-in-time), Yahoo | prototype, non backtesté ; `SEC_USER_AGENT` requis |
-| Journal de décision (48 h) | `decide` | — | opérationnel, dossier `journal/` hors dépôt |
+| Thèmes sectoriels (semis, logiciels, tech) | `signals` (ou `themes`) | Yahoo (^SOX, IGV, XLK) | drapeaux de bulle, pas de couleur |
+| Brief mensuel | `brief` | — | Telegram le 1er du mois |
+| Journal de décision (48 h) | `decide` | — | opérationnel, dossier `journal/` hors dépôt ; rappelle les statistiques historiques |
 | Validation et robustesse | `backtest`, `robustness` | — | rapports HTML |
 
 ## Installation et usage

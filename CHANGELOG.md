@@ -43,3 +43,15 @@
   Nécessite `SEC_USER_AGENT`. Non validé par backtest (10 ans de données, ≤ 10 valeurs : anecdotique).
 - **Journal de décision** (`python -m feux decide`) : intention écrite + cinq questions, confirmation refusée avant 48 h,
   instantané des feux à l'intention et à la confirmation. Dossier `journal/` exclu du dépôt (personnel).
+
+## 2026-11-08 — v0.3 (expérience utilisateur et valeur concrète ; aucun seuil de règle modifié)
+- **Mode simple / mode détaillé** dans le tableau de bord : mêmes chiffres, mêmes règles, mais chaque feu est d'abord
+  expliqué en une phrase de langage courant ; « En une phrase » et « Ce mois-ci, concrètement » en tête ; glossaire de tous
+  les indicateurs avec ce que la règle en fait ; infobulles sur chaque chiffre. Les alertes commencent par la version simple.
+- **Thèmes sectoriels** (semi-conducteurs ^SOX, éditeurs de logiciels IGV, technologie XLK) : drapeaux de bulle
+  (critère GSY, établi sur des secteurs), extension et tendance. Pas de couleur : sans valorisation, jamais « rouge ».
+- **Brief mensuel** (`python -m feux brief`, workflow `monthly.yml` le 1er du mois) : le point en langage courant + actions du mois.
+- **Journal** : à l'enregistrement d'une intention, rappel de ce qui s'est passé historiquement après la couleur du jour.
+- **EDGAR** : concepts IFRS (déposants de 20-F : ASML, Novo Nordisk, TotalEnergies) et devises ; valeurs annuelles acceptées.
+- **Liste de suivi proposée** (`stocks.yaml`, à valider) : Oracle, Microsoft, Nvidia, Salesforce (à remplacer par l'éditeur détenu),
+  Alphabet, ASML (PEA), Novo Nordisk (PEA), Visa, Strategy (proxy), SoftBank (prix seul).
