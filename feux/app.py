@@ -149,7 +149,7 @@ Rouge = valorisation ≥ 80e percentile de son propre historique 10 ans ET (haus
 <label>Montant (€)<input id="pf-amount" type="number" min="0" step="100"></label>
 <label>Levier<select id="pf-lev"><option value="1">×1</option><option value="2">×2</option><option value="3">×3</option></select></label>
 <label>Enveloppe<select id="pf-acct"><option>PEA</option><option>CTO</option><option>Assurance-vie</option><option>Livret / cash</option><option>Autre</option></select></label>
-<button class="btn" id="pf-add">Ajouter</button></div>
+<button class="btn" id="pf-add">Ajouter</button></div><p class="note" id="pf-msg" style="display:none"></p>
 <div style="overflow-x:auto"><table id="pf-table"></table></div>
 <h3>Cibles et versement</h3>
 <div class="form" id="pf-targets">
@@ -159,8 +159,9 @@ Rouge = valorisation ≥ 80e percentile de son propre historique 10 ans ET (haus
 <label>Cible sans risque (%)<input id="t-safe" type="number" value="15"></label>
 <label>Versement mensuel (€)<input id="t-monthly" type="number" value="1000"></label>
 <button class="btn ghost" id="pf-save">Enregistrer</button>
-<button class="btn ghost" id="pf-export">Exporter</button>
+<button class="btn ghost" id="pf-export">Copier (sauvegarde JSON)</button>
 <label>Importer<input id="pf-import" type="file" accept="application/json"></label></div>
+<div id="pf-export-box" style="display:none"><textarea style="width:100%;height:120px;font-size:12px"></textarea></div>
 <div id="pf-analysis"></div>
 </section>
 
@@ -176,7 +177,7 @@ Rouge = valorisation ≥ 80e percentile de son propre historique 10 ans ET (haus
 <label style="grid-column:1/-1">Ce qui invaliderait la décision<textarea id="j-inval" rows="2"></textarea></label>
 <div id="j-questions" style="grid-column:1/-1"></div>
 <div id="j-rates" class="detail" style="grid-column:1/-1"></div>
-<button class="btn" id="j-add">Enregistrer l'intention</button></div>
+<button class="btn" id="j-add">Enregistrer l'intention</button><p class="note" id="j-add-msg" style="grid-column:1/-1;display:none"></p></div>
 <div id="j-list"></div>
 </section>
 
@@ -213,7 +214,8 @@ const eur=x=>Number(x||0).toLocaleString('fr-FR',{maximumFractionDigits:0})+' �
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
 // ---- onglets (mémorisés) ----
 function showTab(t){$$('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));store('feux-tab',t);}
-$$('nav.tabs button').forEach(b=>b.addEventListener('click',()=>{showTab(b.dataset.t);history.replaceState(null,'','#'+b.dataset.t);}));const h0=(location.hash||'').slice(1);showTab(['today','stocks','portfolio','journal','validation','rules'].includes(h0)?h0:(store('feux-tab')||'today'));
+const TABS=['today','stocks','portfolio','journal','validation','rules'];$$('nav.tabs button').forEach(b=>b.addEventListener('click',()=>{showTab(b.dataset.t);try{location.hash=b.dataset.t;}catch(e){}}));const h0=(location.hash||'').slice(1);showTab(TABS.includes(h0)?h0:(store('feux-tab')||'today'));window.addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1);if(TABS.includes(h))showTab(h);});
+function msg(id,text){const e=$(id);if(!e)return;e.textContent=text;e.style.display=text?'block':'none';}
 
 // ---- Actions Top 100 ----
 const S=D.stocks||[];let sortKey='rank',sortAsc=true;
@@ -252,10 +254,10 @@ const stateOf=k=>D.states[k]||null;const stockOf=t=>S.find(s=>s.ticker&&t&&s.tic
 function lineColor(l){if(l.kind==='stock'){const s=stockOf(l.ticker);return s?s.color_confirmed:null;}if(l.kind==='other_equity')return (stateOf('world')||{}).color||null;if(l.kind==='safe')return null;return (stateOf(l.kind)||{}).color||null;}
 function bucket(l){return l.kind==='safe'?'safe':l.kind==='btc'?'btc':l.kind==='stock'?'stock':'equity';}
 function savePF(){store('feux-portfolio',PF);}
-$('#pf-add').onclick=()=>{const amt=parseFloat($('#pf-amount').value);if(!(amt>0))return alert('Montant manquant');PF.lines.push({label:$('#pf-label').value||$('#pf-kind').selectedOptions[0].text,kind:$('#pf-kind').value,ticker:$('#pf-ticker').value.trim(),amount:amt,lev:parseInt($('#pf-lev').value),acct:$('#pf-acct').value});savePF();renderPF();$('#pf-amount').value='';$('#pf-label').value='';$('#pf-ticker').value='';};
+$('#pf-add').onclick=()=>{const amt=parseFloat($('#pf-amount').value);if(!(amt>0))return msg('#pf-msg','Indiquez un montant.');msg('#pf-msg','');PF.lines.push({label:$('#pf-label').value||$('#pf-kind').selectedOptions[0].text,kind:$('#pf-kind').value,ticker:$('#pf-ticker').value.trim(),amount:amt,lev:parseInt($('#pf-lev').value),acct:$('#pf-acct').value});savePF();renderPF();$('#pf-amount').value='';$('#pf-label').value='';$('#pf-ticker').value='';};
 $('#pf-save').onclick=()=>{PF.targets={equity:+$('#t-equity').value,stock:+$('#t-stock').value,btc:+$('#t-btc').value,safe:+$('#t-safe').value,monthly:+$('#t-monthly').value};savePF();renderPF();};
-$('#pf-export').onclick=()=>{const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(PF,null,1));a.download='mon-portefeuille.json';a.click();};
-$('#pf-import').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{PF=JSON.parse(r.result);savePF();renderPF();}catch(err){alert('Fichier invalide');}};r.readAsText(f);};
+$('#pf-export').onclick=async()=>{const txt=JSON.stringify(PF,null,1);$('#pf-export-box').style.display='block';$('#pf-export-box textarea').value=txt;try{await navigator.clipboard.writeText(txt);msg('#pf-msg','Copié dans le presse-papiers (et affiché ci-dessous).');}catch(e){msg('#pf-msg','Copiez le texte ci-dessous pour le sauvegarder.');}};
+$('#pf-import').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{PF=JSON.parse(r.result);savePF();renderPF();msg('#pf-msg','Portefeuille importé.');}catch(err){msg('#pf-msg','Fichier invalide.');}};r.readAsText(f);};
 function renderPF(){const t=PF.targets;['equity','stock','btc','safe','monthly'].forEach(k=>{const e=$('#t-'+k);if(e)e.value=t[k];});
  const L=PF.lines;const total=L.reduce((a,l)=>a+l.amount,0);
  $('#pf-table').innerHTML='<tr><th>Ligne</th><th>Sous-jacent</th><th>Enveloppe</th><th>Montant</th><th>Levier</th><th>Exposition réelle</th><th>Feu du sous-jacent</th><th></th></tr>'+L.map((l,i)=>{const c=lineColor(l);return `<tr class="row${c||''}"><td>${l.label}</td><td>${$('#pf-kind option[value="'+l.kind+'"]').textContent}${l.ticker?' · '+l.ticker:''}</td><td>${l.acct}</td><td>${eur(l.amount)}</td><td>×${l.lev}</td><td>${eur(l.amount*l.lev)}</td><td>${c?`<span class="c ${c}" style="font-weight:700">${LABEL[c]}</span>`:'—'}</td><td><button class="btn ghost" data-i="${i}">retirer</button></td></tr>`;}).join('')+(L.length?`<tr><th colspan="3">Total</th><th>${eur(total)}</th><th></th><th>${eur(L.reduce((a,l)=>a+l.amount*l.lev,0))}</th><th></th><th></th></tr>`:'');
@@ -294,10 +296,13 @@ function rates(){const a=$('#j-asset').value;const st=D.states[a];if(!st){$('#j-
 $('#j-asset').addEventListener('change',rates);rates();
 function renderJ(){const now=Date.now();$('#j-list').innerHTML=J.length?'<h3>Intentions</h3>'+J.slice().reverse().map(it=>{const el=(now-new Date(it.created))/36e5;const ok=el>=D.conduct.hours;
  return `<div class="detail"><b>${new Date(it.created).toLocaleString('fr-FR')}</b> — ${it.action} ${it.assetName}${it.ticker?' ('+it.ticker+')':''} ${eur(it.amount)} · état : <b>${it.status}</b>${it.snapshot?` · feu à l'intention : ${LABEL[it.snapshot.color]||'—'}`:''}<br><i>Thèse :</i> ${it.thesis||'—'} · <i>Invalidation :</i> ${it.inval||'—'}<br>${it.rates?`<span class="note">${it.rates}</span><br>`:''}
- ${it.status==='en attente'?`<button class="btn" data-id="${it.id}" data-a="confirm" ${ok?'':'disabled'}>${ok?'Confirmer (après relecture des cinq questions)':'Confirmation possible dans '+Math.ceil(D.conduct.hours-el)+' h'}</button> <button class="btn ghost" data-id="${it.id}" data-a="cancel">Annuler</button>`:''}</div>`;}).join('')+'<button class="btn ghost" id="j-export">Exporter le journal</button>':'<p class="note">Aucune intention enregistrée.</p>';
- $$('#j-list button[data-a]').forEach(b=>b.onclick=()=>{const it=J.find(x=>x.id===b.dataset.id);if(b.dataset.a==='cancel'){it.status='annulé';}else{const ans=Q.map(q=>prompt(q));if(ans.some(a=>!a))return alert('Les cinq réponses sont redemandées à la confirmation.');it.status='confirmé';it.confirmed=new Date().toISOString();it.answers2=ans;}store('feux-journal',J);renderJ();});
- const ex=$('#j-export');if(ex)ex.onclick=()=>{const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(J,null,1));a.download='journal-decisions.json';a.click();};}
-$('#j-add').onclick=()=>{const ans=$$('#j-questions input').map(i=>i.value.trim());if(ans.some(a=>!a))return alert('Répondez aux cinq questions avant d\'enregistrer.');const a=$('#j-asset').value;const st=D.states[a];
+ ${it.status==='en attente'?`<button class="btn" data-id="${it.id}" data-a="confirm" ${ok?'':'disabled'}>${ok?'Confirmer (les cinq questions sont redemandées)':'Confirmation possible dans '+Math.ceil(D.conduct.hours-el)+' h'}</button> <button class="btn ghost" data-id="${it.id}" data-a="cancel">Annuler</button><div class="confirm-box" data-for="${it.id}" style="display:none;margin-top:8px">${Q.map((q,i)=>`<label style="display:block;margin:4px 0;font-size:13px;color:var(--muted)">${q}<input data-cq="${i}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px"></label>`).join('')}<button class="btn" data-id="${it.id}" data-a="confirm2">Valider la confirmation</button> <span class="note" data-cmsg="${it.id}"></span></div>`:''}</div>`;}).join('')+'<button class="btn ghost" id="j-export">Copier le journal (JSON)</button><div id="j-export-box" style="display:none"><textarea style="width:100%;height:120px;font-size:12px"></textarea></div><p class="note" id="j-msg"></p>':'<p class="note">Aucune intention enregistrée.</p>';
+ $$('#j-list button[data-a]').forEach(b=>b.onclick=()=>{const it=J.find(x=>x.id===b.dataset.id);const a=b.dataset.a;
+  if(a==='cancel'){it.status='annulé';store('feux-journal',J);renderJ();return;}
+  if(a==='confirm'){const box=$(`.confirm-box[data-for="${it.id}"]`);box.style.display=box.style.display==='none'?'block':'none';return;}
+  if(a==='confirm2'){const box=$(`.confirm-box[data-for="${it.id}"]`);const ans=Array.from(box.querySelectorAll('input[data-cq]')).map(i=>i.value.trim());if(ans.some(x=>!x)){box.querySelector('[data-cmsg]').textContent='Les cinq réponses sont obligatoires.';return;}it.status='confirmé';it.confirmed=new Date().toISOString();it.answers2=ans;store('feux-journal',J);renderJ();}});
+ const ex=$('#j-export');if(ex)ex.onclick=async()=>{const txt=JSON.stringify(J,null,1);$('#j-export-box').style.display='block';$('#j-export-box textarea').value=txt;try{await navigator.clipboard.writeText(txt);msg('#j-msg','Copié dans le presse-papiers (et affiché ci-dessous).');}catch(e){msg('#j-msg','Copiez le texte ci-dessous pour le sauvegarder.');}};}
+$('#j-add').onclick=()=>{const ans=$$('#j-questions input').map(i=>i.value.trim());if(ans.some(a=>!a))return msg('#j-add-msg','Répondez aux cinq questions avant d\'enregistrer.');msg('#j-add-msg','');const a=$('#j-asset').value;const st=D.states[a];
  J.push({id:Math.random().toString(36).slice(2,10),created:new Date().toISOString(),asset:a,assetName:st?st.name:'Action',ticker:$('#j-ticker').value.trim(),action:$('#j-action').value,amount:+$('#j-amount').value||0,thesis:$('#j-thesis').value,inval:$('#j-inval').value,answers:ans,snapshot:st?{color:st.color,trend_broken:st.trend_broken}:null,rates:$('#j-rates').textContent,status:'en attente'});
  store('feux-journal',J);$$('#j-questions input').forEach(i=>i.value='');$('#j-thesis').value='';$('#j-inval').value='';$('#j-amount').value='';renderJ();};
 renderJ();
