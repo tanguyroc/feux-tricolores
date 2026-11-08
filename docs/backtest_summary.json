@@ -825,23 +825,89 @@
    "cagr": 0.14273524813440552,
    "drawdown_max": 0.8289721157242125,
    "pire_année": -0.418853359997274,
-   "drawdown_2000_2002": 0.8132656785632214
+   "drawdown_2000_2002": 0.8132656785632214,
+   "drawdown_2007_2009": 0.5103803907896902,
+   "drawdown_2021_2022": 0.32856638423499207
   },
   "x2 permanent": {
    "multiple": 639.8965928621758,
    "cagr": 0.17025014207998557,
    "drawdown_max": 0.9889851097457032,
    "pire_année": -0.7298839180840349,
-   "drawdown_2000_2002": 0.9852359156745808
+   "drawdown_2000_2002": 0.9852359156745808,
+   "drawdown_2007_2009": 0.8131735452571958,
+   "drawdown_2021_2022": 0.6088726575028809
   },
-  "x2 seulement si tendance OK (MM10 mois)": {
+  "x2 si tendance OK, sinon indice sans levier (règle retenue)": {
    "multiple": 1314.7166034842437,
    "cagr": 0.19093459654652634,
    "drawdown_max": 0.8977435416452147,
    "pire_année": -0.5530830541842927,
-   "drawdown_2000_2002": 0.8805754125293885
+   "drawdown_2000_2002": 0.8805754125293885,
+   "drawdown_2007_2009": 0.6352094127624324,
+   "drawdown_2021_2022": 0.39939308432162224
+  },
+  "x2 si tendance OK, sinon monétaire (Faber, référence)": {
+   "multiple": 697.1468763223011,
+   "cagr": 0.17269267188771553,
+   "drawdown_max": 0.7264885690064722,
+   "pire_année": -0.49289053083908296,
+   "drawdown_2000_2002": 0.563209554498297,
+   "drawdown_2007_2009": 0.4154823929674645,
+   "drawdown_2021_2022": 0.2362850882024139
+  },
+  "indice si tendance OK, sinon monétaire (Faber classique)": {
+   "multiple": 127.6245771426409,
+   "cagr": 0.12523160825201107,
+   "drawdown_max": 0.3993498689575383,
+   "pire_année": -0.25109848136738655,
+   "drawdown_2000_2002": 0.29834925276933855,
+   "drawdown_2007_2009": 0.2154127750848328,
+   "drawdown_2021_2022": 0.11959361225791731
   },
   "_part_du_temps_tendance_ok": 0.7447856315179606
+ },
+ "tendance_sp500": {
+  "achat-conservation": {
+   "cagr": 0.0950136567370059,
+   "drawdown_max": 0.5677538774277292,
+   "volatilité": 0.18095220135845344
+  },
+  "filtre 10 mois (monétaire hors tendance)": {
+   "cagr": 0.08311114001781994,
+   "drawdown_max": 0.332363323120331,
+   "volatilité": 0.12804896651983683
+  },
+  "_part_du_temps_investi": 0.7712443095599393,
+  "_allers_retours_par_an": 1.4578453183275535
+ },
+ "tendance_ndx": {
+  "achat-conservation": {
+   "cagr": 0.14359788979196986,
+   "drawdown_max": 0.8289721157242126,
+   "volatilité": 0.25637188274785894
+  },
+  "filtre 10 mois (monétaire hors tendance)": {
+   "cagr": 0.1263884164376361,
+   "drawdown_max": 0.3993498689575382,
+   "volatilité": 0.18934572256786433
+  },
+  "_part_du_temps_investi": 0.7492412746585736,
+  "_allers_retours_par_an": 1.6968363541189557
+ },
+ "tendance_world": {
+  "achat-conservation": {
+   "cagr": 0.08051765419291934,
+   "drawdown_max": 0.5906794533676618,
+   "volatilité": 0.1544874933739903
+  },
+  "filtre 10 mois (monétaire hors tendance)": {
+   "cagr": 0.08353958610876688,
+   "drawdown_max": 0.24963562090131897,
+   "volatilité": 0.10113705202487036
+  },
+  "_part_du_temps_investi": 0.7364820541654953,
+  "_allers_retours_par_an": 1.3620706575073602
  },
  "btc_seuil_1.0": {
   "part_rouge": 0.09266092660926609,

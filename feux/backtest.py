@@ -204,21 +204,48 @@ def leveraged_simulation(df: pd.DataFrame, start: str = "1985-10-01", fee: float
     tb = store.to_indexed(store.load("tbill3m")).reindex(px.index, method="ffill").bfill() / 100.0
     daily_cost = (tb + spread) / TD + fee / TD          # financement de la part empruntée + frais
     r2 = 2 * r1 - daily_cost
+    r_cash = tb / TD
     trend_ok = ~df.loc[px.index, "trend_broken"].astype(bool)   # drapeau connu en fin de mois précédent
-    r_filtered = np.where(trend_ok, r2, r1)
-    out = {}
-    for name, rr in [("Nasdaq-100 sans levier", r1), ("x2 permanent", r2), ("x2 seulement si tendance OK (MM10 mois)", pd.Series(r_filtered, index=px.index))]:
+    variants = [("Nasdaq-100 sans levier", r1), ("x2 permanent", r2),
+                ("x2 si tendance OK, sinon indice sans levier (règle retenue)", pd.Series(np.where(trend_ok, r2, r1), index=px.index)),
+                ("x2 si tendance OK, sinon monétaire (Faber, référence)", pd.Series(np.where(trend_ok, r2, r_cash), index=px.index)),
+                ("indice si tendance OK, sinon monétaire (Faber classique)", pd.Series(np.where(trend_ok, r1, r_cash), index=px.index))]
+    out, curves = {}, {}
+    years = (px.index[-1] - px.index[0]).days / 365.25
+    for name, rr in variants:
         w = (1 + rr).cumprod()
-        years = (px.index[-1] - px.index[0]).days / 365.25
+        curves[name] = w
+        sub = w[(w.index >= "2000-03-01") & (w.index <= "2002-12-31")]
         out[name] = {"multiple": float(w.iloc[-1]), "cagr": float(w.iloc[-1] ** (1 / years) - 1),
                      "drawdown_max": float((1 - w / w.cummax()).max()),
-                     "pire_année": float((1 + rr).groupby(px.index.year).prod().min() - 1)}
-        if name.startswith("x2 perm"):
-            w2 = w
-        # drawdown 2000-2002
-        sub = w[(w.index >= "2000-03-01") & (w.index <= "2002-12-31")]
-        out[name]["drawdown_2000_2002"] = float(1 - sub.min() / sub.iloc[0]) if len(sub) else float("nan")
+                     "pire_année": float((1 + rr).groupby(px.index.year).prod().min() - 1),
+                     "drawdown_2000_2002": float(1 - sub.min() / sub.iloc[0]) if len(sub) else float("nan"),
+                     "drawdown_2007_2009": _dd_between(w, "2007-10-01", "2009-03-31"),
+                     "drawdown_2021_2022": _dd_between(w, "2021-11-01", "2022-12-31")}
     out["_part_du_temps_tendance_ok"] = float(trend_ok.mean())
+    out["_courbes"] = curves
+    return out
+
+
+def _dd_between(w: pd.Series, a: str, b: str) -> float:
+    sub = w[(w.index >= a) & (w.index <= b)]
+    return float(1 - sub.min() / sub.iloc[0]) if len(sub) else float("nan")
+
+
+def trend_filter_stats(df: pd.DataFrame, start: str = "1985-01-01") -> dict:
+    """Filtre 10 mois seul (Faber) sur l'indice non levier : investi si tendance OK, monétaire sinon."""
+    px = df.loc[df.index >= start, "price"]
+    r1 = px.pct_change().fillna(0.0)
+    tb = store.to_indexed(store.load("tbill3m")).reindex(px.index, method="ffill").bfill() / 100.0
+    trend_ok = ~df.loc[px.index, "trend_broken"].astype(bool)
+    years = (px.index[-1] - px.index[0]).days / 365.25
+    out = {}
+    for name, rr in [("achat-conservation", r1), ("filtre 10 mois (monétaire hors tendance)", pd.Series(np.where(trend_ok, r1, tb / TD), index=px.index))]:
+        w = (1 + rr).cumprod()
+        out[name] = {"cagr": float(w.iloc[-1] ** (1 / years) - 1), "drawdown_max": float((1 - w / w.cummax()).max()),
+                     "volatilité": float(rr.std() * np.sqrt(TD))}
+    out["_part_du_temps_investi"] = float(trend_ok.mean())
+    out["_allers_retours_par_an"] = float((trend_ok != trend_ok.shift()).sum() / years)
     return out
 
 
@@ -301,16 +328,36 @@ def run_all() -> dict:
                  sim["C_moins_A"], _fmt_pct(sim["C_moins_A_pct"]), sim["réserve_B_finale"])
 
     # levier
+    from .charts import line_chart
+
     lev = leveraged_simulation(load_signals("ndx"))
+    curves = lev.pop("_courbes")
     summary["levier_ndx"] = lev
     html.append("<h2>ETF Nasdaq-100 x2 quotidien (synthétique : 2× rendement − financement − 0,6 % de frais), depuis octobre 1985</h2>")
     rows = [{"stratégie": k, **v} for k, v in lev.items() if not k.startswith("_")]
-    html.append(_table(pd.DataFrame(rows), ["cagr", "drawdown_max", "pire_année", "drawdown_2000_2002"]))
-    html.append(f"<p>Part du temps avec tendance OK : {100 * lev['_part_du_temps_tendance_ok']:.0f} %.</p>")
+    html.append(_table(pd.DataFrame(rows), ["cagr", "drawdown_max", "pire_année", "drawdown_2000_2002", "drawdown_2007_2009", "drawdown_2021_2022"]))
+    html.append(f"<p>Part du temps avec tendance OK : {100 * lev['_part_du_temps_tendance_ok']:.0f} %. Le filtre ne protège pas de la baisse de l'indice "
+                "lui-même (on reste investi sans levier) : il évite la quasi-ruine du levier.</p>")
+    sel = {"Sans levier": curves["Nasdaq-100 sans levier"], "x2 permanent": curves["x2 permanent"],
+           "x2 si tendance OK": curves["x2 si tendance OK, sinon indice sans levier (règle retenue)"]}
+    html.append(line_chart(sel, "Nasdaq-100 : 1 $ investi en octobre 1985 (échelle log)",
+                           "x2 quotidien synthétique ; tendance = clôture mensuelle au-dessus de la moyenne 10 mois", chart_id="lev"))
     for k, v in lev.items():
         if not k.startswith("_"):
             log.info("levier %s : multiple %.1f, CAGR %s, DD max %s, DD 2000-02 %s", k, v["multiple"], _fmt_pct(v["cagr"]),
                      _fmt_pct(v["drawdown_max"]), _fmt_pct(v["drawdown_2000_2002"]))
+    html.append("<h2>Filtre de tendance seul (10 mois, sans levier) sur les trois indices, depuis 1985</h2>")
+    trows = []
+    for asset in r["indices"]["assets"]:
+        st = trend_filter_stats(load_signals(asset))
+        summary[f"tendance_{asset}"] = st
+        for k, v in st.items():
+            if not k.startswith("_"):
+                trows.append({"indice": r["indices"]["assets"][asset]["name"], "stratégie": k, **v,
+                              "part_investi": st["_part_du_temps_investi"], "allers_retours_par_an": st["_allers_retours_par_an"]})
+    html.append(_table(pd.DataFrame(trows), ["cagr", "drawdown_max", "volatilité", "part_investi"]))
+    html.append("<p>Lecture : le filtre réduit fortement la perte maximale, au prix d'une à deux sorties par an et d'un rendement "
+                "proche de l'achat-conservation (parfois inférieur). C'est pourquoi il gouverne le levier, pas la position de base.</p>")
 
     # sensibilité BTC
     sens = btc_sensitivity(load_signals("btc"))
@@ -323,7 +370,7 @@ def run_all() -> dict:
 
     page = ("<!doctype html><html lang='fr'><head><meta charset='utf-8'><title>Validation des feux</title>"
             "<style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#222}"
-            ".t{border-collapse:collapse;margin:1rem 0;font-size:14px}.t td,.t th{border-bottom:1px solid #ddd;padding:4px 8px;text-align:right}"
+            ".t{border-collapse:collapse;margin:1rem 0;font-size:14px}.t td,.t th{border-bottom:1px solid #ddd;padding:4px 8px;text-align:right;white-space:nowrap}.t td:first-child{white-space:normal}"
             ".t th{background:#f5f5f5}.t td:first-child,.t th:first-child{text-align:left}"
             "b.green{color:#1a7f37}b.orange{color:#b35c00}b.red{color:#b3261e}pre{background:#f7f7f7;padding:8px;font-size:12px}</style></head><body>"
             + "\n".join(html) + "</body></html>")
