@@ -9,3 +9,4 @@ journal/
 data/signals/stocks/
 data/series/
 data/signals/
+node_modules/

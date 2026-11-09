@@ -2,7 +2,9 @@ name: Feux quotidiens
 
 on:
   schedule:
-    - cron: "0 22 * * 1-5"   # 22:00 UTC, du lundi au vendredi (après la clôture US)
+    # 22:17 UTC du lundi au vendredi (après la clôture US). Minute non ronde : les déclenchements à :00 sont les plus
+    # souvent retardés ou sautés par GitHub aux heures chargées (repris de Kairys Lite).
+    - cron: "17 22 * * 1-5"
   workflow_dispatch: {}
 
 permissions:
@@ -17,7 +19,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -38,22 +40,41 @@ jobs:
         run: |
           python -m feux universe
           python -m feux stocks
+      # Publication « fail-closed » : si les données sont incomplètes ou trop anciennes, ou si un témoin bloquant échoue,
+      # le job s'arrête ici : rien n'est commité ni publié, le site garde la dernière version sûre, une alerte part.
+      - name: Contrôles avant publication et témoins
+        run: python -m feux check
       - name: Application (docs/index.html)
         run: python -m feux dashboard
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test de fumée de l'application (aucune erreur JavaScript, onglets remplis) — bloquant
+        run: |
+          npm install --prefix "$RUNNER_TEMP/jsdom" --no-audit --no-fund jsdom@24 > /dev/null
+          NODE_PATH="$RUNNER_TEMP/jsdom/node_modules" node tests/page_smoke.js docs/index.html
+      - name: Archive quotidienne et pré-inscription mensuelle (datée, hachée)
+        run: |
+          python -m feux archive
+          python -m feux prereg --monthly
       - name: Alertes (changement de couleur ou de drapeau)
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m feux alert
-      - name: Backtest et robustesse (le vendredi, ou lancement manuel)
+      - name: Backtest (le vendredi, ou lancement manuel)
         run: |
-          if [ "$(date -u +%u)" = "5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python -m feux backtest; fi
+          if [ "$(date -u +%u)" = "5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python -m feux backtest
+            python -m feux dashboard
+            NODE_PATH="$RUNNER_TEMP/jsdom/node_modules" node tests/page_smoke.js docs/index.html
+          fi
       - name: Commit des données et du tableau de bord
         run: |
           git config user.name "feux-bot"
           git config user.email "feux-bot@users.noreply.github.com"
-          git add data/universe.csv data/raw/isin_symbols.json docs
+          git add data/universe.csv data/raw/isin_symbols.json docs history prereg
           git diff --cached --quiet || git commit -m "Mise à jour quotidienne $(date -u +%F)"
           git push
       # Le push du bot (GITHUB_TOKEN) ne déclenche pas d'autre workflow : on publie le site ici même.
@@ -63,3 +84,12 @@ jobs:
           path: docs
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Alerte d'échec (publication annulée)
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python -c "import os; from feux.alerts import send; send('Mise à jour du jour ANNULÉE : un contrôle a échoué. Le site garde la dernière version sûre (feux non mis à jour). Détail : ' + os.environ['RUN_URL'], 'Feux tricolores : publication annulée')"

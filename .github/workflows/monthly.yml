@@ -2,7 +2,7 @@ name: Brief mensuel
 
 on:
   schedule:
-    - cron: "0 7 1 * *"    # le 1er du mois à 07:00 UTC
+    - cron: "23 6 1 * *"   # le 1er du mois à 06:23 UTC (minute non ronde : moins de retards)
   workflow_dispatch: {}
 
 permissions:

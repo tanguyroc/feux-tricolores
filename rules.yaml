@@ -109,7 +109,7 @@ conduct:
     green: "achat exceptionnel possible, par tiers sur trois mois ; pas de société « proxy » à levier si le prix est sous sa moyenne 200 jours"
     orange: "versements habituels seulement ; pas d'achat exceptionnel"
     red: "aucun achat exceptionnel ; aucune société « proxy » à levier ; versements habituels maintenus"
-  sell_cooling_days_in_stress: 7    # ventes en vert de capitulation ou couteau qui tombe : délai 7 jours (repris de Kairys Alpha)
+  sell_cooling_days_in_stress: 7    # vente ou arbitrage en période de stress (feu vert, couteau qui tombe, baisse ≥ 20 % depuis le plus haut) : délai 7 jours au lieu de 48 h (repris de Kairys Alpha)
   concentration_max_single_stock: 0.12   # alerte si une action dépasse 12 % du portefeuille risqué (repris de Kairys Alpha)
 
 stocks:   # module actions — Top 100 mondial + stocks.yaml. INDICATIF, NON BACKTESTÉ (protocole v1.0 §10)

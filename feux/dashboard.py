@@ -16,6 +16,7 @@ from .signals import load_signals
 log = logging.getLogger("feux.dashboard")
 
 CSS = """
+.src{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
 .since-perf{font-size:13px;margin:6px 0;padding:6px 8px;background:#f6f6f2;border-radius:6px}
 .honest{margin:12px 0;padding:10px 14px;border-left:4px solid #b3261e;background:#fff7f6;font-size:13px}.honest ul{margin:6px 0 0 18px}
 td.ok{color:#2e7d32;font-weight:600}td.ko{color:#b3261e;font-weight:600}
@@ -202,6 +203,9 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
             + f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême'}</div>{_raw_note(row)}"
             f"<div class='flags'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
             f"<details class='detail-only'><summary>Explication chiffrée</summary><div class='expl'>{html.escape(explain_index(name, row))}</div></details>"
+            f"<div class='src detail-only'>Sources : prix Yahoo Finance au {df.index[-1]:%d/%m/%Y} · CAPE et bénéfices de R. Shiller (mensuels), "
+            f"actualisés chaque jour par le prix · VIX et écart de crédit FRED · allocation des ménages Fed Z.1{aiae_when} · "
+            f"dette sur marge FINRA{margin_when} · « par le bas » : comptes SEC EDGAR des plus grosses sociétés</div>"
             f"{_timeline_svg(df, '1990-01-01')}</section>")
 
 
@@ -228,6 +232,8 @@ def _card_btc(df: pd.DataFrame) -> str:
             + f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'ni zone de capitulation ni euphorie (règle B1)'}</div>{_raw_note(row)}"
             f"<div class='flags'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
             f"<details class='detail-only'><summary>Explication chiffrée</summary><div class='expl'>{html.escape(explain_btc(row))}</div></details>"
+            f"<div class='src detail-only'>Sources : Coin Metrics Community au {df.index[-1]:%d/%m/%Y} (prix, MVRV ; licence CC BY-NC 4.0) · "
+            f"Deribit (financement des contrats perpétuels) · alternative.me (Fear &amp; Greed)</div>"
             f"{_timeline_svg(df, '2014-01-01')}</section>")
 
 
@@ -423,7 +429,10 @@ def _states(dfs: dict[str, pd.DataFrame]) -> dict:
                    "trend_broken": bool(row["trend_broken"]), "falling_knife": bool(row.get("falling_knife", False)),
                    "cher": bool(row.get("cher", False)), "cher_tendu": bool(row.get("cher_tendu", False)),
                    "V": None if pd.isna(row.get("V")) else float(row["V"]),
-                   "er10": None if pd.isna(row.get("er10", float("nan"))) else float(row["er10"])}
+                   "er10": None if pd.isna(row.get("er10", float("nan"))) else float(row["er10"]),
+                   "price": None if pd.isna(row.get("price")) else float(row["price"]),
+                   "drawdown": None if pd.isna(row.get("drawdown")) else float(row["drawdown"]),
+                   "date": str(df.index[-1].date())}
     return st
 
 

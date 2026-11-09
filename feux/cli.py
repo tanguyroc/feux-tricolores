@@ -144,6 +144,25 @@ def cmd_longrun(args) -> None:
              "adopté" if out["bitcoin"]["B1"]["critères"]["tout"] else "non validé")
 
 
+def cmd_check(args) -> None:
+    from .check import run
+
+    if not run():
+        sys.exit(1)
+
+
+def cmd_archive(args) -> None:
+    from .prereg import archive_today
+
+    archive_today()
+
+
+def cmd_prereg(args) -> None:
+    from .prereg import register, register_monthly
+
+    register_monthly() if args.monthly else register(args.day)
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(prog="feux", description="Feux tricolores d'investissement long terme")
     p.add_argument("-v", "--verbose", action="store_true")
@@ -180,6 +199,14 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_decide)
     s = sub.add_parser("robustness", help="sous-périodes, bootstrap, sensibilité, confirmation")
     s.set_defaults(fn=cmd_robustness)
+    s = sub.add_parser("check", help="contrôles avant publication et témoins (code 1 si un contrôle bloquant échoue)")
+    s.set_defaults(fn=cmd_check)
+    s = sub.add_parser("archive", help="ajouter l'état du jour à history/ (ajout seul)")
+    s.set_defaults(fn=cmd_archive)
+    s = sub.add_parser("prereg", help="pré-inscription datée et hachée de ce que les règles affirment aujourd'hui")
+    s.add_argument("--day", help="AAAA-MM-JJ (défaut : aujourd'hui)")
+    s.add_argument("--monthly", action="store_true", help="seulement si aucune pré-inscription n'existe pour le mois en cours")
+    s.set_defaults(fn=cmd_prereg)
     s = sub.add_parser("longrun", help="protocole v1.0 : candidats sur 1920-1989 (Shiller) et 1990-aujourd'hui")
     s.set_defaults(fn=cmd_longrun)
     s = sub.add_parser("dashboard", help="générer docs/index.html")

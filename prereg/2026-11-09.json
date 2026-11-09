@@ -1,0 +1,278 @@
+{
+ "actifs": {
+  "btc": {
+   "V": -0.682843,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.452371,
+     "p10": -0.554019,
+     "part_négative": 0.384844
+    },
+    "3 ans": {
+     "médiane": 0.501612,
+     "p10": 0.208312,
+     "part_négative": 0.001139
+    }
+   },
+   "cher": null,
+   "cher_tendu": null,
+   "couleur": "orange",
+   "date_données": "2026-11-07",
+   "fourchette_10a": [
+    null,
+    null
+   ],
+   "prix": 75724.406154,
+   "rdt_réel_attendu_10a": null,
+   "tendance_cassée": false
+  },
+  "ndx": {
+   "V": 98.140732,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.187925,
+     "p10": -0.034813,
+     "part_négative": 0.126623
+    },
+    "3 ans": {
+     "médiane": 0.156793,
+     "p10": -0.014143,
+     "part_négative": 0.118303
+    }
+   },
+   "cher": true,
+   "cher_tendu": false,
+   "couleur": "orange",
+   "date_données": "2026-11-06",
+   "fourchette_10a": [
+    -0.055724,
+    0.066081
+   ],
+   "prix": 26989.990234,
+   "rdt_réel_attendu_10a": 0.006677,
+   "tendance_cassée": false
+  },
+  "sp500": {
+   "V": 98.140732,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.115043,
+     "p10": -0.115168,
+     "part_négative": 0.192831
+    },
+    "3 ans": {
+     "médiane": 0.096874,
+     "p10": -0.075723,
+     "part_négative": 0.184787
+    }
+   },
+   "cher": true,
+   "cher_tendu": false,
+   "couleur": "orange",
+   "date_données": "2026-11-06",
+   "fourchette_10a": [
+    -0.055724,
+    0.066081
+   ],
+   "prix": 7376.859863,
+   "rdt_réel_attendu_10a": 0.006677,
+   "tendance_cassée": false
+  },
+  "world": {
+   "V": 98.140732,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.104914,
+     "p10": -0.134422,
+     "part_négative": 0.266756
+    },
+    "3 ans": {
+     "médiane": 0.076707,
+     "p10": -0.07827,
+     "part_négative": 0.19969
+    }
+   },
+   "cher": true,
+   "cher_tendu": false,
+   "couleur": "orange",
+   "date_données": "2026-11-08",
+   "fourchette_10a": [
+    -0.055724,
+    0.066081
+   ],
+   "prix": 4739.930176,
+   "rdt_réel_attendu_10a": 0.006677,
+   "tendance_cassée": false
+  }
+ },
+ "actions": {
+  "prix": {
+   "000660.KS": 1136000.0,
+   "005930.KS": 189900.0,
+   "0700.HK": 419.399994,
+   "2330.TW": 2235.0,
+   "6758.T": 4297.0,
+   "7203.T": 3491.0,
+   "8306.T": 3366.0,
+   "9984.T": 3400.0,
+   "9988.HK": 105.0,
+   "AAPL": 342.369995,
+   "ABBV": 291.309998,
+   "ABT": 109.93,
+   "ACN": 260.5,
+   "ADI": 363.559998,
+   "ALV.DE": 451.100006,
+   "AMAT": 332.720001,
+   "AMD": 449.040009,
+   "AMGN": 460.420013,
+   "AMZN": 259.299988,
+   "ANET": 170.800003,
+   "APH": 74.589996,
+   "ASML.AS": 1283.599976,
+   "AVGO": 293.690002,
+   "AXP": 320.98999,
+   "AZN.L": 13930.0,
+   "BAC": 49.419998,
+   "BHP.AX": 59.200001,
+   "BLK": 1178.869995,
+   "BRK-B": 570.890015,
+   "C": 119.050003,
+   "CAT": 558.630005,
+   "CBA.AX": 165.970001,
+   "COP": 136.270004,
+   "COST": 1053.560059,
+   "CRM": 213.649994,
+   "CRWD": 216.899994,
+   "CSCO": 93.849998,
+   "CVX": 212.610001,
+   "DE": 671.650024,
+   "DIS": 116.75,
+   "GE": 323.23999,
+   "GEV": 774.109985,
+   "GILD": 166.889999,
+   "GOOGL": 284.779999,
+   "GS": 865.820007,
+   "HD": 343.470001,
+   "HSBA.L": 1304.599976,
+   "IBE.MC": 22.65,
+   "IBM": 245.0,
+   "INTC": 56.279999,
+   "ISRG": 452.799988,
+   "JNJ": 276.220001,
+   "JPM": 334.48999,
+   "KLAC": 138.490005,
+   "KO": 95.669998,
+   "LIN": 515.25,
+   "LLY": 1354.0,
+   "LRCX": 200.440002,
+   "MA": 652.700012,
+   "MCD": 276.519989,
+   "META": 610.150024,
+   "MRK": 146.729996,
+   "MS": 181.440002,
+   "MSFT": 530.609985,
+   "MSTR": 128.929993,
+   "MU": 690.0,
+   "NEE": 86.949997,
+   "NESN.SW": 85.849998,
+   "NFLX": 63.41,
+   "NOVN.SW": 133.080002,
+   "NVDA": 186.639999,
+   "ORCL": 116.099998,
+   "PANW": 313.839996,
+   "PEP": 141.339996,
+   "PFE": 29.389999,
+   "PG": 165.399994,
+   "PLTR": 160.380005,
+   "PM": 197.880005,
+   "QCOM": 165.410004,
+   "ROP.SW": 390.299988,
+   "RTX": 189.529999,
+   "RY.TO": 284.160004,
+   "SAN.MC": 10.696,
+   "SAP.DE": 210.75,
+   "SCHW": 91.489998,
+   "SHEL.L": 3722.5,
+   "SHOP": 148.910004,
+   "SIE.DE": 263.649994,
+   "T": 21.629999,
+   "TD": 122.400002,
+   "TMO": 694.76001,
+   "TSLA": 358.220001,
+   "TTE.PA": 79.730003,
+   "TXN": 277.359985,
+   "UNH": 394.149994,
+   "UNP": 290.160004,
+   "V": 422.649994,
+   "VZ": 45.689999,
+   "WELL": 245.009995,
+   "WFC": 83.940002,
+   "WMT": 125.519997,
+   "XOM": 165.869995
+  },
+  "rouges": [],
+  "solides": [
+   "2330.TW",
+   "6758.T",
+   "9988.HK",
+   "AAPL",
+   "ACN",
+   "AMAT",
+   "ANET",
+   "APH",
+   "ASML.AS",
+   "AVGO",
+   "AXP",
+   "BHP.AX",
+   "BLK",
+   "CAT",
+   "COST",
+   "CSCO",
+   "CVX",
+   "DE",
+   "GE",
+   "GS",
+   "HD",
+   "HSBA.L",
+   "JNJ",
+   "JPM",
+   "KLAC",
+   "KO",
+   "LIN",
+   "LRCX",
+   "MA",
+   "MRK",
+   "MS",
+   "NOVN.SW",
+   "NVDA",
+   "PG",
+   "PM",
+   "QCOM",
+   "RY.TO",
+   "SCHW",
+   "TD",
+   "UNH",
+   "UNP",
+   "V",
+   "VZ",
+   "WFC",
+   "XOM"
+  ],
+  "vertes": [
+   "ACN"
+  ]
+ },
+ "date": "2026-11-09",
+ "hypothèses": [
+  "Indices : sur 3 ans, le rendement après un jour vert dépasse celui après un jour orange (1990-2026 : +1 à +3 points par an).",
+  "Nasdaq-100 : le drapeau « cher et tendu » (R1) est suivi d'un rendement à 3 ans inférieur à celui des autres jours (1990-2026 : −8,5 points ; non retenu comme règle).",
+  "Bitcoin : le rendement à 3 ans après un jour vert dépasse celui après un jour rouge d'au moins 5 points par an.",
+  "Actions (indicatif) : à 1 et 3 ans, les sociétés vertes font mieux que les rouges, et les solides mieux que les non solides."
+ ],
+ "protocole": "research/v1_protocol.md",
+ "règles": "1.0",
+ "échéances": {
+  "1 an": "2027-11-09",
+  "3 ans": "2029-11-09"
+ }
+}

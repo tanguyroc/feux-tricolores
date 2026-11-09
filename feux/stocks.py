@@ -59,14 +59,75 @@ def _asof(df: pd.DataFrame, cal: pd.DatetimeIndex, max_age_days: int = MAX_AGE_D
 
 
 def split_adjust_shares(sh: pd.DataFrame, splits: list[tuple[pd.Timestamp, float]]) -> pd.DataFrame:
-    """Ramène chaque nombre d'actions publié (période `end`) à la base actuelle : × rapport de chaque division postérieure."""
+    """Ramène chaque nombre d'actions publié à la base actuelle : × rapport de chaque division postérieure à sa PUBLICATION.
+
+    Un dépôt fait après une division la prend déjà en compte, même pour une période close avant (retraitement rétroactif
+    imposé par les normes US : Alphabet, 10-Q du 2e trimestre 2022 déposé après la division du 18 juillet ; Walmart, 10-K
+    de janvier 2024 déposé après celle du 26 février). Se fier à la date de clôture multipliait ces valeurs une fois de trop."""
     out = sh.copy()
-    ends = pd.to_datetime(out["end"]).to_numpy()
+    when = pd.to_datetime(out["filed"] if "filed" in out else out["end"]).to_numpy()
     factor = np.ones(len(out))
     for d, ratio in splits:
-        factor = factor * np.where(ends < np.datetime64(pd.Timestamp(d)), ratio, 1.0)
+        factor = factor * np.where(when < np.datetime64(pd.Timestamp(d)), ratio, 1.0)
     out["val"] = out["val"].to_numpy() * factor
     out.attrs.update(sh.attrs)
+    return out
+
+
+def clean_share_counts(sh: pd.DataFrame, tol: float = 3.0) -> pd.DataFrame:
+    """Nombres d'actions publiés à la SEC : écarte les zéros, corrige les erreurs d'échelle (valeurs déclarées en milliers ou en
+    millions au lieu d'unités : McDonald's 2024-2026, Royal Bank of Canada 2019, Oracle 2012...) et écarte une valeur isolée
+    aberrante (Wells Fargo, page de garde de juillet 2023 à la moitié du vrai nombre). À appliquer APRÈS les divisions.
+
+    Référence : parmi les 8 dernières valeurs, la plus grande classe d'ordre de grandeur (par pas de 1 000) qui en compte au
+    moins deux (les erreurs d'échelle donnent des valeurs trop petites). On remonte puis on descend la série depuis cette
+    référence : une valeur à plus de `tol` fois sa voisine retenue est corrigée d'un facteur 1 000, 1 000 000 ou 10⁹ si cela
+    la ramène dans l'intervalle, sinon écartée (coquille Linde plc de 2018 à 25 000 actions, CrowdStrike avant 2021)."""
+    df = sh[pd.to_numeric(sh["val"], errors="coerce") > 0].copy()
+    df = df.assign(_e=pd.to_datetime(df["end"])).sort_values(["_e", "filed"]).drop(columns="_e").reset_index(drop=True)
+    fixed = spikes = 0
+    if len(df) >= 2:
+        v = df["val"].to_numpy(dtype=float).copy()
+        recent = v[-8:]
+        cls = np.round(np.log10(recent / recent.max()) / 3).astype(int)
+        counts = {int(c): int((cls == c).sum()) for c in np.unique(cls)}
+        good = [c for c in sorted(counts, reverse=True) if counts[c] >= 2] or [max(counts, key=counts.get)]
+        anchor = len(v) - len(recent) + int(np.where(cls == good[0])[0][-1])
+        keep = np.zeros(len(v), bool)
+        keep[anchor] = True
+        for rng in (range(anchor - 1, -1, -1), range(anchor + 1, len(v))):
+            ref = v[anchor]
+            for j in rng:
+                for k in (1.0, 1e3, 1e6, 1e9, 1e-3, 1e-6):
+                    if 1 / tol <= v[j] * k / ref <= tol:
+                        fixed += k != 1.0
+                        v[j] *= k
+                        keep[j] = True
+                        ref = v[j]
+                        break
+        # une ou deux valeurs consécutives décalées dans le même sens par rapport à leurs deux voisines, qui elles concordent :
+        # erreur de déclaration, pas un mouvement réel (BHP 2020-2021 : actions de BHP Group Limited seule, 2,95 Md au lieu de 5,1 Md)
+        kept = list(np.where(keep)[0])
+        i = 1
+        while i < len(kept) - 1:
+            for run in (1, 2):
+                if i + run >= len(kept):
+                    continue
+                a, js, b = kept[i - 1], kept[i:i + run], kept[i + run]
+                r = np.array([[v[j] / v[a], v[j] / v[b]] for j in js])
+                if ((r > 1.25).all() or (r < 0.8).all()) and 0.9 <= v[b] / v[a] <= 1.1:
+                    for j in js:
+                        keep[j] = False
+                    del kept[i:i + run]
+                    spikes += run
+                    break
+            else:
+                i += 1
+        df["val"] = v
+        df = df[keep].reset_index(drop=True)
+    out = df
+    out.attrs.update(sh.attrs)
+    out.attrs.update({"scale_fixed": int(fixed), "dropped": int(len(sh) - len(out)), "spikes": int(spikes)})
     return out
 
 
@@ -168,6 +229,12 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     splits = yahoo.splits(spec["ticker"])
     if splits and len(f["shares"]):
         f["shares"] = split_adjust_shares(f["shares"], splits)
+    shares_cleaning = {}
+    if len(f["shares"]):
+        f["shares"] = clean_share_counts(f["shares"])
+        shares_cleaning = {k: f["shares"].attrs.get(k, 0) for k in ("scale_fixed", "dropped", "spikes")}
+        if any(shares_cleaning.values()):
+            log.info("%s : nombres d'actions nettoyés %s", key, shares_cleaning)
     split_list = [(str(d.date()), r) for d, r in splits]
     if f.get("shares_stale") and len(f.get("public_float", [])) >= 3:
         # actions multi-classes sans nombre d'actions exploitable (Visa, Berkshire) : actions ≈ flottant déclaré / cours du jour du flottant
@@ -289,6 +356,7 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df.attrs["shares_ok"] = bool(shares_ok)
     df.attrs["sbc_known"] = bool(sbc_known)
     df.attrs["splits"] = split_list[-4:]
+    df.attrs["shares_cleaning"] = shares_cleaning
     df.attrs["concepts"] = {k: v.attrs.get("concept") for k, v in f.items() if hasattr(v, "attrs")}
     df.attrs["accounts_currency"] = unit
     df.attrs["price_currency"] = px_ccy

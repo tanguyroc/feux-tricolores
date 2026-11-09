@@ -1,5 +1,60 @@
 # Journal des modifications des règles
 
+## 2026-11-09 — v1.0 (refonte selon un protocole pré-enregistré)
+Déclencheur : en v0.6, le rouge des indices ne passait pas son propre critère (écart vert − rouge à 3 ans < 5 points sur le
+S&P 500 et le MSCI World), et la consigne de « challenger la pertinence des signaux ».
+
+**Méthode.** Protocole écrit et poussé **avant tout calcul** (`research/v1_protocol.md`, commit e92b515, sha256 `08e5abbb…df44`) :
+trois candidats rouges, critères chiffrés, règle de décision écrite d'avance (§8.4), et un hors-échantillon jamais utilisé
+(S&P Composite mensuel 1920-1989, rendements réels dividendes inclus). Résultats publiés tels quels : `research/v1_results.md`.
+
+**Résultat.** Les trois candidats passent largement sur 1920-1989 (écart +13 à +19 points) mais **aucun ne passe sur le S&P 500
+depuis 1990** (+2,2 à +3,6 points) : le CAPE a été au-dessus de son 80e percentile historique 88 % du temps depuis 1990, contre
+20 % avant. Attendre parce que le marché était cher a coûté cher. Bitcoin : la règle B1 passe.
+
+**Indices.**
+- Plus de rouge. « Cher » (V ≥ 80) devient une information, sans règle de report. Vert : V ≤ 40, ou baisse ≥ 25 % avec peur ≥ 80e percentile.
+- V = percentile du CAPE point-in-time contre **tout l'historique depuis 1881** (une fenêtre glissante finit par trouver normal ce qui est cher).
+- Rendement réel attendu à 10 ans (régression sur ln(CAPE)) affiché avec sa fourchette et son biais hors échantillon
+  (trop pessimiste de 5,2 points par an depuis 1990) : aujourd'hui environ +0,7 %/an, fourchette −5,6 à +6,6 %.
+- Drapeau d'information « cher et tendu » (R1 : passe sur le Nasdaq-100 seul ; non retenu, choisi après coup ; inscrit comme hypothèse en avant).
+- Contexte séparé de la règle (dette sur marge, excess CAPE yield, allocation des ménages, momentum, GSY). Drapeau de tendance décalé d'un jour.
+- Conduite : montants exceptionnels en trois tranches mensuelles en orange (« cher » compris), réserve déployée en vert ;
+  levier plafonné à 15 % en vert, 10 % en orange (« cher » compris, conformément au §8.4), 5 % si la tendance est cassée.
+- Plan type 1990-2026 (1 000 €/mois + 10 000 €/an) : trois tranches contre tout investir tout de suite, −0,3 % de capital final ;
+  attendre le vert, −9,1 % (S&P 500) et −26,5 % (Nasdaq-100).
+
+**Bitcoin.** Règle B1 en niveaux (vert si MVRV < 1 ou prix < moyenne 200 semaines ; rouge si MVRV ≥ 3) au lieu des z-scores
+glissants. Le seuil d'origine 3,7 n'a jamais été atteint depuis 2014 et B1 n'a allumé le rouge ni en novembre 2021 ni en mars 2024
+ni en octobre 2025 : il peut manquer le prochain sommet (écrit sur la carte). État du jour : orange (v0.6 : vert).
+
+**Actions.**
+- **Défaut corrigé, présent depuis la v0.5** : les nombres d'actions de la SEC n'étaient pas ajustés des divisions alors que les prix
+  Yahoo le sont. La capitalisation passée des sociétés ayant divisé leurs actions était 4 à 20 fois trop faible avant la division,
+  donc leur valorisation paraissait chère contre leur passé à tort (Nvidia V 76 → 4, Netflix 75 → 2, Amazon 59 → 2).
+- Correctifs du 9 novembre (après la mise en place des témoins) : division appliquée selon la **date de dépôt** et non de clôture
+  (Alphabet : capitalisation 20 fois trop forte de juillet à octobre 2022) ; nombres d'actions déclarés en millions ou en milliers
+  corrigés (McDonald's 2024-2026 : V 34 → 20 ; Royal Bank of Canada 2019) ; valeurs isolées aberrantes écartées (Wells Fargo juillet 2023,
+  BHP 2020-2021 déclaré pour la seule société australienne, coquille Linde plc 2018, CrowdStrike avant 2021). Témoin quotidien :
+  aucun saut de plus de 50 % en un jour du nombre d'actions implicite sur dix ans (91 sociétés).
+- Flux libre net de la rémunération en actions ; deux lentilles (son passé, les autres grandes sociétés) ; feu indicatif par
+  conjonction (rouge : chère sous les deux lentilles **et** tendue ; vert : bon marché sous les deux **et** solide) ; retour aux
+  actionnaires, dilution sur 3 ans, accruals, marge brute ; comptes de plus de 15 mois → orange. TSMC, Toyota, Sony et BHP sont dans
+  ce cas : leurs rapports annuels 2026 sont déposés, mais leurs chiffres IFRS n'apparaissent pas (encore) dans l'API de la SEC.
+- Secteurs sans couleur (drapeaux et valorisation médiane seulement) ; 7 thèmes.
+- Valorisation « par le bas » de chaque indice (P/E agrégé des plus grosses sociétés et position contre leur propre passé), en contexte.
+
+**Test en avant.** Archive quotidienne (`history/`) et pré-inscription mensuelle datée et hachée (`prereg/`) de ce que les règles
+affirment, confrontées au réalisé à un an et trois ans dans l'onglet Validation. Premiers verdicts : 9 novembre 2027 et 9 novembre 2029.
+
+**Repris de Kairys Lite et Kairys Alpha.** Contrôles avant publication et témoins (`python -m feux check`) : publication
+« fail-closed » (un contrôle bloquant en échec arrête la mise à jour, le site garde la dernière version sûre, une alerte part) ;
+minute de déclenchement non ronde (22 h 17 UTC) ; fraîcheur affichée (« il y a X h ») ; sources sur chaque carte ; points
+d'attention par ligne et « test d'échange » dans Mon portefeuille ; alerte de concentration (une action > 12 % de la poche risquée) ;
+trois questions de vente et délai de 7 jours pour une vente en période de stress ; revue écrite à 90 jours de chaque décision.
+
+**Archivé.** Règles et résultats v0.6 (`archive/`) ; la robustesse v0.6 est remplacée par le protocole et la pré-inscription.
+
 ## 2026-11-08 — v0.6 (couche d'honnêteté ; aucune règle modifiée)
 Suite à une revue critique indépendante des signaux (lecteur n'ayant pas participé à la conception), vérifiée point par point :
 - **Validation** : le tableau affiche désormais l'écart vert − rouge à 3 ans face au critère pré-enregistré (≥ 5 pts) — **non atteint

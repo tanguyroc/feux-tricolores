@@ -1,149 +1,147 @@
 # Feux tricolores — investissement long terme
 
-**Une application monopage** (`docs/index.html`, publiée par GitHub Pages) : Aujourd'hui · Actions Top 100 · Mon portefeuille · Journal · Validation · Règles & glossaire.
+**Une application monopage** (`docs/index.html`, publiée par GitHub Pages) : Aujourd'hui · Actions Top 100 · Mon portefeuille ·
+Journal · Validation · Règles & glossaire.
 
-Un feu **vert / orange / rouge** par actif (S&P 500, Nasdaq-100, MSCI World, Bitcoin), calculé chaque soir
-à partir de données publiques, **point-in-time** (aucune valeur n'est utilisée avant sa date de publication),
-par du code Python déterministe. Aucun LLM dans la chaîne de décision.
+Un feu par actif (S&P 500, Nasdaq-100, MSCI World, Bitcoin), calculé chaque soir à partir de données publiques,
+**point-in-time** (aucune valeur n'est utilisée avant sa date de publication), par du code Python déterministe.
+Aucun LLM dans la chaîne de décision. Version des règles : **v1.0** (`rules.yaml`, gelées le 9 novembre 2026).
 
 Un feu mesure un **état**, pas une prévision :
 
 | Couleur | Signification | Ce qu'elle gouverne |
 |---|---|---|
-| 🟢 Vert | décoté (valorisation ≤ 40e percentile) **ou** capitulation (baisse ≥ 25 % + peur extrême) | déploiement de la réserve par tiers ; levier autorisé si la tendance est OK |
-| 🟠 Orange | état normal ou ambigu (y compris « cher mais pas euphorique ») | montants exceptionnels déployés par tiers ; levier maintenu, non renforcé |
-| 🔴 Rouge | cher (≥ 80e percentile) **et** (tendu **ou** euphorique) | aucun montant exceptionnel ; levier plafonné à 5 % ; rééquilibrage |
-| ⚑ Tendance cassée | clôture mensuelle sous la moyenne 10 mois (Bitcoin : sous la MM200 jours) | levier ramené à 0-5 % sous 5 jours, quelle que soit la couleur |
+| 🟢 Vert | indices : décoté (CAPE ≤ 40e percentile depuis 1881) **ou** capitulation (baisse ≥ 25 % et peur ≥ 80e percentile) ; Bitcoin : MVRV < 1 ou prix sous sa moyenne 200 semaines | la réserve est déployée ; levier jusqu'à 15 % si la tendance est OK |
+| 🟠 Orange | tout le reste, y compris **« cher »** (CAPE ≥ 80e percentile), affiché comme information | versements ; montants exceptionnels en trois tranches mensuelles ; levier ≤ 10 % |
+| 🔴 Rouge | **Bitcoin seulement** : MVRV ≥ 3 | aucun montant exceptionnel ; levier ≤ 5 % |
+| ⚑ Tendance cassée | clôture mensuelle sous la moyenne 10 mois (Bitcoin : sous la MM200 jours) | levier ramené à 5 % |
 
 **Les versements réguliers ne s'arrêtent jamais.** Le feu ne dit pas « vendre » ; il dit comment acheter.
 
-## Pourquoi ces règles (résumé des preuves)
+## Pourquoi ces règles : un protocole écrit avant les calculs
 
-- La valorisation (CAPE) prédit les rendements à 10 ans, pas le timing : elle ne déclenche jamais le rouge seule
-  (sinon rouge quasi permanent depuis 1991). Le rouge exige une deuxième famille : extension de prix (écart à la MM200,
-  momentum 12 mois, critère Greenwood-Shleifer-You « +100 % en 2 ans avec accélération ») ou euphorie (dette sur marge).
-- La tendance (moyenne 10 mois, Faber 2007) est le seul signal dont la réduction des pertes extrêmes est robuste :
-  elle pilote le levier. Simulation 1985-2026 d'un x2 quotidien sur le Nasdaq-100 : −98,5 % en 2000-2002 sans filtre,
-  −88 % avec (l'indice lui-même : −81 %).
-- Combinaison par **conjonction**, pas par moyenne pondérée (AQR « Sin a little » : les déviations doivent rester modestes).
-- Bitcoin : seuils fixes abandonnés (ils ont manqué le sommet d'octobre 2025) ; z-scores glissants 4 ans en log du
-  prix / MM200 semaines et du MVRV. Confiance assumée plus faible.
+La v1.0 vient d'un protocole pré-enregistré (`research/v1_protocol.md`, poussé avant tout calcul, empreinte dans
+`research/PROTOCOL_HASHES.txt`) et de ses résultats publiés tels quels (`research/v1_results.md`) :
 
-Cahier de conception, sources et désaccords : voir la recherche jointe au projet ; règles exactes : `rules.yaml` ;
-historique des modifications : `CHANGELOG.md`.
+- **Rouge des indices abandonné.** Trois définitions candidates (« cher et tendu », « cher et tendance cassée », « très cher »)
+  passent largement sur un hors-échantillon jamais utilisé (S&P Composite 1920-1989, écart de rendement vert − rouge à 3 ans de
+  +13 à +19 points) mais **aucune ne passe sur le S&P 500 depuis 1990** (+2 à +4 points). Raison : le CAPE a été au-dessus de son
+  80e percentile historique 88 % du temps depuis 1990 (20 % avant) ; attendre parce que le marché était cher a coûté cher.
+  « Cher » reste affiché, avec le rendement réel attendu à 10 ans, sa fourchette et son biais (trop pessimiste de 5,2 points par an
+  depuis 1990 en hors-échantillon).
+- **Vert conservé** : décote ou capitulation ont été suivies de meilleurs rendements que l'orange (écart à 3 ans : +2,6 points sur le
+  S&P 500, +1,2 sur le Nasdaq-100, +3,2 sur le MSCI World, 1990-2026) ; c'est le moment de déployer une réserve, pas un signal de timing.
+- **Tendance (moyenne 10 mois, Faber 2007)** : réduit les pertes extrêmes (S&P 500 1990-2026 : perte maximale 33 % au lieu de 57 %) au
+  prix d'un rendement plus faible ; elle pilote donc le levier, pas les achats. Nasdaq-100 x2 quotidien : −98,5 % en 2000-2002 sans
+  filtre, −89 % avec (l'indice : −81 %).
+- **Bitcoin, règle B1 en niveaux** : écart de rendement à 3 ans vert − rouge de +116 points (2014-2026, pas de hors-échantillon
+  possible). Le seuil d'origine (MVRV 3,7) n'a jamais été atteint depuis 2014 : **le rouge peut manquer le prochain sommet**.
 
-## Résultats du backtest point-in-time (1990-2026 ; Bitcoin 2014-2026)
+## Résultats, règles en vigueur (point-in-time, 1990-2026 ; Bitcoin 2014-2026)
 
-| Actif | Temps en rouge | Rendement médian 3 ans après **vert** | … après **rouge** | Baisse médiane 24 mois après rouge (vs vert) | Épisodes reproduits |
-|---|---|---|---|---|---|
-| S&P 500 | 11 % | +12,8 %/an | +8,5 %/an | 13 % (6 %) | 6/7 (octobre 2022 orange, pas vert) |
-| Nasdaq-100 | 14 % | +16,7 %/an | +8,7 %/an | 20 % (8 %) | 6/7 |
-| MSCI World | 8 % | +10,0 %/an | +5,2 %/an | 22 % (9 %) | 5/6 |
-| Bitcoin | 9 % | +78 %/an | +33 %/an | 50 % (14 %) | 6/8 (nov. 2021 et oct. 2025 orange) |
+| Actif | Temps en vert | Rendement médian 3 ans après **vert** | … après **orange** | Baisse 24 mois, 90e percentile (vert / orange) |
+|---|---|---|---|---|
+| S&P 500 | 8 % | +12,3 %/an | +9,7 %/an | 29 % / 34 % |
+| Nasdaq-100 | 13 % | +16,8 %/an | +15,7 %/an | 61 % / 35 % |
+| MSCI World | 9 % | +10,9 %/an | +7,7 %/an | 30 % / 37 % |
+| Bitcoin (rouge 4 % du temps) | 17 % | +126 %/an | +50 %/an (rouge : +9 %/an) | 25 % / 69 % (rouge : 79 %) |
 
-Rendements de prix hors dividendes. Chaque jour est classé par sa couleur du jour. Rapport complet : `docs/backtest.html`.
+Rendements de prix hors dividendes ; chaque jour est classé par sa couleur du jour. Sur le Nasdaq-100, les verts de 2000-2002
+(capitulations trop précoces) expliquent la baisse de 61 % : d'où le drapeau « couteau qui tombe » et les tranches.
+**Plan type** (1 000 €/mois + 10 000 €/an) : trois tranches mensuelles contre tout investir tout de suite, −0,3 % de capital final ;
+attendre le vert, −9,1 % (S&P 500) et −26,5 % (Nasdaq-100).
 
-**Robustesse** (`docs/robustness.html`, v0.2) : l'écart vert − rouge à 3 ans est statistiquement solide sur le MSCI World
-(IC 90 % par bootstrap de blocs : [+4,5 ; +28,9] points) et le Bitcoin ([+16 ; +135]), **pas sur le S&P 500** ([−2,5 ; +11,6]) ;
-sur le Nasdaq-100 il tient presque entièrement à 2000-2002. Ce qui est stable partout : après un rouge, les baisses des
-24 mois suivants sont plus profondes. Les résultats bougent peu quand on déplace chaque seuil de ±5 points (tableau de
-sensibilité, aucun seuil retouché). 1987 n'a pas été signalé (orange) : krach hors conception, assumé.
+Le gain attendu de l'outil n'est **pas** sur le rendement des flux (≈ 0) ; il est sur (1) le contrôle du levier, (2) le comportement
+(pas de levier ni de montant exceptionnel d'un coup ; achats effectifs dans la capitulation ; ventes ralenties), (3) le Bitcoin.
 
-**Affichage confirmé** : une nouvelle couleur n'apparaît qu'après 5 jours de bourse consécutifs (changements par an
-divisés par ~3, rendements par couleur inchangés). L'état brut reste visible sur la carte.
+**Test en avant.** Chaque jour, l'état est archivé (`history/`) ; chaque mois, ce que les règles affirment est inscrit, haché
+(SHA-256) et commité (`prereg/`), puis confronté au réalisé à un an et trois ans (onglet Validation). Premiers verdicts :
+9 novembre 2027 et 9 novembre 2029.
 
-**Coût des faux positifs** (plan type 1 000 €/mois + 10 000 €/an, 1990-2026) : attendre le **vert** pour les montants
-exceptionnels aurait coûté −6 % de capital final sur le S&P 500 et −25 % sur le Nasdaq-100 (0 % sur le World), avec
-~95 000 € jamais déployés depuis 2020. Différer **seulement en rouge** : −0,3 % (neutre). D'où la règle de conduite retenue.
+## Actions : le Top 100 mondial
 
-Le gain attendu de l'outil n'est **pas** sur le rendement des flux (≈ 0) ; il est sur (1) le contrôle du levier,
-(2) le comportement (pas d'achat exceptionnel ni de levier dans l'euphorie, achats effectifs dans la capitulation),
-(3) le Bitcoin, où la discrimination vert/rouge est forte.
+Univers = 100 premières pondérations du MSCI ACWI (positions de l'ETF SPDR), comptes SEC EDGAR point-in-time. Chaque société est
+jugée sous **deux lentilles** : son multiple contre **son passé** (EV/EBIT et P/FCF, percentile 10 ans) et contre **les autres
+grandes sociétés**. Flux libre **net de la rémunération en actions**. Feu **indicatif, non backtesté** : rouge seulement si chère
+sous les deux lentilles **et** tendue ; vert seulement si bon marché sous les deux **et** solide (rentabilité, cash, dette sur 5 ans) ;
+comptes de plus de 15 mois → orange. Les données SEC sont nettoyées (divisions d'actions selon la date de dépôt, nombres déclarés
+en milliers ou en millions, valeurs aberrantes) et un témoin vérifie chaque jour qu'aucun nombre d'actions ne saute de plus de 50 %.
+Secteurs et thèmes : drapeaux de prix et valorisation médiane, **sans couleur**.
 
-## Pour qui ne lit pas les bilans
+## Garde-fous de publication et de comportement
 
-Le tableau de bord s'ouvre en **mode simple** : une phrase par feu (« Feu rouge sur les grandes entreprises américaines :
-les actions se paient cher par rapport aux bénéfices des dix dernières années ; les investisseurs empruntent beaucoup pour
-acheter… Ce n'est pas le moment de placer une grosse somme d'un coup. Les versements habituels continuent. »), un encadré
-« Ce mois-ci, concrètement » et un glossaire où chaque indicateur est expliqué en langage courant avec ce que la règle en fait.
-Le **mode détaillé** garde tous les chiffres, percentiles et z-scores. Le brief mensuel (Telegram) reprend la version simple.
-
-## Modules (v0.3)
-
-| Module | Commande | Données | État |
-|---|---|---|---|
-| Indices (S&P 500, Nasdaq-100, MSCI World) | `signals` | Shiller, FRED, Yahoo, FINRA | validé 1985-2026 |
-| Bitcoin | `signals` | Coin Metrics, alternative.me, Deribit (financement) | validé 2014-2026, confiance moyenne |
-| Actions : Top 100 mondial (MSCI ACWI) + `stocks.yaml` | `universe`, `stocks` | SPDR MSCI ACWI (positions), Yahoo, SEC EDGAR | prix seuls sans `SEC_USER_AGENT` ; valorisation (jauge 0-100), solidité pluriannuelle et feu avec |
-| Mon portefeuille, Journal | dans l'application | navigateur (localStorage) | rien n'est transmis |
-| Secteurs (11 GICS) et thèmes (semis, logiciels) | `signals` (ou `themes`) | Yahoo (ETF SPDR, VNQ, VOX, ^SOX, IGV) + V médian des sociétés du secteur | couleur de contexte, non backtestée |
-| Brief mensuel | `brief` | — | Telegram le 1er du mois |
-| Journal de décision (48 h) | `decide` | — | opérationnel, dossier `journal/` hors dépôt ; rappelle les statistiques historiques |
-| Validation et robustesse | `backtest`, `robustness` | — | rapports HTML |
+- `python -m feux check` : contrôles de fraîcheur et de complétude, et **témoins** (ce que le code doit faire, vérifié sur les données
+  du jour : pas de rouge sur les indices, règle B1 respectée, banques en P/E, comptes anciens jamais colorés, FCF net ≤ brut, nombre
+  d'actions continu…). Un contrôle bloquant en échec arrête la mise à jour : le site garde la dernière version sûre et une alerte part.
+- Mon portefeuille (navigateur seulement) : exposition réelle avec levier, test de résistance, plafond de levier du jour, écart aux
+  cibles, versement du mois, **points d'attention par ligne et test d'échange**, **alerte de concentration** (> 12 % de la poche risquée).
+- Journal : intention écrite, cinq questions, 48 h avant confirmation ; **vente en période de stress : trois questions de plus et
+  7 jours** ; **revue écrite à 90 jours** avec la performance depuis l'intention.
 
 ## Installation et usage
 
 ```bash
 pip install -r requirements.txt
-python -m feux update      # télécharge Shiller, FRED, Yahoo, FINRA, Coin Metrics, Fear & Greed
+python -m feux update      # Shiller, FRED, Yahoo, FINRA, Coin Metrics, Fear & Greed, Deribit
 python -m feux signals     # indicateurs + couleurs -> data/signals/, docs/latest.json
-python -m feux backtest    # validation -> docs/backtest.html
 python -m feux universe    # Top 100 mondial -> data/universe.csv
-python -m feux stocks      # actions : prix seuls, ou comptes EDGAR si SEC_USER_AGENT
+SEC_USER_AGENT="Prénom Nom adresse@email" python -m feux stocks   # actions (sans la variable : prix seuls)
+python -m feux check       # contrôles et témoins -> docs/checks.json (code 1 si un contrôle bloquant échoue)
 python -m feux dashboard   # l'application : docs/index.html (un seul fichier)
-python -m feux alert       # Telegram si une couleur ou un drapeau a changé (sinon journal)
-python -m feux robustness  # sous-périodes, bootstrap, sensibilité -> docs/robustness.html
-SEC_USER_AGENT="Prenom Nom prenom.nom@example.com" python -m feux stocks   # actions suivies
+python -m feux archive     # ajoute l'état du jour à history/
+python -m feux prereg --monthly   # pré-inscription du mois (une seule fois par mois)
+python -m feux alert       # alerte si une couleur ou un drapeau a changé
+python -m feux backtest    # validation -> docs/backtest.html, docs/backtest_summary.json
+python -m feux longrun     # protocole v1.0 (1920-1989 et 1990-aujourd'hui) -> docs/longrun_summary.json
 python -m feux decide new --asset ndx --action acheter --amount 5000 --thesis "..." --invalidation "..."
 python -m pytest -q tests
 ```
 
 ## Déploiement (GitHub, gratuit)
 
-1. Créer un dépôt (public pour des minutes Actions illimitées et GitHub Pages ; aucune donnée personnelle n'y figure).
-2. Pousser ce dossier. Activer **Settings → Pages → Source : GitHub Actions**.
-3. Secrets (`Settings → Secrets and variables → Actions → New repository secret`) :
-   - `SEC_USER_AGENT` : « Prénom Nom adresse@email » (exigé par la politique d'accès de la SEC) — sans lui, les 100 sociétés restent en prix seul ;
-   - `NTFY_TOPIC` : le sujet ntfy.sh auquel vous êtes abonné (alertes et brief mensuel, sans compte) ;
-   - ou `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` si vous préférez Telegram.
-4. Le workflow `daily.yml` tourne du lundi au vendredi à 22 h UTC (lancement manuel possible : Actions → Feux quotidiens → Run workflow),
-   régénère l'application et n'envoie une alerte qu'en cas de changement. `monthly.yml` envoie le brief le 1er du mois.
-   `pages.yml` active GitHub Pages tout seul au premier push et publie `docs/` : l'application est à
-   `https://<owner>.github.io/feux-tricolores/`.
-5. Note GitHub : les workflows planifiés d'un dépôt public sont désactivés après 60 jours sans activité ;
-   le commit quotidien du bot devrait suffire, à vérifier le premier mois.
+1. Dépôt public (minutes Actions illimitées et GitHub Pages ; aucune donnée personnelle n'y figure).
+2. **Settings → Pages → Source : GitHub Actions**.
+3. Secrets (`Settings → Secrets and variables → Actions`) :
+   - `SEC_USER_AGENT` : « Prénom Nom adresse@email » (exigé par la SEC, envoyé seulement à sec.gov) ;
+   - `NTFY_TOPIC` : le sujet ntfy.sh auquel vous êtes abonné (alertes, échecs de publication, brief mensuel) ;
+   - ou `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`.
+4. `daily.yml` tourne du lundi au vendredi à 22 h 17 UTC : données → signaux → actions → **contrôles (bloquants)** → application →
+   archive et pré-inscription → alertes → backtest le vendredi → commit → publication. Lancement manuel : Actions → Feux quotidiens →
+   Run workflow. `monthly.yml` envoie le brief le 1er du mois.
+5. Les workflows planifiés d'un dépôt public sont désactivés après 60 jours sans activité ; le commit quotidien du bot suffit.
 
 ## Sources de données
 
 | Donnée | Source | Décalage point-in-time appliqué |
 |---|---|---|
-| Prix, dividendes, bénéfices, CPI, GS10 | Robert Shiller, `ie_data.xls` | bénéfices : +3 mois |
-| VIX, spread Baa−T10 (BAA10Y), T-bill 3 mois, séries Z.1 (AIAE) | FRED (`fredgraph.csv`) | Z.1 : +70 jours ; T-bill : +7 jours |
-| Prix quotidiens ^GSPC, ^NDX (+^IXIC avant 1985), ^990100-USD-STRD, ^VIX | Yahoo Finance (API chart, non officielle) | aucun |
-| Dette sur marge | FINRA, `margin-statistics.xlsx` | +25 jours |
+| Prix, dividendes, bénéfices, CPI | Robert Shiller, `ie_data.xls` | bénéfices : +3 mois |
+| VIX, écart de crédit (BAA10Y, BAA−AAA), T-bill 3 mois, séries Z.1 | FRED | Z.1 : +70 jours ; T-bill : +7 jours |
+| Prix quotidiens des indices, des ETF sectoriels et des actions | Yahoo Finance (API chart, non officielle) | aucun |
+| Dette sur marge | FINRA | +25 jours |
 | Prix et MVRV Bitcoin | Coin Metrics Community API (CC BY-NC 4.0) | aucun |
-| Fear & Greed crypto | alternative.me | aucun |
-| Taux de financement du perpétuel BTC | Deribit (API publique, horaire depuis 06/2019) | aucun |
-| Comptes des sociétés suivies | SEC EDGAR companyfacts (XBRL) | date de dépôt réelle (`filed`), première publication |
+| Fear & Greed crypto ; financement du perpétuel BTC | alternative.me ; Deribit | aucun |
+| Univers Top 100 ; S&P 500 | positions SPDR MSCI ACWI et SPY (State Street) | date de publication |
+| Comptes des sociétés | SEC EDGAR companyfacts (XBRL) | date de dépôt réelle, première publication |
 
-Limites connues : Yahoo est non officiel (prévoir EODHD ≈ 20 $/mois en secours si l'API change) ; `fredgraph.csv`
-renvoie le dernier millésime (révisions Z.1 : approximées par le décalage de 70 jours ; ALFRED possible plus tard) ;
-l'OAS haut rendement ICE n'est pas téléchargeable au-delà de 3 ans (remplacé par BAA10Y) ; Binance et Bybit refusent
-les exécuteurs américains (Deribit utilisé à la place) ; le module actions ne couvre que les sociétés déposant à la SEC.
+Limites connues : Yahoo est non officiel ; FRED renvoie le dernier millésime (révisions Z.1 approximées par le décalage) ; les
+sociétés qui ne déposent pas à la SEC sont suivies en prix seul ; pour plusieurs déposants IFRS (TSMC, Toyota, Sony, BHP), les
+chiffres des rapports 2026 n'apparaissent pas dans l'API de la SEC : comptes anciens, donc orange.
 
 ## Structure
 
 ```
-rules.yaml          seuils gelés + règles de conduite      CHANGELOG.md   modifications des règles (datées, motivées)
-feux/loaders/       téléchargement, dates de disponibilité  feux/store.py  stockage point-in-time (ref_date, available_date)
-feux/indicators.py  percentiles, z-scores, GSY, CAPE PIT    feux/signals.py familles V/X/E/P et couleurs
-feux/backtest.py    validation, plan type, levier x2        feux/robustness.py  sous-périodes, bootstrap, sensibilité
-feux/stocks.py      module actions (EDGAR, DCF inversé)     feux/journal.py     journal de décision 48 h
-feux/charts.py      graphiques SVG                          feux/dashboard.py, alerts.py, explain.py
-docs/               index.html, backtest.html, latest.json, state.json (publié par Pages)
+rules.yaml            règles gelées v1.0             CHANGELOG.md     modifications (datées, motivées)
+research/             protocole v1.0, empreintes, résultats       archive/   règles et résultats v0.6
+feux/loaders/         téléchargement, dates de disponibilité      feux/store.py    stockage point-in-time
+feux/signals.py       valorisation, rendement attendu, couleurs   feux/longrun.py  protocole 1881-2026
+feux/backtest.py      validation, plan type, levier x2            feux/stocks.py   module actions (EDGAR)
+feux/check.py         contrôles avant publication, témoins        feux/prereg.py   archive et pré-inscription
+feux/app.py, dashboard.py, plain.py, explain.py   application    feux/alerts.py, brief.py   alertes et brief
+history/, prereg/     archive quotidienne, pré-inscriptions hachées (ajout seul)
+docs/                 index.html, latest.json, checks.json, backtest.html (publié par Pages)
 ```
 
 ## Avertissement
 
-Outil personnel d'aide à la discipline. Pas un conseil en investissement. Les performances passées, point-in-time ou
-non, ne garantissent rien ; voir `runbook.md` pour les modes d'échec connus.
+Outil personnel d'aide à la discipline. Pas un conseil en investissement. Les performances passées, point-in-time ou non,
+ne garantissent rien ; voir `runbook.md` pour les modes d'échec connus.

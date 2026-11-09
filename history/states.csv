@@ -1,0 +1,5 @@
+date_calcul,date_données,actif,règles,couleur,couleur_confirmée,cher,cher_tendu,tendance_cassée,V,rdt_attendu_10a,prix,mvrv,prix_mm200s
+2026-11-09,2026-11-06,sp500,1.0,orange,orange,True,False,False,98.140732,0.006677,7376.859863,,
+2026-11-09,2026-11-06,ndx,1.0,orange,orange,True,False,False,98.140732,0.006677,26989.990234,,
+2026-11-09,2026-11-08,world,1.0,orange,orange,True,False,False,98.140732,0.006677,4739.930176,,
+2026-11-09,2026-11-07,btc,1.0,orange,orange,,,False,-0.682843,,75724.406154,1.405379,1.119466

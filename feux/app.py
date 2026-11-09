@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import html
 import json
+import logging
 
 import pandas as pd
 
@@ -19,6 +20,8 @@ from .plain import GLOSSARY, headline, monthly_actions
 from .signals import load_signals
 from .stocks import load_latest
 from .themes import overlay as themes_overlay
+
+log = logging.getLogger("feux.app")
 
 APP_CSS = d.CSS + """
 nav.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:14px 0 18px}
@@ -74,8 +77,8 @@ def _payload() -> dict:
                                             "V", "ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda", "quality_ok", "implied_growth",
                                             "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "da_known", "accounts_as_of", "shares_source",
                                             "V_cross", "vs_sector", "sector_peers", "tendu", "stale_accounts", "fcf", "fcf_gross", "sbc", "sbc_known", "sbc_to_revenue",
-                                            "shareholder_yield", "dividend_yield", "net_buyback_yield", "dilution_3y", "accruals", "gross_margin", "gross_profitability", "splits",
-                                            "fcf_cagr_5y", "gap_ma200", "gap_ma200_pct", "runup_24m", "gsy", "trend_broken", "drawdown", "mom_12m", "date", "since",
+                                            "shareholder_yield", "dividend_yield", "net_buyback_yield", "dilution_3y", "accruals", "gross_margin", "gross_profitability", "splits", "shares_cleaning",
+                                            "fcf_cagr_5y", "gap_ma200", "gap_ma200_pct", "runup_24m", "gsy", "trend_broken", "drawdown", "mom_12m", "date", "since", "price",
                                             "source", "accounts_currency", "price_currency", "mode", "ebit_source", "shares_ok", "pe", "pb", "roe", "note")} | {"key": k})
     themes = themes_overlay(stocks)
     q = r["stocks"]["quality"]
@@ -100,7 +103,7 @@ def _payload() -> dict:
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC"), "generated_iso": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
         "frozen_at": r["frozen_at"], "version": str(r["version"]),
         "states": states, "headline": headline(states), "actions": monthly_actions(states), "base_rates": base,
-        "stocks": rows, "universe_as_of": universe_as_of, "themes": themes, "breadth": breadth,
+        "stocks": rows, "universe_as_of": universe_as_of, "themes": themes, "breadth": breadth, "prereg": _prereg_rows(),
         "quality_rules": {"roic_min": q["roic_min"], "fcf_ni_min": q["fcf_to_net_income_min"], "nd_ebitda_max": q["net_debt_to_ebitda_max"],
                           "avg_years": q.get("avg_years", 5), "ebitda_avg_years": q.get("ebitda_avg_years", 3)},
         "stock_rules": {"red_min": r["stocks"]["valuation"]["red_min"], "green_max": r["stocks"]["valuation"]["green_max"],
@@ -108,15 +111,37 @@ def _payload() -> dict:
         "conduct": {c: conduct_text(c) for c in ("green", "orange", "red")} | {"bands": {c: r["conduct"][c]["rebalance_band_pts"] for c in ("green", "orange", "red")},
                                                                           "lev_cap": {c: r["conduct"][c]["leverage_cap_share_equities"] for c in ("green", "orange", "red")},
                                                                           "lev_cap_broken": r["conduct"]["trend_broken"]["leverage_cap_share_equities"],
-                                                                          "hours": r["conduct"]["exceptional_order_checklist_hours"]},
+                                                                          "hours": r["conduct"]["exceptional_order_checklist_hours"],
+                                                                          "sell_cooling_days": r["conduct"].get("sell_cooling_days_in_stress", 7),
+                                                                          "stress_drawdown": 0.20, "review_days": 90,
+                                                                          "concentration_max": r["conduct"].get("concentration_max_single_stock", 0.12)},
+        "checks": _checks(),
         "questions": ["Quelle couleur, et depuis quand ?", "Quel drapeau de tendance ?", "Le montant respecte-t-il le plafond de la couleur ?",
                       "Ai-je lu l'explication générée ?", "Agirais-je identiquement si le marché avait baissé de 10 % demain ?"],
     }
 
 
+def _checks() -> dict:
+    """Contrôles de publication et témoins du jour (python -m feux check), affichés dans l'onglet Validation."""
+    p = DOCS_DIR / "checks.json"
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except Exception:
+        return {}
+
+
 def _fragment(name: str) -> str:
     p = DOCS_DIR / "fragments" / f"{name}.html"
     return p.read_text(encoding="utf-8") if p.exists() else "<p class='sub'>Non généré.</p>"
+
+
+def _prereg_rows() -> list[dict]:
+    try:
+        from .prereg import scoreboard
+        return scoreboard()
+    except Exception as exc:   # pas bloquant
+        log.warning("Suivi des pré-inscriptions indisponible : %s", exc)
+        return []
 
 
 def build() -> None:
@@ -130,7 +155,8 @@ def build() -> None:
     page = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Feux tricolores</title><style>{APP_CSS}</style></head><body data-mode="simple"><main>
 <h1>Feux tricolores <span class="toggle"><button data-m="simple">Mode simple</button><button data-m="detail">Mode détaillé</button></span></h1>
-<p class="sub">Mise à jour {pay['generated']} · règles gelées le {pay['frozen_at']} · v{pay['version']}</p>
+<p class="sub">Mise à jour {pay['generated']} <span id="fresh"></span> · règles gelées le {pay['frozen_at']} · v{pay['version']}</p>
+<div id="stale-banner"></div>
 <nav class="tabs">
 <button data-t="today" class="on">Aujourd'hui</button><button data-t="stocks">Actions · Top 100</button><button data-t="portfolio">Mon portefeuille</button>
 <button data-t="journal">Journal</button><button data-t="validation">Validation</button><button data-t="rules">Règles &amp; glossaire</button></nav>
@@ -196,7 +222,7 @@ Chaque société est jugée sous <b>deux lentilles</b> : son prix contre <b>son 
 
 <section class="tab" id="tab-journal">
 <h2>Journal de décision</h2>
-<p class="sub">Tout ordre exceptionnel commence par une intention écrite et cinq questions. La confirmation est impossible avant {pay['conduct']['hours']} heures. Les intentions restent dans ce navigateur (export possible).</p>
+<p class="sub">Tout ordre exceptionnel commence par une intention écrite et cinq questions. La confirmation est impossible avant {pay['conduct']['hours']} heures ; pour une vente en période de stress (feu vert, couteau qui tombe, ou baisse de 20 % ou plus depuis le plus haut), avant {pay['conduct']['sell_cooling_days']} jours. Chaque décision confirmée revient {pay['conduct']['review_days']} jours plus tard pour une revue écrite. Les intentions restent dans ce navigateur (export possible).</p>
 <div class="form">
 <label>Actif<select id="j-asset"><option value="sp500">S&amp;P 500</option><option value="ndx">Nasdaq-100</option><option value="world">MSCI World</option><option value="btc">Bitcoin</option><option value="stock">Action (préciser)</option></select></label>
 <label>Précision (symbole)<input id="j-ticker" placeholder="facultatif"></label>
@@ -205,6 +231,7 @@ Chaque société est jugée sous <b>deux lentilles</b> : son prix contre <b>son 
 <label style="grid-column:1/-1">Thèse (pourquoi)<textarea id="j-thesis" rows="2"></textarea></label>
 <label style="grid-column:1/-1">Ce qui invaliderait la décision<textarea id="j-inval" rows="2"></textarea></label>
 <div id="j-questions" style="grid-column:1/-1"></div>
+<div id="j-sell" class="detail" style="grid-column:1/-1;display:none"></div>
 <div id="j-rates" class="detail" style="grid-column:1/-1"></div>
 <button class="btn" id="j-add">Enregistrer l'intention</button><p class="note" id="j-add-msg" style="grid-column:1/-1;display:none"></p></div>
 <div id="j-list"></div>
@@ -265,12 +292,12 @@ function solidity(s){if(s.V==null)return '—';if(s.mode==='reit')return '<span 
  if(s.quality_ok===true)return '<span class="pill on">solide</span>';
  if(!f.length&&u.length)return `<span class="note">n.d. (${u.join(', ')})</span>`;
  return f.map(k=>`<span class="pill warnp">⚠ ${SHORT[k](s)}</span>`).join(' ')+(u.length?`<br><small class="note">${u.join(', ')} : n.d.</small>`:'');}
+const ageMonths=d=>d?Math.round((new Date(D_DATE)-new Date(d))/2629800000):null;
+const accountsNote=s=>{if(!s.accounts_as_of)return '';const m=ageMonths(s.accounts_as_of);const old=m!=null&&m>15;return `<br><small class="${old?'warn':'note'}">comptes au ${fmtDate(s.accounts_as_of)}${old?' — anciens ('+m+' mois) : lecture prudente':''}</small>`;};
 function fmtCell(k,s){switch(k){
  case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker} · ${s.country||'—'} · ${s.sector||'—'}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>${s.stale_accounts&&s.kind==='operating'?'<br><small class="warn">comptes anciens</small>':''}`;
  case 'V_cross':if(s.V_cross==null)return '—';return `<b>${Math.round(s.V_cross)}</b>${vgauge(s.V_cross)}<small>${s.mode!=='industrial'?'P/E':'EV/EBIT'}${s.vs_sector!=null?` · secteur ${s.vs_sector>2?'> +200 %':pct(s.vs_sector,0,true)}`:''}</small>`;
  case 'shareholder_yield':return s.shareholder_yield==null?'—':`${pct(s.shareholder_yield,1)}<br><small>dividende ${pct(s.dividend_yield,1)} · actions ${s.dilution_3y==null?'n.d.':pct(s.dilution_3y,0,true)} en 3 ans</small>`;
-const ageMonths=d=>d?Math.round((new Date(D_DATE)-new Date(d))/2629800000):null;
-const accountsNote=s=>{if(!s.accounts_as_of)return '';const m=ageMonths(s.accounts_as_of);const old=m!=null&&m>15;return `<br><small class="${old?'warn':'note'}">comptes au ${fmtDate(s.accounts_as_of)}${old?' — anciens ('+m+' mois) : lecture prudente':''}</small>`;};
  case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `<b>${Math.round(s.V)}</b> <small>${VLAB(s.V)}</small>${vgauge(s.V)}<small>${s.mode!=='industrial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>${accountsNote(s)}`;
  case 'quality_ok':return solidity(s);
  case 'implied_growth':return s.implied_growth==null?'—':`${pct(s.implied_growth,0,true)}/an<br><small>réalisée 5 ans ${pct(s.fcf_cagr_5y,0,true)}</small>`;
@@ -295,7 +322,7 @@ function detail(key){const s=S.find(x=>x.key===key);if(!s)return;const body=s.V=
  `<p><b>Valorisation, lentille 1 (son propre passé)</b> : EV/EBIT ${num(s.ev_ebit)} (percentile 10 ans ${s.ev_ebit_pct==null?'n.d.':Math.round(s.ev_ebit_pct)}), P/FCF ${num(s.p_fcf)} (p${s.p_fcf_pct==null?'n.d.':Math.round(s.p_fcf_pct)}) → V = ${Math.round(s.V)}, <b>${VLAB(s.V)}</b> par rapport à ses dix dernières années.${s.ebit_source&&s.ebit_source.indexOf('approximation')>=0?' <small>(résultat d\'exploitation non publié : approché par résultat avant impôt + intérêts)</small>':''}<br>
  <b>Lentille 2 (les autres)</b> : ${s.V_cross==null?'n.d.':`plus cher que ${Math.round(s.V_cross)} % des grandes sociétés comparables`}${s.vs_sector!=null?` ; ${s.vs_sector>=0?'prime':'décote'} de ${Math.abs(Math.round(100*s.vs_sector))} % sur la médiane de son secteur (${s.sector_peers} sociétés)`:''}. Une société peut être bon marché contre son passé et chère contre les autres (multiple en baisse après une forte croissance), ou l'inverse : le feu exige l'accord des deux.<br>
  <b>Cash</b> : flux libre ${s.fcf_gross==null?'n.d.':num(s.fcf_gross/1e9,1)+' Md'} avant rémunération en actions, <b>${s.fcf==null?'n.d.':num(s.fcf/1e9,1)+' Md'}</b> après${s.sbc_to_revenue!=null?` (rémunération en actions : ${pct(s.sbc_to_revenue,1)} du chiffre d'affaires)`:s.sbc_known===false?' (rémunération en actions non publiée : comptée à zéro)':''} ; c'est ce flux net qui sert au P/FCF, au test de cash et au DCF inversé.<br>
- <b>Retour aux actionnaires (12 mois)</b> : ${pct(s.shareholder_yield,1)} de la capitalisation (dividendes ${pct(s.dividend_yield,1)}, rachats nets ${pct(s.net_buyback_yield,1)}) ; nombre d'actions ${s.dilution_3y==null?'n.d.':pct(s.dilution_3y,0,true)} en trois ans${s.splits&&s.splits.length?` (divisions d'actions prises en compte : ${s.splits.map(x=>x[0]+' ×'+x[1]).join(', ')})`:''}.<br>
+ <b>Retour aux actionnaires (12 mois)</b> : ${pct(s.shareholder_yield,1)} de la capitalisation (dividendes ${pct(s.dividend_yield,1)}, rachats nets ${pct(s.net_buyback_yield,1)}) ; nombre d'actions ${s.dilution_3y==null?'n.d.':pct(s.dilution_3y,0,true)} en trois ans${s.splits&&s.splits.length?` (divisions d'actions prises en compte : ${s.splits.map(x=>x[0]+' ×'+x[1]).join(', ')})`:''}${s.shares_cleaning&&(s.shares_cleaning.scale_fixed||s.shares_cleaning.dropped)?` ; données SEC nettoyées : ${s.shares_cleaning.scale_fixed||0} nombre(s) d'actions publié(s) en milliers ou millions corrigé(s), ${s.shares_cleaning.dropped||0} aberrant(s) écarté(s)`:''}.<br>
  <b>Qualité des résultats</b> : marge brute ${pct(s.gross_margin,0)} ; écart résultat − cash d'exploitation ${pct(s.accruals,1,true)} de l'actif (positif et élevé = bénéfices peu convertis en cash, Sloan 1996).<br>
  <b>Solidité</b> (moyennes ${QR.avg_years} ans) : ${['rentabilité','cash','dette'].map(k=>{const ok=!(s.quality_fails||[]).includes(k),unk=(s.quality_unknown||[]).includes(k);return `${TESTS[k](s)} ${unk?'→ n.d.':ok?'✓':'<b>✗</b>'}`;}).join(' · ')} → ${s.quality_ok===true?'<b>solide</b>':(s.quality_fails||[]).length?'<b>test(s) échoué(s)</b> : jamais vert tant que cela dure':'incomplet'}.${s.da_known===0?' <small>(amortissements non publiés : EBITDA approché par le résultat d\'exploitation)</small>':''}<br>
  <small class="note">Dernier exercice glissant : rentabilité ${pct(s.roic,0)}, cash ${num(s.fcf_ni,2)}×, dette ${num(s.nd_ebitda,1)}×.</small><br>
@@ -317,15 +344,42 @@ function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerH
  const byFlag=(a,b)=>((b.gsy||b.extended)?1:0)-((a.gsy||a.extended)?1:0);
  $('#sectors').innerHTML=`<h3 style="margin:6px 0">Thèmes</h3><div class="secs">${T.filter(t=>t.kind!=='sector').sort(byFlag).map(row).join('')}</div><h3 style="margin:14px 0 6px">Les onze secteurs</h3><div class="secs">${T.filter(t=>t.kind==='sector').sort(byFlag).map(row).join('')}</div>`;}
 renderSectors();
+(function(){const P=D.prereg||[];const el=$('#prereg');if(!el)return;
+ if(!P.length){el.innerHTML='';return;}
+ const by={};P.forEach(r=>{(by[r.date]=by[r.date]||[]).push(r);});
+ el.innerHTML=`<h3>5. Le vrai test : l'avenir (pré-inscriptions)</h3><p class="note">Chaque mois, l'état de chaque actif et ce que l'histoire « promet » pour sa couleur sont inscrits, hachés (SHA-256) et commités ; ils seront confrontés au réalisé à un an et à trois ans. Rien d'inscrit n'est modifié ensuite.</p>`+
+ Object.keys(by).sort().reverse().map(d=>`<table><tr><th>Inscrit le ${fmtDate(d)} <small>(empreinte ${by[d][0].empreinte}…)</small></th><th>Couleur</th><th>Promesse historique à 1 an (médiane)</th><th>Réalisé 1 an</th><th>Promesse à 3 ans (médiane/an)</th><th>Réalisé 3 ans</th></tr>`+
+ by[d].map(r=>{const a=r.attentes||{};const m1=a['1 an']?a['1 an'].médiane:null,m3=a['3 ans']?a['3 ans'].médiane:null;
+  return `<tr><td>${({sp500:'S&P 500',ndx:'Nasdaq-100',world:'MSCI World',btc:'Bitcoin'})[r.actif]||r.actif}</td><td class="c ${r.couleur}">${LABEL[r.couleur]||r.couleur}${r.cher?' · cher':''}</td><td>${m1==null?'—':pct(m1,1,true)}</td><td>${r['1 an']==null?'<span class="note">à venir</span>':pct(r['1 an'],1,true)}</td><td>${m3==null?'—':pct(m3,1,true)}</td><td>${r['3 ans']==null?'<span class="note">à venir</span>':pct(r['3 ans'],1,true)}</td></tr>`;}).join('')+'</table>').join('');})();
 (function(){const b=D.breadth;if(!b||!b.n)return;const pct=(x,n)=>Math.round(100*x/n);
  $('#breadth').innerHTML=`<h3 style="margin:14px 0 6px">Le Top 100 en un coup d'œil <small class="note">(faits de contexte, hors règles)</small></h3>
  <p><b>${pct(b.above_ma200,b.n)} %</b> des ${b.n} plus grandes sociétés sont au-dessus de leur moyenne des 200 jours, <b>${pct(b.trend_broken,b.n)} %</b> ont une tendance cassée (dernier mois sous la moyenne 10 mois). Feux : <span class="c green">${b.colors.green} verts</span> · <span class="c orange">${b.colors.orange} orange</span> · <span class="c red">${b.colors.red} rouges</span>.${b.top10_share!=null?` Concentration : les 10 premières pèsent <b>${Math.round(100*b.top10_share)} %</b> du Top 100${b.top1?` (${b.top1.name} seule : ${Math.round(100*b.top1.share)} %)`:''}.`:''}</p>`;})();
+
+// ---- Fraîcheur et témoins ----
+(function(){const h=(Date.now()-new Date(D.generated_iso))/36e5;const el=$('#fresh');if(el&&!isNaN(h))el.textContent=`(il y a ${h<1?'moins d\u2019une heure':h<48?Math.round(h)+' h':Math.round(h/24)+' jours'})`;
+ if(h>96)$('#stale-banner').innerHTML=`<div class="warn">Données vieilles de ${Math.round(h/24)} jours : la mise à jour automatique a probablement été arrêtée par un contrôle (le site garde alors la dernière version sûre). Voir l'onglet Validation et l'onglet « Actions » du dépôt GitHub.</div>`;})();
+(function(){const C=D.checks||{};const el=$('#sanity');if(!el||!C.publication)return;
+ const all=[...(C.publication||[]),...(C['témoins']||[])];const nko=all.filter(x=>!x.ok).length;
+ const wit=(C['témoins']||[]).map(w=>`<tr><td>${w['témoin']}${w.critique?' <small class="note">(bloquant)</small>':''}</td><td>${w.attendu}</td><td>${w['observé']}</td><td class="${w.ok?'ok':'ko'}">${w.ok?'OK':'ÉCHEC'}</td></tr>`).join('');
+ const pub=(C.publication||[]).map(c=>`<tr><td>${c['contrôle']}</td><td>${c['observé']??'—'}</td><td class="${c.ok?'ok':'ko'}">${c.ok?'OK':'ÉCHEC'}</td></tr>`).join('');
+ el.innerHTML=`<h3>4. Témoins : ce que le code doit faire, vérifié avant chaque publication</h3><p class="note">Avant de publier, des contrôles vérifient que les données sont fraîches et complètes, et des « témoins » que les règles se comportent comme annoncé sur les données du jour (repris de Kairys). Un contrôle bloquant en échec arrête la mise à jour : le site garde la version précédente plutôt que d'afficher un feu faux, et une alerte est envoyée. Contrôles du ${fmtDate(C.date)} : ${nko?'<b class="warnc">'+nko+' en échec</b>':'tous réussis'}.</p>
+ <table><tr><th>Témoin</th><th>Attendu</th><th>Observé</th><th></th></tr>${wit}</table>
+ <details><summary>Contrôles de fraîcheur et de complétude</summary><table><tr><th>Contrôle</th><th>Observé</th><th></th></tr>${pub}</table></details>`;})();
 
 // ---- Mon portefeuille ----
 let PF=store('feux-portfolio')||{lines:[],targets:{equity:60,stock:15,btc:10,safe:15,monthly:1000}};
 const stateOf=k=>D.states[k]||null;const stockOf=t=>S.find(s=>s.ticker&&t&&s.ticker.toUpperCase()===t.toUpperCase());
 function lineColor(l){if(l.kind==='stock'){const s=stockOf(l.ticker);return s?s.color_confirmed:null;}if(l.kind==='other_equity')return (stateOf('world')||{}).color||null;if(l.kind==='safe')return null;return (stateOf(l.kind)||{}).color||null;}
 function bucket(l){return l.kind==='safe'?'safe':l.kind==='btc'?'btc':l.kind==='stock'?'stock':'equity';}
+function attention(l){const a=[];
+ if(l.kind==='stock'){const s=stockOf(l.ticker);if(!s)return ['hors Top 100 : pas de lecture'];
+  if(s.kind!=='operating')a.push('prix seul (pas de comptes SEC)');
+  else{if(s.stale_accounts)a.push('comptes de plus de 15 mois');
+   if((s.quality_fails||[]).length)a.push('solidité en échec ('+s.quality_fails.join(', ')+')');
+   if(s.V!=null&&s.V>=80&&s.V_cross!=null&&s.V_cross>=80)a.push('chère contre son passé et contre les autres');}
+  if(s.gsy)a.push('bulle GSY');else if(s.tendu)a.push('tendue');if(s.trend_broken)a.push('tendance cassée');}
+ else if(l.kind!=='safe'&&l.kind!=='other_equity'){const st=stateOf(l.kind);if(st){if(st.cher)a.push(`cher (V ${Math.round(st.V)}) : montants exceptionnels en trois tranches`);if(st.falling_knife)a.push('couteau qui tombe');if(st.trend_broken)a.push('tendance cassée');}}
+ if(l.lev>1)a.push(`levier ×${l.lev}`);return a;}
 function savePF(){store('feux-portfolio',PF);}
 $('#pf-add').onclick=()=>{const amt=parseFloat($('#pf-amount').value);if(!(amt>0))return msg('#pf-msg','Indiquez un montant.');msg('#pf-msg','');PF.lines.push({label:$('#pf-label').value||$('#pf-kind').selectedOptions[0].text,kind:$('#pf-kind').value,ticker:$('#pf-ticker').value.trim(),amount:amt,lev:parseInt($('#pf-lev').value),acct:$('#pf-acct').value});savePF();renderPF();$('#pf-amount').value='';$('#pf-label').value='';$('#pf-ticker').value='';};
 $('#pf-save').onclick=()=>{PF.targets={equity:+$('#t-equity').value,stock:+$('#t-stock').value,btc:+$('#t-btc').value,safe:+$('#t-safe').value,monthly:+$('#t-monthly').value};savePF();renderPF();};
@@ -333,7 +387,7 @@ $('#pf-export').onclick=async()=>{const txt=JSON.stringify(PF,null,1);$('#pf-exp
 $('#pf-import').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{PF=JSON.parse(r.result);savePF();renderPF();msg('#pf-msg','Portefeuille importé.');}catch(err){msg('#pf-msg','Fichier invalide.');}};r.readAsText(f);};
 function renderPF(){const t=PF.targets;['equity','stock','btc','safe','monthly'].forEach(k=>{const e=$('#t-'+k);if(e)e.value=t[k];});
  const L=PF.lines;const total=L.reduce((a,l)=>a+l.amount,0);
- $('#pf-table').innerHTML='<tr><th>Ligne</th><th>Sous-jacent</th><th>Enveloppe</th><th>Montant</th><th>Levier</th><th>Exposition réelle</th><th>Feu du sous-jacent</th><th></th></tr>'+L.map((l,i)=>{const c=lineColor(l);return `<tr class="row${c||''}"><td>${l.label}</td><td>${$('#pf-kind option[value="'+l.kind+'"]').textContent}${l.ticker?' · '+l.ticker:''}</td><td>${l.acct}</td><td>${eur(l.amount)}</td><td>×${l.lev}</td><td>${eur(l.amount*l.lev)}</td><td>${c?`<span class="c ${c}" style="font-weight:700">${LABEL[c]}</span>`:'—'}</td><td><button class="btn ghost" data-i="${i}">retirer</button></td></tr>`;}).join('')+(L.length?`<tr><th colspan="3">Total</th><th>${eur(total)}</th><th></th><th>${eur(L.reduce((a,l)=>a+l.amount*l.lev,0))}</th><th></th><th></th></tr>`:'');
+ $('#pf-table').innerHTML='<tr><th>Ligne</th><th>Sous-jacent</th><th>Enveloppe</th><th>Montant</th><th>Levier</th><th>Exposition réelle</th><th>Feu du sous-jacent</th><th>Points d\'attention</th><th></th></tr>'+L.map((l,i)=>{const c=lineColor(l);const at=attention(l);return `<tr class="row${c||''}"><td>${l.label}</td><td>${$('#pf-kind option[value="'+l.kind+'"]').textContent}${l.ticker?' · '+l.ticker:''}</td><td>${l.acct}</td><td>${eur(l.amount)}</td><td>×${l.lev}</td><td>${eur(l.amount*l.lev)}</td><td>${c?`<span class="c ${c}" style="font-weight:700">${LABEL[c]}</span>`:'—'}</td><td style="white-space:normal;min-width:180px">${at.length?at.map(x=>`<small class="pill${/échec|chère|bulle|couteau/.test(x)?' warnp':''}">${x}</small>`).join(' '):'<small class="note">rien à signaler</small>'}</td><td><button class="btn ghost" data-i="${i}">retirer</button></td></tr>`;}).join('')+(L.length?`<tr><th colspan="3">Total</th><th>${eur(total)}</th><th></th><th>${eur(L.reduce((a,l)=>a+l.amount*l.lev,0))}</th><th></th><th></th><th></th></tr>`:'');
  $$('#pf-table button').forEach(b=>b.onclick=()=>{PF.lines.splice(+b.dataset.i,1);savePF();renderPF();});
  if(!L.length){$('#pf-analysis').innerHTML='<p class="note">Ajoutez vos lignes pour obtenir l\'analyse.</p>';return;}
  const byB={equity:0,stock:0,btc:0,safe:0};L.forEach(l=>byB[bucket(l)]+=l.amount);const expo={equity:0,stock:0,btc:0,safe:0};L.forEach(l=>expo[bucket(l)]+=l.amount*l.lev);
@@ -347,6 +401,12 @@ function renderPF(){const t=PF.targets;['equity','stock','btc','safe','monthly']
  const kp=(v,lab)=>`<div class="kpi"><b>${v}</b><span>${lab}</span></div>`;
  let html=`<div class="kpis">${kp(eur(total),'patrimoine saisi')}${kp(eur(eqExpo+expo.btc),'exposition réelle au risque (levier compté)')}${kp(pct(total?red/total:0),'part exposée à un feu ROUGE')}${kp(pct(levShare),`part de levier dans la poche risquée (plafond actuel ${pct(cap)})`)}${kp(pct(total?tech/total:0),'exposition tech / Nasdaq (levier compté)')}${kp(pct(total?pea/total:0)+' / '+pct(total?cto/total:0),'PEA / CTO')}</div>`;
  html+=`<h3>Test de résistance (perte en euros, levier compté, perte plafonnée au montant investi)</h3><table><tr><th>Scénario</th><th>Actions −20 % · Bitcoin −40 %</th><th>Actions −40 % · Bitcoin −60 %</th><th>Actions −60 % · Bitcoin −80 %</th></tr><tr><td>Perte</td><td>−${eur(shock(.2,.4))}</td><td>−${eur(shock(.4,.6))}</td><td>−${eur(shock(.6,.8))}</td></tr><tr><td>Patrimoine restant</td><td>${eur(total-shock(.2,.4))}</td><td>${eur(total-shock(.4,.6))}</td><td>${eur(total-shock(.6,.8))}</td></tr></table>`;
+ const risky=L.filter(l=>bucket(l)!=='safe').reduce((a,l)=>a+l.amount*l.lev,0);const byT={};
+ L.filter(l=>l.kind==='stock'&&l.ticker).forEach(l=>{const k=l.ticker.toUpperCase();byT[k]=(byT[k]||0)+l.amount*l.lev;});
+ const conc=Object.entries(byT).filter(([k,v])=>risky&&v/risky>D.conduct.concentration_max);
+ if(conc.length)html+=`<div class="warn">Concentration : ${conc.map(([k,v])=>`<b>${k}</b> pèse ${pct(v/risky)} de la poche risquée`).join(', ')} (seuil ${pct(D.conduct.concentration_max)}). Une société seule peut perdre 50 à 80 % sans que le marché baisse : ramener vers le seuil par les versements, ou préparer un arbitrage dans le Journal.</div>`;
+ const flagged=L.filter(l=>l.kind==='stock'&&attention(l).some(x=>/échec|chère|bulle|comptes/.test(x)));
+ if(flagged.length)html+=`<div class="detail"><b>Test d'échange</b> (${flagged.map(l=>l.ticker||l.label).join(', ')}) : la question n'est pas « faut-il vendre ? » mais « si cette somme était en liquide aujourd'hui, l'investirais-je dans cette ligne, à ce prix, plutôt que dans l'ETF monde ? ». Un « non » à deux revues de suite justifie de préparer un arbitrage dans le Journal (délai de ${D.conduct.hours} h, ${D.conduct.sell_cooling_days} jours en période de stress). Dans un PEA, l'arbitrage ne déclenche pas d'impôt ; dans un compte-titres, la plus-value est imposée.</div>`;
  if(levShare>cap+1e-9)html+=`<div class="warn">Levier au-dessus du plafond de la couleur du jour (${pct(levShare)} > ${pct(cap)}) : ramener l'excédent vers l'ETF sans levier (dans le PEA, sans impôt).</div>`;
  const tg={equity:t.equity,stock:t.stock,btc:t.btc,safe:t.safe};const names={equity:'Actions indices & monde',stock:'Actions individuelles',btc:'Bitcoin & proxys',safe:'Sans risque'};
  html+=`<h3>Écart à vos cibles (bandes ±${band} points au feu ${FR[worst]})</h3><table><tr><th>Poche</th><th>Poids actuel</th><th>Cible</th><th>Écart</th><th>Feu</th><th></th></tr>`;
@@ -367,17 +427,37 @@ $('#j-questions').innerHTML=Q.map((q,i)=>`<label style="display:block;margin:4px
 function rates(){const a=$('#j-asset').value;const st=D.states[a];if(!st){$('#j-rates').textContent='Pour une action : voir sa fiche dans l\'onglet Actions.';return;}const br=(D.base_rates[a]||{})[st.color];
  $('#j-rates').innerHTML=`Feu <b>${LABEL[st.color]}</b> sur ${st.name}${st.trend_broken?' · tendance cassée':''}. `+(br?`Historiquement, après un jour ${FR[st.color]} : rendement médian <b>${pct(br.r1,1,true)}</b> à un an (négatif dans ${pct(br.neg1)} des cas), <b>${pct(br.r3,1,true)}/an</b> sur trois ans ; baisse médiane dans les 24 mois suivants <b>${pct(br.dd24)}</b> (plus de 20 % dans ${pct(br.dd20)} des cas).`:'');}
 $('#j-asset').addEventListener('change',rates);rates();
-function renderJ(){const now=Date.now();$('#j-list').innerHTML=J.length?'<h3>Intentions</h3>'+J.slice().reverse().map(it=>{const el=(now-new Date(it.created))/36e5;const ok=el>=D.conduct.hours;
+const SELLQ=["Qu'est-ce qui a changé dans les faits, et pas seulement dans le prix ?","Le critère d'invalidation écrit à l'achat est-il atteint ?","Que deviendra l'argent, et pourquoi est-ce mieux ?"];
+const REVQ=["La thèse s'est-elle vérifiée, dans les faits ?","Le critère d'invalidation a-t-il été atteint ?","Referais-je la même décision ? Qu'est-ce que j'en retiens ?"];
+const qInput=(q,attr,i)=>`<label style="display:block;margin:4px 0;font-size:13px;color:var(--muted)">${q}<input ${attr}="${i}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px"></label>`;
+$('#j-sell').innerHTML='<b>Vente ou arbitrage : trois questions de plus</b>'+SELLQ.map((q,i)=>qInput(q,'data-sq',i)).join('');
+function sellMode(){const v=$('#j-action').value;$('#j-sell').style.display=(v==='vendre'||v==='arbitrer')?'block':'none';}
+$('#j-action').addEventListener('change',sellMode);sellMode();
+function assetNow(a,tk){if(a==='stock'){const s=stockOf(tk);return s?{name:s.name,color:s.color_confirmed,price:s.price,drawdown:s.drawdown,trend_broken:s.trend_broken,falling_knife:false}:null;}return D.states[a]||null;}
+function inStress(st,isStock){return !!st&&((!isStock&&st.color==='green')||st.falling_knife||(st.drawdown!=null&&st.drawdown>=D.conduct.stress_drawdown));}
+const revDue=(it,now)=>it.status==='confirmé'&&!it.review&&it.confirmed&&(now-new Date(it.confirmed))/864e5>=D.conduct.review_days;
+function renderJ(){const now=Date.now();$('#j-list').innerHTML=J.length?'<h3>Intentions</h3>'+J.slice().reverse().map(it=>{const el=(now-new Date(it.created))/36e5;const delay=it.delay_h||D.conduct.hours;const ok=el>=delay;
+ const cur=assetNow(it.asset,it.ticker),p0=(it.snapshot||{}).price;const perfNow=(cur&&cur.price&&p0)?cur.price/p0-1:null;
+ const rev=revDue(it,now)?`<div class="confirm-box" style="margin-top:8px"><b>Revue à ${D.conduct.review_days} jours</b> — ${perfNow==null?'':`depuis l'intention : <b>${pct(perfNow,1,true)}</b> (${it.action==='vendre'?'ce que la vente a évité, ou manqué':'ce que la décision a donné jusqu\'ici'}) · `}feu à l'intention ${LABEL[(it.snapshot||{}).color]||'—'}, aujourd'hui ${cur?LABEL[cur.color]||'—':'—'}.${REVQ.map((q,i)=>qInput(q,'data-rq',i)).join('')}<button class="btn" data-id="${it.id}" data-a="review">Enregistrer la revue</button> <span class="note" data-rmsg="${it.id}"></span></div>`:'';
+ const done=it.review?`<br><i>Revue du ${fmtDate(it.review.date)}</i>${it.review.perf==null?'':' ('+pct(it.review.perf,1,true)+' depuis l\'intention)'} : ${it.review.answers.join(' / ')}`:'';
  return `<div class="detail"><b>${new Date(it.created).toLocaleString('fr-FR')}</b> — ${it.action} ${it.assetName}${it.ticker?' ('+it.ticker+')':''} ${eur(it.amount)} · état : <b>${it.status}</b>${it.snapshot?` · feu à l'intention : ${LABEL[it.snapshot.color]||'—'}`:''}<br><i>Thèse :</i> ${it.thesis||'—'} · <i>Invalidation :</i> ${it.inval||'—'}<br>${it.rates?`<span class="note">${it.rates}</span><br>`:''}
- ${it.status==='en attente'?`<button class="btn" data-id="${it.id}" data-a="confirm" ${ok?'':'disabled'}>${ok?'Confirmer (les cinq questions sont redemandées)':'Confirmation possible dans '+Math.ceil(D.conduct.hours-el)+' h'}</button> <button class="btn ghost" data-id="${it.id}" data-a="cancel">Annuler</button><div class="confirm-box" data-for="${it.id}" style="display:none;margin-top:8px">${Q.map((q,i)=>`<label style="display:block;margin:4px 0;font-size:13px;color:var(--muted)">${q}<input data-cq="${i}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px"></label>`).join('')}<button class="btn" data-id="${it.id}" data-a="confirm2">Valider la confirmation</button> <span class="note" data-cmsg="${it.id}"></span></div>`:''}</div>`;}).join('')+'<button class="btn ghost" id="j-export">Copier le journal (JSON)</button><div id="j-export-box" style="display:none"><textarea style="width:100%;height:120px;font-size:12px"></textarea></div><p class="note" id="j-msg"></p>':'<p class="note">Aucune intention enregistrée.</p>';
+ ${it.sell?`<i>Vente :</i> ${it.sell.join(' / ')}${it.stress?` <b class="warnc">(période de stress : délai ${Math.round(delay/24)} jours)</b>`:''}<br>`:''}${done}${rev}
+ ${it.status==='en attente'?`<button class="btn" data-id="${it.id}" data-a="confirm" ${ok?'':'disabled'}>${ok?'Confirmer (les cinq questions sont redemandées)':'Confirmation possible dans '+(delay-el>48?Math.ceil((delay-el)/24)+' jours':Math.ceil(delay-el)+' h')}</button> <button class="btn ghost" data-id="${it.id}" data-a="cancel">Annuler</button><div class="confirm-box" data-for="${it.id}" style="display:none;margin-top:8px">${Q.map((q,i)=>`<label style="display:block;margin:4px 0;font-size:13px;color:var(--muted)">${q}<input data-cq="${i}" style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px"></label>`).join('')}<button class="btn" data-id="${it.id}" data-a="confirm2">Valider la confirmation</button> <span class="note" data-cmsg="${it.id}"></span></div>`:''}</div>`;}).join('')+'<button class="btn ghost" id="j-export">Copier le journal (JSON)</button><div id="j-export-box" style="display:none"><textarea style="width:100%;height:120px;font-size:12px"></textarea></div><p class="note" id="j-msg"></p>':'<p class="note">Aucune intention enregistrée.</p>';
  $$('#j-list button[data-a]').forEach(b=>b.onclick=()=>{const it=J.find(x=>x.id===b.dataset.id);const a=b.dataset.a;
   if(a==='cancel'){it.status='annulé';store('feux-journal',J);renderJ();return;}
+  if(a==='review'){const box=b.closest('.confirm-box');const ans=Array.from(box.querySelectorAll('input[data-rq]')).map(i=>i.value.trim());if(ans.some(x=>!x)){box.querySelector('[data-rmsg]').textContent='Les trois réponses sont obligatoires.';return;}
+   const cur=assetNow(it.asset,it.ticker),p0=(it.snapshot||{}).price;it.review={date:new Date().toISOString(),answers:ans,perf:(cur&&cur.price&&p0)?cur.price/p0-1:null,color_now:cur?cur.color:null};store('feux-journal',J);renderJ();return;}
   if(a==='confirm'){const box=$(`.confirm-box[data-for="${it.id}"]`);box.style.display=box.style.display==='none'?'block':'none';return;}
   if(a==='confirm2'){const box=$(`.confirm-box[data-for="${it.id}"]`);const ans=Array.from(box.querySelectorAll('input[data-cq]')).map(i=>i.value.trim());if(ans.some(x=>!x)){box.querySelector('[data-cmsg]').textContent='Les cinq réponses sont obligatoires.';return;}it.status='confirmé';it.confirmed=new Date().toISOString();it.answers2=ans;store('feux-journal',J);renderJ();}});
+ const due=J.filter(it=>revDue(it,now)).length;const jb=$('nav.tabs button[data-t="journal"]');if(jb)jb.textContent='Journal'+(due?` (${due} revue${due>1?'s':''} à faire)`:'');
  const ex=$('#j-export');if(ex)ex.onclick=async()=>{const txt=JSON.stringify(J,null,1);$('#j-export-box').style.display='block';$('#j-export-box textarea').value=txt;try{await navigator.clipboard.writeText(txt);msg('#j-msg','Copié dans le presse-papiers (et affiché ci-dessous).');}catch(e){msg('#j-msg','Copiez le texte ci-dessous pour le sauvegarder.');}};}
-$('#j-add').onclick=()=>{const ans=$$('#j-questions input').map(i=>i.value.trim());if(ans.some(a=>!a))return msg('#j-add-msg','Répondez aux cinq questions avant d\'enregistrer.');msg('#j-add-msg','');const a=$('#j-asset').value;const st=D.states[a];
- J.push({id:Math.random().toString(36).slice(2,10),created:new Date().toISOString(),asset:a,assetName:st?st.name:'Action',ticker:$('#j-ticker').value.trim(),action:$('#j-action').value,amount:+$('#j-amount').value||0,thesis:$('#j-thesis').value,inval:$('#j-inval').value,answers:ans,snapshot:st?{color:st.color,trend_broken:st.trend_broken}:null,rates:$('#j-rates').textContent,status:'en attente'});
- store('feux-journal',J);$$('#j-questions input').forEach(i=>i.value='');$('#j-thesis').value='';$('#j-inval').value='';$('#j-amount').value='';renderJ();};
+$('#j-add').onclick=()=>{const ans=$$('#j-questions input').map(i=>i.value.trim());if(ans.some(a=>!a))return msg('#j-add-msg','Répondez aux cinq questions avant d\'enregistrer.');
+ const a=$('#j-asset').value,tk=$('#j-ticker').value.trim(),act=$('#j-action').value;const st=assetNow(a,tk);const sell=act==='vendre'||act==='arbitrer';let sellAns=null;
+ if(sell){sellAns=$$('#j-sell input').map(i=>i.value.trim());if(sellAns.some(x=>!x))return msg('#j-add-msg','Vente ou arbitrage : répondez aussi aux trois questions de vente.');}
+ const stress=sell&&inStress(st,a==='stock');msg('#j-add-msg',stress?`Vente en période de stress : confirmation possible dans ${D.conduct.sell_cooling_days} jours, le temps de relire ce que l'histoire dit de cette situation.`:'');
+ J.push({id:Math.random().toString(36).slice(2,10),created:new Date().toISOString(),asset:a,assetName:st?st.name:'Action',ticker:tk,action:act,amount:+$('#j-amount').value||0,thesis:$('#j-thesis').value,inval:$('#j-inval').value,answers:ans,sell:sellAns,stress,delay_h:stress?24*D.conduct.sell_cooling_days:D.conduct.hours,
+  snapshot:st?{color:st.color,trend_broken:st.trend_broken,price:st.price,drawdown:st.drawdown}:null,rates:$('#j-rates').textContent,status:'en attente'});
+ store('feux-journal',J);$$('#j-questions input').forEach(i=>i.value='');$$('#j-sell input').forEach(i=>i.value='');$('#j-thesis').value='';$('#j-inval').value='';$('#j-amount').value='';renderJ();};
 renderJ();
 })();
 """

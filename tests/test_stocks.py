@@ -119,6 +119,38 @@ def test_split_adjustment_matches_adjusted_prices():
     assert adj["val"].tolist() == [2.46e10, 2.45e10]
 
 
+def test_split_adjustment_uses_filing_date():
+    """Alphabet 20 pour 1 le 18/07/2022 : le 10-Q du 2e trimestre (clos le 30/06) a été déposé le 27/07, APRÈS la division,
+    avec des nombres d'actions déjà retraités. Il ne faut pas les multiplier une seconde fois (bogue corrigé : ×20)."""
+    from feux.stocks import split_adjust_shares
+
+    sh = pd.DataFrame({"end": pd.to_datetime(["2022-03-31", "2022-06-30"]), "filed": pd.to_datetime(["2022-04-27", "2022-07-27"]),
+                       "val": [6.6e8, 1.31e10]})
+    adj = split_adjust_shares(sh, [(pd.Timestamp("2022-07-18"), 20.0)])
+    assert adj["val"].tolist() == [1.32e10, 1.31e10]
+
+
+def test_clean_share_counts_scale_errors_and_outliers():
+    """McDonald's publie certains trimestres en millions (725,9 au lieu de 725 900 000) ; Wells Fargo, une page de garde à la
+    moitié du vrai nombre ; Linde plc, une coquille à 25 000 actions avant la fusion ; zéros (CrowdStrike 2019)."""
+    from feux.stocks import clean_share_counts
+
+    ends = pd.date_range("2023-03-31", periods=9, freq="QE")
+    sh = pd.DataFrame({"end": ends, "filed": ends + pd.Timedelta(days=35),
+                       "val": [25_000.0, 0.0, 722.0e6, 725.9, 722.0, 3.6e8, 714.0e6, 718.2, 710.0e6]})
+    out = clean_share_counts(sh)
+    assert out["val"].min() > 7e8 and out["val"].max() < 7.3e8           # échelles corrigées, coquille, zéro et demi-valeur écartés
+    assert out.attrs["scale_fixed"] == 3 and out.attrs["dropped"] == 3 and out.attrs["spikes"] == 1
+    # BHP : deux exercices déclarés pour la seule société australienne (2,95 Md) entre deux exercices consolidés (5,1-5,2 Md)
+    ye = pd.date_range("2018-06-30", periods=6, freq="12ME")
+    bhp = pd.DataFrame({"end": ye, "filed": ye + pd.Timedelta(days=80), "val": [5.323e9, 5.18e9, 2.946e9, 2.950e9, 5.066e9, 5.066e9]})
+    out = clean_share_counts(bhp)
+    assert len(out) == 4 and out["val"].min() > 5e9 and out.attrs["spikes"] == 2
+    # une baisse durable (rachats) ou une hausse durable (fusion) n'est pas touchée
+    sh2 = pd.DataFrame({"end": ends, "filed": ends, "val": [1.0e9, 0.99e9, 0.98e9, 1.5e9, 1.5e9, 1.49e9, 1.48e9, 1.47e9, 1.46e9]})
+    assert clean_share_counts(sh2)["val"].tolist() == sh2["val"].tolist()
+
+
 def test_cross_section_and_indicative_color():
     """Lentille 2 = rang du multiple parmi les sociétés du même mode ; rouge seulement si chère sous les deux lentilles ET tendue."""
     from feux.stocks import apply_cross_section

@@ -1,0 +1,134 @@
+{
+ "publication": [
+  {
+   "contrôle": "sp500 : données de moins de 5 jours",
+   "observé": "2026-11-06 (3 j)",
+   "ok": true
+  },
+  {
+   "contrôle": "sp500 : couleur calculée",
+   "observé": "orange",
+   "ok": true
+  },
+  {
+   "contrôle": "ndx : données de moins de 5 jours",
+   "observé": "2026-11-06 (3 j)",
+   "ok": true
+  },
+  {
+   "contrôle": "ndx : couleur calculée",
+   "observé": "orange",
+   "ok": true
+  },
+  {
+   "contrôle": "world : données de moins de 5 jours",
+   "observé": "2026-11-08 (1 j)",
+   "ok": true
+  },
+  {
+   "contrôle": "world : couleur calculée",
+   "observé": "orange",
+   "ok": true
+  },
+  {
+   "contrôle": "btc : données de moins de 4 jours",
+   "observé": "2026-11-07 (2 j)",
+   "ok": true
+  },
+  {
+   "contrôle": "btc : couleur calculée",
+   "observé": "orange",
+   "ok": true
+  },
+  {
+   "contrôle": "actions : au moins 80 sociétés suivies",
+   "observé": 102,
+   "ok": true
+  },
+  {
+   "contrôle": "actions : au moins 60 valorisées",
+   "observé": 88,
+   "ok": true
+  }
+ ],
+ "témoins": [
+  {
+   "témoin": "Indices : plus de rouge depuis la v1.0 (protocole §8.4)",
+   "attendu": "vert ou orange",
+   "observé": "orange, orange, orange",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "S&P 500 : un CAPE au-dessus de 30 est « cher » (V ≥ 80) contre l'histoire depuis 1881",
+   "attendu": "cher si CAPE > 30",
+   "observé": "CAPE 39.3, V 98, cher True",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Rendement réel attendu à 10 ans dans une plage plausible",
+   "attendu": "entre −10 % et +15 %/an",
+   "observé": "+0.7 %/an",
+   "ok": true,
+   "critique": false
+  },
+  {
+   "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux)",
+   "attendu": "orange",
+   "observé": "orange (MVRV 1.41, prix/MM200s 1.12)",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Banques en mode P/E et P/B (EV et flux libre n'ont pas de sens)",
+   "attendu": "financial",
+   "observé": "JPM:financial, BAC:financial, WFC:financial, HSBA.L:financial, RY.TO:financial, 8306.T:financial",
+   "ok": true,
+   "critique": false
+  },
+  {
+   "témoin": "Réseaux de paiement en mode industriel",
+   "attendu": "industrial",
+   "observé": "V:industrial, MA:industrial",
+   "ok": true,
+   "critique": false
+  },
+  {
+   "témoin": "Une foncière n'est jamais verte",
+   "attendu": "aucune foncière verte",
+   "observé": "1 foncière(s), vertes : 0",
+   "ok": true,
+   "critique": false
+  },
+  {
+   "témoin": "Comptes de plus de 15 mois : jamais colorée",
+   "attendu": "orange",
+   "observé": "2330.TW:orange, 7203.T:orange, BHP.AX:orange, 6758.T:orange",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Sans comptes à la SEC : prix seul, orange",
+   "attendu": "orange",
+   "observé": "10 sociétés, colorées : 0",
+   "ok": true,
+   "critique": false
+  },
+  {
+   "témoin": "Flux libre net de la rémunération en actions ≤ flux libre brut",
+   "attendu": "toujours",
+   "observé": "écarts : aucun",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Nombre d'actions implicite (capitalisation / cours) sans saut de plus de 50 % d'un jour à l'autre sur dix ans (91 sociétés) : divisions d'actions, erreurs d'échelle et valeurs aberrantes de la SEC traitées",
+   "attendu": "aucun saut",
+   "observé": "aucun",
+   "ok": true,
+   "critique": true
+  }
+ ],
+ "date": "2026-11-09"
+}
