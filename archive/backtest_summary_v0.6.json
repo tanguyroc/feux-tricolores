@@ -1,0 +1,1005 @@
+{
+ "sp500": {
+  "share": {
+   "green": 0.1165,
+   "orange": 0.775,
+   "red": 0.1085
+  },
+  "checks": {
+   "part_rouge": {
+    "valeur": 0.1085,
+    "seuil": 0.25,
+    "ok": true
+   },
+   "écart_3ans_vert_moins_rouge": {
+    "valeur": 0.04359490499824581,
+    "seuil": 0.05,
+    "ok": false
+   },
+   "drawdown24m_rouge_plus_profond": {
+    "rouge": 0.13104887388712572,
+    "vert": 0.06360574657343754,
+    "ok": true
+   },
+   "épisodes_ok": {
+    "valeur": 6,
+    "total": 7
+   },
+   "changements_par_an": 4.804135394218622
+  },
+  "episodes": [
+   {
+    "date": "1999-12-31",
+    "épisode": "fin 1999 (attendu rouge ou orange ; rouge via dette sur marge dès mars 2000)",
+    "attendu": "orange/red",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2000-03-24",
+    "épisode": "sommet mars 2000",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2007-10-09",
+    "épisode": "sommet octobre 2007",
+    "attendu": "orange/red",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2009-03-09",
+    "épisode": "creux mars 2009",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   },
+   {
+    "date": "2020-03-23",
+    "épisode": "creux mars 2020",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2021-11-30",
+    "épisode": "fin 2021",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2022-10-12",
+    "épisode": "creux octobre 2022",
+    "attendu": "green",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": false
+   }
+  ],
+  "fwd": [
+   {
+    "horizon": "1 an",
+    "couleur": "green",
+    "n_jours": 1081,
+    "médiane_annualisée": 0.1702952777122151,
+    "moyenne_annualisée": 0.16274246493547162,
+    "p10_annualisé": -0.1121953917896995,
+    "part_négative": 0.13598519888991675
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "orange",
+    "n_jours": 7193,
+    "médiane_annualisée": 0.11228244548690935,
+    "moyenne_annualisée": 0.0973522825705806,
+    "p10_annualisé": -0.10324103909083715,
+    "part_négative": 0.18365077158348395
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 755,
+    "médiane_annualisée": 0.11546031616565822,
+    "moyenne_annualisée": 0.06134590262352768,
+    "p10_annualisé": -0.1461342724746324,
+    "part_négative": 0.3509933774834437
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "green",
+    "n_jours": 1081,
+    "médiane_annualisée": 0.12849843237263237,
+    "moyenne_annualisée": 0.12493536432202346,
+    "p10_annualisé": 0.030299795186773615,
+    "part_négative": 0.01942645698427382
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "orange",
+    "n_jours": 6918,
+    "médiane_annualisée": 0.09641857047413449,
+    "moyenne_annualisée": 0.09710356260141095,
+    "p10_annualisé": -0.07556049099885187,
+    "part_négative": 0.19297484822202948
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 526,
+    "médiane_annualisée": 0.08490352737438656,
+    "moyenne_annualisée": 0.07597321167219717,
+    "p10_annualisé": -0.14625493022375724,
+    "part_négative": 0.188212927756654
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "green",
+    "n_jours": 1081,
+    "médiane_annualisée": 0.1290796179807694,
+    "moyenne_annualisée": 0.12489316665510253,
+    "p10_annualisé": 0.07012765259432796,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "orange",
+    "n_jours": 6452,
+    "médiane_annualisée": 0.09241436009002202,
+    "moyenne_annualisée": 0.0944584415784453,
+    "p10_annualisé": -0.02550168632610339,
+    "part_négative": 0.24705517668939864
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 488,
+    "médiane_annualisée": 0.10542504549187925,
+    "moyenne_annualisée": 0.06418601719907158,
+    "p10_annualisé": -0.04198000364096355,
+    "part_négative": 0.39959016393442626
+   }
+  ],
+  "dd24": [
+   {
+    "couleur": "green",
+    "n_jours": 1081,
+    "drawdown_24m_médian": 0.06360574657343754,
+    "drawdown_24m_p90": 0.2806774810770316,
+    "part_drawdown_>20%": 0.19888991674375578
+   },
+   {
+    "couleur": "orange",
+    "n_jours": 7059,
+    "drawdown_24m_médian": 0.05172044001143594,
+    "drawdown_24m_p90": 0.35884425948651627,
+    "part_drawdown_>20%": 0.18968692449355432
+   },
+   {
+    "couleur": "red",
+    "n_jours": 637,
+    "drawdown_24m_médian": 0.13104887388712572,
+    "drawdown_24m_p90": 0.3095293400172905,
+    "part_drawdown_>20%": 0.24489795918367346
+   }
+  ]
+ },
+ "ndx": {
+  "share": {
+   "green": 0.158,
+   "orange": 0.7053,
+   "red": 0.1367
+  },
+  "checks": {
+   "part_rouge": {
+    "valeur": 0.1367,
+    "seuil": 0.25,
+    "ok": true
+   },
+   "écart_3ans_vert_moins_rouge": {
+    "valeur": 0.08075458967287252,
+    "seuil": 0.05,
+    "ok": true
+   },
+   "drawdown24m_rouge_plus_profond": {
+    "rouge": 0.20012551474944595,
+    "vert": 0.07807411055900743,
+    "ok": true
+   },
+   "épisodes_ok": {
+    "valeur": 6,
+    "total": 7
+   },
+   "changements_par_an": 5.455543583265215
+  },
+  "episodes": [
+   {
+    "date": "1999-12-31",
+    "épisode": "fin 1999",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2000-03-24",
+    "épisode": "sommet mars 2000",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2007-10-31",
+    "épisode": "octobre 2007",
+    "attendu": "orange/red",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2009-03-09",
+    "épisode": "creux mars 2009",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   },
+   {
+    "date": "2020-03-23",
+    "épisode": "creux mars 2020",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2021-11-30",
+    "épisode": "fin 2021",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2022-10-12",
+    "épisode": "creux octobre 2022",
+    "attendu": "green",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": false
+   }
+  ],
+  "fwd": [
+   {
+    "horizon": "1 an",
+    "couleur": "green",
+    "n_jours": 1466,
+    "médiane_annualisée": 0.1791590983568927,
+    "moyenne_annualisée": 0.10267704144171885,
+    "p10_annualisé": -0.3735640542558467,
+    "part_négative": 0.3226466575716235
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "orange",
+    "n_jours": 6546,
+    "médiane_annualisée": 0.1926909051179604,
+    "moyenne_annualisée": 0.2022909649099507,
+    "p10_annualisé": -0.005126408394090065,
+    "part_négative": 0.10724106324472961
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 1017,
+    "médiane_annualisée": 0.16287996955743012,
+    "moyenne_annualisée": 0.18131614149624076,
+    "p10_annualisé": -0.29151916861533156,
+    "part_négative": 0.2871189773844641
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "green",
+    "n_jours": 1466,
+    "médiane_annualisée": 0.1672793674950157,
+    "moyenne_annualisée": 0.13267548976106314,
+    "p10_annualisé": -0.08043279951394999,
+    "part_négative": 0.1664392905866303
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "orange",
+    "n_jours": 6153,
+    "médiane_annualisée": 0.16376564937917593,
+    "moyenne_annualisée": 0.19384383472405586,
+    "p10_annualisé": 0.007622366058489094,
+    "part_négative": 0.08954981309930116
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 906,
+    "médiane_annualisée": 0.08652477782214318,
+    "moyenne_annualisée": 0.13968411189403862,
+    "p10_annualisé": -0.3217583828576809,
+    "part_négative": 0.35209713024282563
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "green",
+    "n_jours": 1466,
+    "médiane_annualisée": 0.15960407184928815,
+    "moyenne_annualisée": 0.1398735714519177,
+    "p10_annualisé": -0.024835016023948553,
+    "part_négative": 0.12687585266030013
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "orange",
+    "n_jours": 5687,
+    "médiane_annualisée": 0.1618310400000702,
+    "moyenne_annualisée": 0.18967042238867293,
+    "p10_annualisé": 0.01012786778836805,
+    "part_négative": 0.08616142078424477
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 868,
+    "médiane_annualisée": 0.09852410431782044,
+    "moyenne_annualisée": 0.12899689943397008,
+    "p10_annualisé": -0.15002836874796643,
+    "part_négative": 0.4804147465437788
+   }
+  ],
+  "dd24": [
+   {
+    "couleur": "green",
+    "n_jours": 1466,
+    "drawdown_24m_médian": 0.07807411055900743,
+    "drawdown_24m_p90": 0.5557370655814069,
+    "part_drawdown_>20%": 0.3615279672578445
+   },
+   {
+    "couleur": "orange",
+    "n_jours": 6404,
+    "drawdown_24m_médian": 0.07055646631489537,
+    "drawdown_24m_p90": 0.27663577616645113,
+    "part_drawdown_>20%": 0.13835103060587134
+   },
+   {
+    "couleur": "red",
+    "n_jours": 907,
+    "drawdown_24m_médian": 0.20012551474944595,
+    "drawdown_24m_p90": 0.6794583257894344,
+    "part_drawdown_>20%": 0.5005512679162073
+   }
+  ]
+ },
+ "world": {
+  "share": {
+   "green": 0.1257,
+   "orange": 0.7896,
+   "red": 0.0847
+  },
+  "checks": {
+   "part_rouge": {
+    "valeur": 0.0847,
+    "seuil": 0.25,
+    "ok": true
+   },
+   "écart_3ans_vert_moins_rouge": {
+    "valeur": 0.04762013240761154,
+    "seuil": 0.05,
+    "ok": false
+   },
+   "drawdown24m_rouge_plus_profond": {
+    "rouge": 0.21513572627751887,
+    "vert": 0.09106066023770887,
+    "ok": true
+   },
+   "épisodes_ok": {
+    "valeur": 5,
+    "total": 6
+   },
+   "changements_par_an": 3.2294189761497885
+  },
+  "episodes": [
+   {
+    "date": "2000-03-24",
+    "épisode": "sommet mars 2000",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2007-10-31",
+    "épisode": "octobre 2007",
+    "attendu": "orange/red",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2009-03-09",
+    "épisode": "creux mars 2009",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   },
+   {
+    "date": "2020-03-23",
+    "épisode": "creux mars 2020",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "orange",
+    "ok": true
+   },
+   {
+    "date": "2021-11-30",
+    "épisode": "fin 2021",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2022-10-12",
+    "épisode": "creux octobre 2022",
+    "attendu": "green",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": false
+   }
+  ],
+  "fwd": [
+   {
+    "horizon": "1 an",
+    "couleur": "green",
+    "n_jours": 1179,
+    "médiane_annualisée": 0.13416124511516792,
+    "moyenne_annualisée": 0.13390948020553406,
+    "p10_annualisé": -0.170108434170833,
+    "part_négative": 0.2383375742154368
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "orange",
+    "n_jours": 7403,
+    "médiane_annualisée": 0.107093360425085,
+    "moyenne_annualisée": 0.07416838148241411,
+    "p10_annualisé": -0.11190117387675291,
+    "part_négative": 0.2511144130757801
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 542,
+    "médiane_annualisée": -0.052846380789887126,
+    "moyenne_annualisée": -0.013792284731988902,
+    "p10_annualisé": -0.19493589395839817,
+    "part_négative": 0.5202952029520295
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "green",
+    "n_jours": 1179,
+    "médiane_annualisée": 0.10008436028487822,
+    "moyenne_annualisée": 0.10085514848309085,
+    "p10_annualisé": 0.029178716920667647,
+    "part_négative": 0.04495335029686175
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "orange",
+    "n_jours": 7057,
+    "médiane_annualisée": 0.07924930657691331,
+    "moyenne_annualisée": 0.07091728498335215,
+    "p10_annualisé": -0.07682536491444103,
+    "part_négative": 0.20419441689103018
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 384,
+    "médiane_annualisée": 0.05246422787726668,
+    "moyenne_annualisée": 0.012923571892970775,
+    "p10_annualisé": -0.17499048929878414,
+    "part_négative": 0.2630208333333333
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "green",
+    "n_jours": 1179,
+    "médiane_annualisée": 0.09894505633097816,
+    "moyenne_annualisée": 0.10603903977913998,
+    "p10_annualisé": 0.06479370276423402,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "orange",
+    "n_jours": 6589,
+    "médiane_annualisée": 0.06225240755352446,
+    "moyenne_annualisée": 0.061568466098444574,
+    "p10_annualisé": -0.034718502214556635,
+    "part_négative": 0.25390802853240246
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 348,
+    "médiane_annualisée": 0.09488728748264874,
+    "moyenne_annualisée": 0.05833205770809635,
+    "p10_annualisé": -0.035270780213632946,
+    "part_négative": 0.3448275862068966
+   }
+  ],
+  "dd24": [
+   {
+    "couleur": "green",
+    "n_jours": 1179,
+    "drawdown_24m_médian": 0.09106066023770887,
+    "drawdown_24m_p90": 0.28888573087588687,
+    "part_drawdown_>20%": 0.23748939779474132
+   },
+   {
+    "couleur": "orange",
+    "n_jours": 7263,
+    "drawdown_24m_médian": 0.06428353109029716,
+    "drawdown_24m_p90": 0.37349023348307303,
+    "part_drawdown_>20%": 0.20955528018725045
+   },
+   {
+    "couleur": "red",
+    "n_jours": 430,
+    "drawdown_24m_médian": 0.21513572627751887,
+    "drawdown_24m_p90": 0.37107795645563935,
+    "part_drawdown_>20%": 0.5674418604651162
+   }
+  ]
+ },
+ "btc": {
+  "share": {
+   "green": 0.3392,
+   "orange": 0.5688,
+   "red": 0.092
+  },
+  "checks": {
+   "part_rouge": {
+    "valeur": 0.092,
+    "seuil": 0.3,
+    "ok": true
+   },
+   "écart_3ans_vert_moins_rouge": {
+    "valeur": 0.4539264030150272,
+    "seuil": 0.05,
+    "ok": true
+   },
+   "drawdown24m_rouge_plus_profond": {
+    "rouge": 0.504514679939958,
+    "vert": 0.14391289727399148,
+    "ok": true
+   },
+   "épisodes_ok": {
+    "valeur": 6,
+    "total": 8
+   },
+   "changements_par_an": 8.483326230556147
+  },
+  "episodes": [
+   {
+    "date": "2017-12-17",
+    "épisode": "sommet décembre 2017",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2018-12-15",
+    "épisode": "creux décembre 2018",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   },
+   {
+    "date": "2020-03-13",
+    "épisode": "creux mars 2020",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   },
+   {
+    "date": "2021-04-14",
+    "épisode": "sommet avril 2021",
+    "attendu": "red",
+    "obtenu": "red",
+    "dominant_±3_mois": "red",
+    "ok": true
+   },
+   {
+    "date": "2021-11-10",
+    "épisode": "sommet novembre 2021",
+    "attendu": "red",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": false
+   },
+   {
+    "date": "2022-11-21",
+    "épisode": "creux novembre 2022",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   },
+   {
+    "date": "2025-10-06",
+    "épisode": "sommet octobre 2025",
+    "attendu": "red",
+    "obtenu": "orange",
+    "dominant_±3_mois": "orange",
+    "ok": false
+   },
+   {
+    "date": "2026-07-15",
+    "épisode": "creux juillet 2026",
+    "attendu": "green",
+    "obtenu": "green",
+    "dominant_±3_mois": "green",
+    "ok": true
+   }
+  ],
+  "fwd": [
+   {
+    "horizon": "1 an",
+    "couleur": "green",
+    "n_jours": 1433,
+    "médiane_annualisée": 0.9911644407041371,
+    "moyenne_annualisée": 1.1815933618792784,
+    "p10_annualisé": -0.2198371456359678,
+    "part_négative": 0.15073272854152128
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "orange",
+    "n_jours": 2464,
+    "médiane_annualisée": 0.3203103242808534,
+    "moyenne_annualisée": 1.4306818954142235,
+    "p10_annualisé": -0.5736014479388171,
+    "part_négative": 0.4135551948051948
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 432,
+    "médiane_annualisée": 0.123943117138126,
+    "moyenne_annualisée": 0.8410022873105909,
+    "p10_annualisé": -0.6945146559839528,
+    "part_négative": 0.4375
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "green",
+    "n_jours": 1433,
+    "médiane_annualisée": 0.7853141569087414,
+    "moyenne_annualisée": 1.3252608506077368,
+    "p10_annualisé": 0.33674705196135113,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "orange",
+    "n_jours": 1734,
+    "médiane_annualisée": 0.4949925728338209,
+    "moyenne_annualisée": 0.783704166626779,
+    "p10_annualisé": 0.16582985397301675,
+    "part_négative": 0.0017301038062283738
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 432,
+    "médiane_annualisée": 0.3313877538937142,
+    "moyenne_annualisée": 0.3898330711366842,
+    "p10_annualisé": 0.038774326606265674,
+    "part_négative": 0.016203703703703703
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "green",
+    "n_jours": 900,
+    "médiane_annualisée": 0.7969560096655479,
+    "moyenne_annualisée": 0.8638650067037883,
+    "p10_annualisé": 0.5731386832488963,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "orange",
+    "n_jours": 1537,
+    "médiane_annualisée": 0.576546860018418,
+    "moyenne_annualisée": 0.9681033047612411,
+    "p10_annualisé": 0.14306517995769763,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 432,
+    "médiane_annualisée": 0.24245129763409312,
+    "moyenne_annualisée": 0.44043735225537994,
+    "p10_annualisé": 0.03481740366629782,
+    "part_négative": 0.018518518518518517
+   }
+  ],
+  "dd24": [
+   {
+    "couleur": "green",
+    "n_jours": 1433,
+    "drawdown_24m_médian": 0.14391289727399148,
+    "drawdown_24m_p90": 0.53521710883102,
+    "part_drawdown_>20%": 0.38799720865317516
+   },
+   {
+    "couleur": "orange",
+    "n_jours": 2099,
+    "drawdown_24m_médian": 0.21992262804298146,
+    "drawdown_24m_p90": 0.6968574906991093,
+    "part_drawdown_>20%": 0.5259647451167222
+   },
+   {
+    "couleur": "red",
+    "n_jours": 432,
+    "drawdown_24m_médian": 0.504514679939958,
+    "drawdown_24m_p90": 0.7504302327331036,
+    "part_drawdown_>20%": 0.8078703703703703
+   }
+  ]
+ },
+ "plan_sp500": {
+  "période": "1990-01-31 → 2026-11-30",
+  "investi_total": 813000.0,
+  "A_valeur_finale": 5666691.247824737,
+  "B_valeur_finale": 5317187.885326554,
+  "B_moins_A": -349503.3624981828,
+  "B_moins_A_pct": -0.06167679642548829,
+  "C_valeur_finale": 5648651.758228826,
+  "C_moins_A": -18039.489595910534,
+  "C_moins_A_pct": -0.003183425531227857,
+  "C_drawdown_max": 0.4964947341103292,
+  "réserve_B_finale": 94851.13530824172,
+  "réserve_B_max": 161866.74761275016,
+  "A_drawdown_max": 0.4974941079632539,
+  "B_drawdown_max": 0.459217305141958
+ },
+ "plan_ndx": {
+  "période": "1990-01-31 → 2026-11-30",
+  "investi_total": 813000.0,
+  "A_valeur_finale": 19515387.924822614,
+  "B_valeur_finale": 14668646.071335437,
+  "B_moins_A": -4846741.853487177,
+  "B_moins_A_pct": -0.2483548813970723,
+  "C_valeur_finale": 19461214.9470894,
+  "C_moins_A": -54172.977733213454,
+  "C_moins_A_pct": -0.0027759108833449453,
+  "C_drawdown_max": 0.7991532067772058,
+  "réserve_B_finale": 94374.94287050054,
+  "réserve_B_max": 142492.99245363002,
+  "A_drawdown_max": 0.8002725608196152,
+  "B_drawdown_max": 0.7653504607632565
+ },
+ "plan_world": {
+  "période": "1990-01-31 → 2026-11-30",
+  "investi_total": 813000.0,
+  "A_valeur_finale": 3436412.0578447147,
+  "B_valeur_finale": 3438494.1820737296,
+  "B_moins_A": 2082.124229014851,
+  "B_moins_A_pct": 0.0006059006294840685,
+  "C_valeur_finale": 3434491.9762274,
+  "C_moins_A": -1920.0816173148341,
+  "C_moins_A_pct": -0.00055874603656203,
+  "C_drawdown_max": 0.5236436597585182,
+  "réserve_B_finale": 94610.3269203449,
+  "réserve_B_max": 159382.68246089783,
+  "A_drawdown_max": 0.5244677845226637,
+  "B_drawdown_max": 0.488593696310053
+ },
+ "levier_ndx": {
+  "Nasdaq-100 sans levier": {
+   "multiple": 240.68120546883648,
+   "cagr": 0.14273524813440552,
+   "drawdown_max": 0.8289721157242125,
+   "pire_année": -0.418853359997274,
+   "drawdown_2000_2002": 0.8132656785632214,
+   "drawdown_2007_2009": 0.5103803907896902,
+   "drawdown_2021_2022": 0.32856638423499207
+  },
+  "x2 permanent": {
+   "multiple": 639.8965928621758,
+   "cagr": 0.17025014207998557,
+   "drawdown_max": 0.9889851097457032,
+   "pire_année": -0.7298839180840349,
+   "drawdown_2000_2002": 0.9852359156745808,
+   "drawdown_2007_2009": 0.8131735452571958,
+   "drawdown_2021_2022": 0.6088726575028809
+  },
+  "x2 si tendance OK, sinon indice sans levier (règle retenue)": {
+   "multiple": 1314.7166034842437,
+   "cagr": 0.19093459654652634,
+   "drawdown_max": 0.8977435416452147,
+   "pire_année": -0.5530830541842927,
+   "drawdown_2000_2002": 0.8805754125293885,
+   "drawdown_2007_2009": 0.6352094127624324,
+   "drawdown_2021_2022": 0.39939308432162224
+  },
+  "x2 si tendance OK, sinon monétaire (Faber, référence)": {
+   "multiple": 697.1468763223011,
+   "cagr": 0.17269267188771553,
+   "drawdown_max": 0.7264885690064722,
+   "pire_année": -0.49289053083908296,
+   "drawdown_2000_2002": 0.563209554498297,
+   "drawdown_2007_2009": 0.4154823929674645,
+   "drawdown_2021_2022": 0.2362850882024139
+  },
+  "indice si tendance OK, sinon monétaire (Faber classique)": {
+   "multiple": 127.6245771426409,
+   "cagr": 0.12523160825201107,
+   "drawdown_max": 0.3993498689575383,
+   "pire_année": -0.25109848136738655,
+   "drawdown_2000_2002": 0.29834925276933855,
+   "drawdown_2007_2009": 0.2154127750848328,
+   "drawdown_2021_2022": 0.11959361225791731
+  },
+  "_part_du_temps_tendance_ok": 0.7447856315179606
+ },
+ "tendance_sp500": {
+  "achat-conservation": {
+   "cagr": 0.0950136567370059,
+   "drawdown_max": 0.5677538774277292,
+   "volatilité": 0.18095220135845344
+  },
+  "filtre 10 mois (monétaire hors tendance)": {
+   "cagr": 0.08311114001781994,
+   "drawdown_max": 0.332363323120331,
+   "volatilité": 0.12804896651983683
+  },
+  "_part_du_temps_investi": 0.7712443095599393,
+  "_allers_retours_par_an": 1.4578453183275535
+ },
+ "tendance_ndx": {
+  "achat-conservation": {
+   "cagr": 0.14359788979196986,
+   "drawdown_max": 0.8289721157242126,
+   "volatilité": 0.25637188274785894
+  },
+  "filtre 10 mois (monétaire hors tendance)": {
+   "cagr": 0.1263884164376361,
+   "drawdown_max": 0.3993498689575382,
+   "volatilité": 0.18934572256786433
+  },
+  "_part_du_temps_investi": 0.7492412746585736,
+  "_allers_retours_par_an": 1.6968363541189557
+ },
+ "tendance_world": {
+  "achat-conservation": {
+   "cagr": 0.08051765419291934,
+   "drawdown_max": 0.5906794533676618,
+   "volatilité": 0.1544874933739903
+  },
+  "filtre 10 mois (monétaire hors tendance)": {
+   "cagr": 0.08353958610876688,
+   "drawdown_max": 0.24963562090131897,
+   "volatilité": 0.10113705202487036
+  },
+  "_part_du_temps_investi": 0.7364820541654953,
+  "_allers_retours_par_an": 1.3620706575073602
+ },
+ "btc_seuil_1.0": {
+  "part_rouge": 0.09266092660926609,
+  "sommets": {
+   "2013-12-04": "red",
+   "2017-12-17": "red",
+   "2021-04-14": "red",
+   "2021-11-10": "orange",
+   "2025-10-06": "orange"
+  },
+  "fwd": [
+   {
+    "horizon": "1 an",
+    "couleur": "green",
+    "n_jours": 1433,
+    "médiane_annualisée": 0.9911644407041371,
+    "moyenne_annualisée": 1.1815933618792784,
+    "p10_annualisé": -0.2198371456359678,
+    "part_négative": 0.15073272854152128
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "orange",
+    "n_jours": 2628,
+    "médiane_annualisée": 0.4109099956271076,
+    "moyenne_annualisée": 1.507830225906425,
+    "p10_annualisé": -0.5705922303052835,
+    "part_négative": 0.3987823439878234
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 452,
+    "médiane_annualisée": 0.09746744869984258,
+    "moyenne_annualisée": 0.7822201455031692,
+    "p10_annualisé": -0.6872107128551458,
+    "part_négative": 0.46017699115044247
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "green",
+    "n_jours": 1433,
+    "médiane_annualisée": 0.7853141569087414,
+    "moyenne_annualisée": 1.3252608506077368,
+    "p10_annualisé": 0.33674705196135113,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "orange",
+    "n_jours": 1898,
+    "médiane_annualisée": 0.5496903651533311,
+    "moyenne_annualisée": 0.7744023940047038,
+    "p10_annualisé": 0.15252481500425796,
+    "part_négative": 0.00684931506849315
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 452,
+    "médiane_annualisée": 0.31771169472453464,
+    "moyenne_annualisée": 0.3768082094398295,
+    "p10_annualisé": 0.026001727641296934,
+    "part_négative": 0.04424778761061947
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "green",
+    "n_jours": 900,
+    "médiane_annualisée": 0.7969560096655479,
+    "moyenne_annualisée": 0.8638650067037883,
+    "p10_annualisé": 0.5731386832488963,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "orange",
+    "n_jours": 1701,
+    "médiane_annualisée": 0.5992725152287888,
+    "moyenne_annualisée": 0.9921030417850845,
+    "p10_annualisé": 0.1538124736998827,
+    "part_négative": 0.0
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 452,
+    "médiane_annualisée": 0.26448996389190027,
+    "moyenne_annualisée": 0.44110749313115094,
+    "p10_annualisé": 0.0351514695512416,
+    "part_négative": 0.017699115044247787
+   }
+  ]
+ }
+}

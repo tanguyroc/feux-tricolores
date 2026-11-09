@@ -1,0 +1,166 @@
+# Règles des feux tricolores — GELÉES avant le premier backtest.
+# Toute modification doit être commitée séparément, justifiée dans CHANGELOG.md,
+# et suivie d'un re-test sur une période non utilisée pour la décision.
+version: 1
+frozen_at: "2026-11-08"
+
+windows:
+  # Percentiles glissants (indices) : fenêtre de 25 ans, valeur produite dès 15 ans d'historique.
+  pct_years: 25
+  pct_min_years: 15
+  # Séries « rapides » à historique court (VIX, HY OAS, Nasdaq-100 splicé) : minimum 10 ans.
+  pct_min_years_fast: 10
+  # Dette sur marge (depuis 1997) : fenêtre croissante, minimum 5 ans.
+  margin_expanding_min_years: 5
+  # Bitcoin : z-score glissant 4 ans (un cycle), minimum 3 ans.
+  btc_z_years: 4
+  btc_z_min_years: 3
+
+lags:
+  # Point-in-time : date de disponibilité = date de référence + décalage.
+  shiller_earnings_months: 3        # bénéfices trimestriels connus ~3 mois après
+  cape_month_available_days: 0      # le CAPE du mois m est connu en fin de mois m
+  aiae_days_after_quarter_end: 70   # Z.1 publié ~10 semaines après le trimestre
+  margin_debt_days_after_month_end: 25  # FINRA publie ~3 semaines après le mois
+
+indices:
+  assets:
+    sp500:  {ticker: "^GSPC", name: "S&P 500", splice: null}
+    ndx:    {ticker: "^NDX",  name: "Nasdaq-100", splice: "^IXIC"}   # Composite avant 10/1985
+    world:  {ticker: "^990100-USD-STRD", name: "MSCI World (USD)", splice: null}
+  valuation:            # famille V — commune à tous les indices (plafond S&P 500)
+    indicators: [cape_pit_pct, ecy_pit_pct_inv, aiae_pct]
+    red_min: 80
+    green_max: 40
+  extension:            # famille X — propre à chaque indice
+    indicators: [gap_ma200_pct, mom_12m_pct]
+    red_min: 90
+    gsy:                # Greenwood-Shleifer-You : hausse ≥ 100 % sur 24 mois ET accélération
+      runup_months: 24
+      runup_min: 1.00
+      accel_short_months: 6   # pente annualisée 6 mois > pente annualisée 24 mois
+  euphoria:             # famille E — commune (marché US)
+    indicators: [margin_debt_yoy_pct]
+    red_min: 80
+    margin_debt_yoy_extreme: 0.50   # croissance annuelle ≥ 50 % → E = 100
+  fear:                 # famille P — confirmation du vert de capitulation
+    indicators: [vix_pct, credit_spread_pct]   # spread = Baa Moody's − Treasury 10 ans (BAA10Y)
+    green_min: 80
+    drawdown_min: 0.25
+  falling_knife:
+    sma_months: 10
+    mom_months: 3
+  leverage_flag:
+    sma_months: 10      # clôture mensuelle < moyenne 10 mois → drapeau « tendance cassée »
+
+bitcoin:
+  valuation:
+    indicators: [log_price_ma200w_z, log_mvrv_z]   # moyenne des deux z-scores
+    red_min_z: 1.0    # 1,5 à l'origine ; ajustement unique du 2026-11-08, voir CHANGELOG.md
+    green_max_z: -0.5
+  extension:
+    gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
+  euphoria:
+    # Taux de financement du perpétuel BTC (Deribit, horaire depuis 06/2019 ; Binance/Bybit géobloqués) :
+    # moyenne 30 jours, percentile sur fenêtre croissante (minimum 18 mois). Implémenté le 2026-11-08 (v0.2).
+    funding_30d_pct_red_min: 90
+  capitulation:
+    drawdown_min: 0.50
+    fng_30d_max: 25
+  leverage_flag: {sma_days: 200}
+
+# Confirmation (couche d'affichage et d'alerte, pas la règle) : une nouvelle couleur n'est affichée
+# qu'après N jours de bourse consécutifs. Ajouté le 2026-11-08 (v0.2) : divise par ~3 les changements
+# par an sans modifier les rendements par couleur (docs/robustness.html).
+confirmation_days: 5
+
+# Préséance quand plusieurs conditions sont vraies :
+# 1) vert de capitulation (drawdown + peur), 2) rouge, 3) vert de valorisation, 4) orange.
+precedence: [green_capitulation, red, green_valuation, orange]
+
+acceptance:   # critères de validation, évalués par backtest.py, non négociables
+  red_time_share_max_indices: 0.25
+  red_time_share_max_btc: 0.30
+  fwd3y_median_gap_min_annual: 0.05    # vert − rouge, rendement annualisé médian à 3 ans
+  drawdown24m_red_deeper_in: "2 of 3 episodes"
+  plan_type: {monthly_eur: 1000, exceptional_yearly_eur: 10000}
+
+conduct:
+  green:
+    regular_contribution: "maintenu"
+    reserve: "déploiement par tiers sur 3 mois (6 mois si couteau qui tombe) ; la réserve au-delà de la cible peut aussi être engagée"
+    leverage_cap_share_equities: 0.15
+    leverage_requires_trend_ok: true
+    rebalance_band_pts: 10
+  orange:
+    regular_contribution: "maintenu"
+    reserve: "montants exceptionnels déployés par tiers sur 3 mois (attendre le vert coûte cher : voir CHANGELOG 2026-11-08)"
+    leverage_cap_share_equities: 0.10
+    rebalance_band_pts: 5
+  red:
+    regular_contribution: "maintenu"
+    reserve: "aucun déploiement ; les montants exceptionnels attendent en réserve rémunérée (fonds euros, livret, monétaire)"
+    leverage_cap_share_equities: 0.05
+    rebalance_band_pts: 5
+  trend_broken:
+    leverage_cap_share_equities: 0.05
+    action_within_trading_days: 5
+  exceptional_order_checklist_hours: 48
+
+stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeurs
+  valuation:
+    indicators: [ev_ebit_pct, p_fcf_pct]     # percentiles sur 10 ans de l'historique propre de la société
+    pct_years: 10
+    pct_min_years: 5
+    red_min: 80
+    green_max: 30
+  extension:
+    red_min: 90                                 # écart à la MM200 jours, percentile 10 ans
+    gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
+  reverse_dcf:
+    wacc: 0.09
+    terminal_growth: 0.025
+    years: 10
+    red_if_implied_over_realized: 1.5           # croissance implicite > 1,5 × croissance réalisée 5 ans → drapeau
+  quality:   # « solidité », éliminatoire : une valeur qui échoue ne peut jamais être verte (v0.5 : moyennes pluriannuelles)
+    roic_min: 0.10               # rentabilité du capital investi (moyenne 5 ans) ; banques : rentabilité des fonds propres
+    fcf_to_net_income_min: 0.70  # part du résultat net transformée en cash libre (moyenne 5 ans)
+    net_debt_to_ebitda_max: 2.5  # dette nette du jour / EBITDA moyen 3 ans (2,0 → 2,5 en v0.5, seuil Fundsmith / Kairys Alpha)
+    avg_years: 5                 # fenêtre des moyennes (au moins avg_min_years de données)
+    avg_min_years: 3
+    ebitda_avg_years: 3
+    tax_rate: 0.21
+    # hors grille : foncières (REIT) — jamais vertes, valorisation P/E et P/B seulement
+  leverage_flag: {sma_days: 200}
+
+themes:   # secteurs et thèmes (v0.5). Drapeaux de prix sur l'ETF ; pour les 11 secteurs GICS, valorisation = médiane des V
+          # des sociétés du Top 100 appartenant au secteur (au moins sector_min_members) → couleur avec les mêmes règles de conjonction
+  assets:
+    it:        {ticker: "XLK", name: "Technologie de l'information", kind: sector, gics: "Information Technology"}
+    financials: {ticker: "XLF", name: "Finance", kind: sector, gics: "Financials"}
+    health:    {ticker: "XLV", name: "Santé", kind: sector, gics: "Health Care"}
+    discretionary: {ticker: "XLY", name: "Consommation discrétionnaire", kind: sector, gics: "Consumer Discretionary"}
+    staples:   {ticker: "XLP", name: "Consommation de base", kind: sector, gics: "Consumer Staples"}
+    industrials: {ticker: "XLI", name: "Industrie", kind: sector, gics: "Industrials"}
+    energy:    {ticker: "XLE", name: "Énergie", kind: sector, gics: "Energy"}
+    materials: {ticker: "XLB", name: "Matériaux", kind: sector, gics: "Materials"}
+    utilities: {ticker: "XLU", name: "Services aux collectivités", kind: sector, gics: "Utilities"}
+    communication: {ticker: "VOX", name: "Communication", kind: sector, gics: "Communication Services"}
+    realestate: {ticker: "VNQ", name: "Immobilier coté", kind: sector, gics: "Real Estate"}
+    # thèmes : là où les bulles se sont historiquement formées (industries, périmètre de l'étude GSY), ETF/indice ≥ 15 ans d'historique
+    semis:     {ticker: "^SOX", name: "Semi-conducteurs", kind: theme, since: 1993}
+    software:  {ticker: "IGV",  name: "Éditeurs de logiciels", kind: theme, since: 2001}
+    biotech:   {ticker: "IBB",  name: "Biotechnologies", kind: theme, since: 2001}
+    cleanenergy: {ticker: "PBW", name: "Énergies propres", kind: theme, since: 2005}
+    goldminers: {ticker: "GDX", name: "Mines d'or", kind: theme, since: 2006}
+    homebuilders: {ticker: "XHB", name: "Constructeurs de maisons (États-Unis)", kind: theme, since: 2006}
+    defense:   {ticker: "ITA",  name: "Défense et aéronautique", kind: theme, since: 2006}
+  sector_min_members: 3        # en dessous, pas de valorisation sectorielle → orange (drapeaux seulement)
+  sector_red_min_v: 80         # médiane des V ≥ 80 ET (tendu OU bulle GSY) → rouge
+  sector_green_max_v: 40       # médiane des V ≤ 40 → vert ; ou capitulation : baisse ≥ 25 % ET écart MM200 ≤ 10e percentile
+  sector_capitulation_drawdown: 0.25
+  sector_capitulation_gap_pct: 10
+  gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You, mesuré sur des SECTEURS
+  extension_red_min: 90        # écart à la MM200 j en percentile 25 ans (min 10 ans) → « tendu »
+  runup_alert_min: 1.50        # hausse ≥ 150 % sur 2 ans : probabilité de krach ≈ 80 % dans GSY
+  leverage_flag: {sma_months: 10}

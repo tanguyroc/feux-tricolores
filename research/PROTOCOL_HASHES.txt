@@ -1,0 +1,1 @@
+research/v1_protocol.md sha256=08e5abbb003f2e9aa23506526e3d57cab4143267a9b95106ec60ef555fe8df44 écrit le 2026-11-09T06:40Z (avant tout calcul des candidats)
