@@ -207,25 +207,30 @@ def stock_scores() -> list[dict]:
     from .config import ROOT
 
     sd = ROOT / "data" / "signals" / "stocks"
+    # symbole inscrit → fichier de cours (la clé peut différer du symbole : SoftBank « 9984 » / « 9984.T »)
+    key_of = {(v.get("ticker") or k): k for k, v in _stocks_latest().items()}
     out = []
     for path in sorted(PREREG_DIR.glob("20*.json")) if PREREG_DIR.exists() else []:
         c = json.loads(path.read_text(encoding="utf-8"))
         a = c.get("actions") or {}
         p0s = {t: p for t, p in (a.get("prix") or {}).items() if p}
+        d0 = pd.Timestamp(c["date"])
         groups = {"vertes": set(a.get("vertes", [])), "rouges": set(a.get("rouges", [])), "solides": set(a.get("solides", []))}
         groups["non solides"] = set(p0s) - groups["solides"]
         rec = {"date": c["date"], "effectifs": {g: len(v & set(p0s)) for g, v in groups.items()}}
         for h, due in c["échéances"].items():
             years, rets = HORIZONS[h], {}
-            for t, p0 in p0s.items():
-                f = sd / f"{t}.parquet"
+            for t in p0s:
+                f = sd / f"{key_of.get(t, t)}.parquet"
                 if not f.exists():
                     continue
                 px = pd.read_parquet(f, columns=["price"])["price"].dropna()
                 if px.empty or pd.Timestamp(due) > px.index[-1]:
                     continue
-                p1 = px.asof(pd.Timestamp(due))
-                if p1 and p1 == p1:
+                # les deux bouts dans la même série (cours ajustés des divisions) : une division survenue après l'inscription
+                # ne fausse pas le rendement (le prix inscrit, non ajusté, reste dans le fichier pour mémoire)
+                p0, p1 = px.asof(d0), px.asof(pd.Timestamp(due))
+                if p0 and p1 and p0 == p0 and p1 == p1:
                     rets[t] = (p1 / p0) ** (1 / years) - 1
             rec[h] = None if not rets else {g: _clean(pd.Series([rets[t] for t in v if t in rets]).median()) if any(t in rets for t in v) else None
                                              for g, v in groups.items()}

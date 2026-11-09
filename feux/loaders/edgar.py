@@ -200,37 +200,40 @@ def _quarterize(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["end", "filed", "val"])
     out = pd.DataFrame(rows)
     out["rank"] = (out["kind"] != "explicit").astype(int)
-    out = out.sort_values(["end", "rank", "filed"], kind="mergesort").drop_duplicates("end", keep="first")
+    out = out.sort_values(["end", "filed", "rank"], kind="mergesort").drop_duplicates("end", keep="first")
     return out[["end", "filed", "val"] + (["concept"] if cc else [])].reset_index(drop=True)
 
 
 def quarterly_flow(cf: dict, concepts, keep_concept: bool = False) -> pd.DataFrame:
-    """Valeurs trimestrielles datées du dépôt. Les concepts listés sont des façons équivalentes de publier la même ligne : leurs
-    faits sont MIS EN COMMUN avant le calcul des trimestres (v1.0.1) — un 10-K et les 10-Q peuvent employer deux concepts
-    différents (Nvidia), et le 4e trimestre se déduit alors de l'exercice d'un concept et des neuf mois de l'autre. Pour une
-    même période (début, fin) : la première publication, à égalité le concept listé en premier. Déposants de 20-F : valeurs
-    annuelles (attribut annual_only)."""
-    frames = []
-    for i, (taxonomy, concept) in enumerate(_iter_concepts(concepts)):
+    """Valeurs trimestrielles datées du dépôt. Chaque concept est d'abord mis en trimestres SÉPARÉMENT (une différence de cumuls
+    n'associe jamais deux concepts : Union Pacific, Linde, AT&T auraient eu des trimestres faux, v1.0.1), puis les concepts sont
+    fusionnés : pour chaque trimestre, la valeur publiée en premier, à égalité le concept listé en premier. Les sociétés changent
+    de concept au fil du temps (Revenues → RevenueFromContract...). Déposants de 20-F : valeurs annuelles (attribut annual_only)."""
+    parts = []
+    for taxonomy, concept in _iter_concepts(concepts):
         df = _facts(cf, taxonomy, concept)
         if df.empty or df["start"].isna().all():
             continue
-        frames.append(df.assign(_prio=i, concept=f"{taxonomy}:{concept}"))
-    if not frames:
+        q = _quarterize(df)
+        if q.empty:
+            continue
+        annual = bool(q.attrs.get("annual_only"))
+        q = q[["end", "filed", "val"]].copy()
+        q["concept"] = f"{taxonomy}:{concept}"
+        q["unit"] = df["unit"].iloc[0]
+        q["annual"] = annual
+        parts.append(q)
+    if not parts:
         return pd.DataFrame(columns=["end", "filed", "val"])
-    pool = pd.concat(frames, ignore_index=True)
-    if pool["unit"].nunique() > 1:
-        pool = pool[pool["unit"] == pool["unit"].mode().iloc[0]]
-    pool = pool.dropna(subset=["start"]).sort_values(["start", "end", "filed", "_prio"], kind="mergesort")
-    pool = pool.drop_duplicates(["start", "end"], keep="first")
-    q = _quarterize(pool)
-    if q.empty:
-        return pd.DataFrame(columns=["end", "filed", "val"])
-    used = list(dict.fromkeys(c for c in q["concept"] if c))
-    out = q[["end", "filed", "val"] + (["concept"] if keep_concept else [])].sort_values("end").reset_index(drop=True)
-    out.attrs["concept"] = " + ".join(used)
-    out.attrs["unit"] = pool["unit"].iloc[0]
-    if q.attrs.get("annual_only"):
+    quarterly = [q for q in parts if not q["annual"].iloc[0]]
+    use = quarterly if quarterly else parts
+    unit = pd.concat([q["unit"] for q in use]).mode().iloc[0]
+    use = [q for q in use if q["unit"].iloc[0] == unit]
+    merged = _merge_parts([q[["end", "filed", "val", "concept"]] for q in use])
+    out = merged[["end", "filed", "val"] + (["concept"] if keep_concept else [])].reset_index(drop=True)
+    out.attrs["concept"] = " + ".join(dict.fromkeys(merged["concept"]))
+    out.attrs["unit"] = unit
+    if not quarterly:
         out.attrs["annual_only"] = True
     return out
 
@@ -396,15 +399,35 @@ def capex_series(cf: dict) -> pd.DataFrame:
 
 
 def _instant_by_end(cf: dict, concepts) -> dict:
-    """{fin de période: (valeur, date de dépôt, concept)} : pour chaque date, le premier concept (dans l'ordre listé) publié."""
+    """{fin de période: (valeur, date de dépôt, concept)} : pour chaque date, la valeur publiée en premier, à égalité le concept
+    listé en premier (v1.0.1 : l'ordre de la liste seul faisait parfois attendre un dépôt plus tardif)."""
     out = {}
     for tax, concept in _iter_concepts(concepts):
         df = _facts(cf, tax, concept)
         if df.empty:
             continue
         for r in _first_reported(df, ["end"]).itertuples():
-            out.setdefault(r.end, (float(r.val), r.filed, f"{tax}:{concept}"))
+            cur = out.get(r.end)
+            if cur is None or r.filed < cur[1]:
+                out[r.end] = (float(r.val), r.filed, f"{tax}:{concept}")
     return out
+
+
+def interest_evidence(cf: dict) -> pd.DataFrame:
+    """Charges d'intérêts publiées, ramenées à l'année (toute période), datées du dépôt : preuve d'endettement, même quand les
+    trimestres ne permettent pas de somme sur 12 mois (Berkshire)."""
+    rows = []
+    for tax, concept in _iter_concepts(CONCEPTS["interest"][0]):
+        df = _facts(cf, tax, concept)
+        if df.empty or df["start"].isna().all():
+            continue
+        df = df.dropna(subset=["start"])
+        days = (df["end"] - df["start"]).dt.days.clip(lower=1)
+        ok = days >= 80
+        rows.append(pd.DataFrame({"end": df["end"][ok], "filed": df["filed"][ok], "val": (df["val"][ok].abs() * 365.0 / days[ok]).astype(float)}))
+    if not rows:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    return pd.concat(rows).sort_values("filed").reset_index(drop=True)
 
 
 def debt_series(cf: dict) -> pd.DataFrame:
@@ -412,17 +435,21 @@ def debt_series(cf: dict) -> pd.DataFrame:
     tot, ltt, nc, cur, call, sht = (_instant_by_end(cf, c) for c in (DEBT_TOTAL, DEBT_LT_TOTAL, DEBT_LT_NONCURRENT,
                                                                        DEBT_LT_CURRENT, DEBT_CURRENT_ALL, DEBT_SHORT))
     rows, used = [], {}
-    for end in sorted(set(tot) | set(ltt) | set(nc) | set(cur) | set(call)):
+    for end in sorted(set(tot) | set(ltt) | set(nc)):
+        cands = []                                             # (rang de qualité, composantes)
         if end in tot:
-            comps = [tot[end]]
-        elif end in ltt:
-            comps = [ltt[end]] + ([sht[end]] if end in sht else [])
-        elif end in nc and end in call:
-            comps = [nc[end], call[end]]                       # part courante totale = part à moins d'un an + court terme
-        elif end in nc or end in cur:
-            comps = [x[end] for x in (nc, cur, sht) if end in x]
-        else:
+            cands.append((0, [tot[end]]))
+        if end in ltt:
+            cands.append((1, [ltt[end]] + ([sht[end]] if end in sht else [])))
+        if end in nc and end in call:
+            cands.append((2, [nc[end], call[end]]))            # part courante totale = part à moins d'un an + court terme
+        if end in nc:
+            cands.append((3, [x[end] for x in (nc, cur, sht) if end in x]))
+        if not cands:
             continue
+        # la construction disponible LA PREMIÈRE (date de dépôt de sa dernière composante), à égalité la plus complète
+        # (v1.0.1 : PepsiCo, dette de fin 2022 connue en février au lieu d'avril)
+        _, comps = min(cands, key=lambda c: (max(x[1] for x in c[1]), c[0]))
         rows.append({"end": end, "filed": max(c[1] for c in comps), "val": sum(c[0] for c in comps)})
         for c in comps:
             used[c[2]] = True
@@ -487,6 +514,7 @@ def fundamentals(cik: int, extra_ciks: tuple[int, ...] = ()) -> dict[str, pd.Dat
             out[key] = instant(cf, concepts)
     out["capex"] = capex_series(cf)
     out["debt"] = debt_series(cf)
+    out["interest_evidence"] = interest_evidence(cf)
     out["shares"] = shares_series(cf)
     stale = out["shares"].empty or out["shares"]["end"].max() < pd.Timestamp.now() - pd.DateOffset(years=2)
     if stale:

@@ -124,8 +124,8 @@ Les tableaux ci-dessus sont inchangés ; trois phrases de commentaire étaient i
   attendre le vert, −9,6 % et −28,8 %.
 
 Point-in-time : dans le moteur quotidien, le CAPE d'un mois était utilisé dès la fin du mois, avant la publication de l'indice des prix
-(vers le 15 du mois suivant). Corrigé ; le protocole recalculé donne des écarts identiques à 0,1 point près et les mêmes conclusions
-(aucun candidat retenu sur le S&P 500, B1 adopté). Le moteur mensuel 1920-2026 n'était pas concerné (mise en œuvre le mois suivant).
+(vers le 15 du mois suivant). Corrigé ; le protocole recalculé (moteurs quotidien et mensuel) donne des écarts modifiés d'au plus 0,11 point et les mêmes conclusions
+(aucun candidat retenu sur le S&P 500, B1 adopté). Le moteur mensuel 1920-2026 n'était pas concerné (mise en œuvre le mois suivant) ; la reconstitution quotidienne du protocole l'était, corrigée aussi.
 Limite non corrigée : les bénéfices mensuels de Shiller sont interpolés (annuels avant 1926) ; le décalage de 3 mois peut laisser
 passer 1 à 2 mois d'information, davantage au début du hors-échantillon. Vu l'ampleur des écarts hors échantillon (+13 à +19 points),
 la conclusion n'en dépend pas, mais ce n'est pas démontré ici.

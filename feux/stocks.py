@@ -282,7 +282,15 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     # négligeables (≤ 0,3 % du chiffre d'affaires) → dette nulle. Sinon une dette introuvable reste inconnue (Deere, Berkshire :
     # dette publiée sous des concepts propres à la société, intérêts importants).
     debt_recent = _asof(f.get("debt"), cal, max_age_days=3 * 365)
-    small_interest = df["interest"].abs().fillna(0.0) <= 0.003 * df["revenue"].abs()
+    # plus forte charge d'intérêts annualisée publiée dans les trois dernières années (inconnue = aucune publiée)
+    ie = f.get("interest_evidence")
+    if ie is not None and len(ie):
+        s_ie = pd.Series(ie["val"].to_numpy(), index=pd.DatetimeIndex(ie["filed"])).groupby(level=0).max()
+        idx = cal.union(s_ie.index)
+        int_3y = s_ie.reindex(idx).rolling("1095D", min_periods=1).max().reindex(cal)
+    else:
+        int_3y = pd.Series(np.nan, index=cal)
+    small_interest = int_3y.isna() | (int_3y <= 0.003 * df["revenue"].abs())
     df["debt_free"] = (df["debt"].isna() & debt_recent.isna() & small_interest & df["revenue"].notna()).astype(bool)
     df.loc[df["debt_free"], "debt"] = 0.0
     df["mcap"] = df["price_in_accounts_ccy"] * df["shares"]

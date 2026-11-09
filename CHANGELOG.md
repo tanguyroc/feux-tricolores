@@ -14,7 +14,8 @@ a reproduit les défauts suivants. Tous sont corrigés ; aucun seuil de `rules.y
   alternative (AstraZeneca 2,8 → 5,9 Md, Novartis 1,6 → 3,9 Md, Verizon fréquences comprises) ; un capex ancien n'est plus reporté
   indéfiniment (Verizon utilisait celui de 2020, ConocoPhillips celui de 2023, Alibaba celui de 2022) : flux libre inconnu à la place.
 - **Fusion des concepts** : tri stable, et pour chaque période la valeur **publiée en premier** (un tri instable figeait parfois le
-  résultat d'Oracle à mai 2025) ; les concepts équivalents sont mis en commun avant le calcul des trimestres (Nvidia).
+  résultat d'Oracle à mai 2025). Une différence de cumuls n'associe jamais deux concepts différents (une mise en commun essayée en
+  cours de correction produisait des trimestres faux chez Union Pacific, Linde, AT&T et Morgan Stanley : abandonnée).
 - **Trimestres** : exercices de 52/53 semaines pris en compte (4e trimestre de 16 semaines : flux d'exploitation de PepsiCo 12,4 → 14,6 Md,
   PepsiCo repasse le test de cash ; Costco à jour de son exercice d'août) ; une somme sur 12 mois exige quatre trimestres consécutifs.
 - **Déposants annuels (20-F)** : le bilan expire au même rythme que les flux (avant : chaque année, quelques semaines avec dette et
@@ -22,14 +23,19 @@ a reproduit les défauts suivants. Tous sont corrigés ; aucun seuil de `rules.y
 - **Berkshire Hathaway** jugée en P/E et P/B (son « résultat d'exploitation » comprend les plus-values de son portefeuille).
 - **Comptes anciens** : le feu affiché passe à l'orange immédiatement (il pouvait garder sa couleur quatre jours).
 - Nombre d'actions : la référence du nettoyage est une valeur confirmée par sa voisine (Alibaba : page de garde 2026 dix fois trop petite).
+- Seconde vérification par le même relecteur, après correction : chiffres de dette conformes aux comptes pour Oracle, Verizon,
+  Philip Morris, Amphenol, Coca-Cola, Exxon, Tesla, Thermo Fisher, AT&T (sans double compte de la part courante) ; aucune fuite
+  d'information future sur 630 contrôles par troncature ; dates de disponibilité avancées là où une valeur publiée plus tôt existait
+  (capex 2025 de Coca-Cola connu en février et non en octobre, dette de PepsiCo de fin 2022 connue en février) ; « intérêts inconnus =
+  zéro » remplacé par la plus forte charge d'intérêts réellement publiée sur trois ans (Berkshire était jugée sans dette en 2016-2020).
 - Effet : 41 sociétés solides au lieu de 45 ; Coca-Cola V 43 → 62 ; Verizon, Philip Morris et Amphenol échouent au test de dette ;
   Chevron n'est plus vert même en brut (V 24 → 41) ; seule Accenture reste verte.
 
 **Indices et Bitcoin (effet négligeable, mais point-in-time) :** le CAPE d'un mois n'est utilisé qu'après la publication de l'indice des
 prix (vers le 15 du mois suivant) ; l'écart de crédit Baa est daté du jour ouvré suivant ; la barre fictive du dimanche du MSCI World
 est écartée ; le drapeau de tendance des secteurs et thèmes est décalé d'un jour comme celui des indices ; les jours Bitcoin sans
-MVRV ou sans moyenne 200 semaines (2010-2014) n'affichent plus un motif vert ou rouge. Protocole v1.0 recalculé : aucun écart de
-plus de 0,1 point, mêmes conclusions.
+MVRV ou sans moyenne 200 semaines (2010-2014) n'affichent plus un motif vert ou rouge. Protocole v1.0 recalculé : écarts de
+rendement modifiés d'au plus 0,11 point, mêmes conclusions.
 
 **Textes corrigés :** le MVRV a dépassé 3,7 pendant 22 jours depuis 2014 (pas « jamais ») ; ses sommets (7,7 en 2011, 5,9 en 2013,
 4,7 en 2017, 4,0 en 2021) ; le rouge Bitcoin de mai-juin 2017 manquait à la liste des épisodes ; le vert des indices n'a été suivi
@@ -50,7 +56,8 @@ Tests unitaires exécutés avant chaque publication.
 **Limites restantes, documentées :** les bénéfices mensuels de Shiller sont interpolés (annuels avant 1926), si bien que le décalage
 de 3 mois peut laisser passer 1 à 2 mois d'information, davantage au début du hors-échantillon 1920-1989 ; les dettes de Deere et
 Shopify, et le capex d'Alibaba, NextEra, TotalEnergies et ConocoPhillips sont publiés sous des concepts propres à la société : inconnus ;
-celui de Nvidia ne l'est sous des concepts standard que depuis fin 2023 : son test de cash reste « n.d. » tant que trois ans ne sont pas réunis.
+celui de Nvidia ne l'est sous des concepts standard que depuis fin 2023, et celui d'Arista mêle deux concepts d'un trimestre à l'autre :
+leur test de cash reste « n.d. ». Le suivi de l'hypothèse « actions » compare des cours ajustés des divisions aux deux bouts.
 
 ## 2026-11-09 — v1.0 (refonte selon un protocole pré-enregistré)
 Déclencheur : en v0.6, le rouge des indices ne passait pas son propre critère (écart vert − rouge à 3 ans < 5 points sur le

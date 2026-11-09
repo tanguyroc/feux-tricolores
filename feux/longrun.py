@@ -153,7 +153,9 @@ def daily_components(key: str, cape_m: pd.Series) -> pd.DataFrame:
     df = pd.read_parquet(ROOT / "data" / "signals" / f"{key}.parquet")
     d = pd.DataFrame(index=df.index)
     d["price"] = df["price"]
-    d["V"] = ind.pct_against_reference(df["cape_live"], cape_m.dropna(), window=10 ** 7, min_periods=360)
+    ref = cape_m.dropna()
+    ref.index = ref.index + pd.Timedelta(days=15)     # CAPE d'un mois connu après l'indice des prix (vers le 15 du mois suivant)
+    d["V"] = ind.pct_against_reference(df["cape_live"], ref, window=10 ** 7, min_periods=360)
     d["X"] = _expanding_pct(df["gap_ma200"], 252 * 15)
     d["T"] = df["trend_broken"].astype(float).where(df["trend_broken"].notna())
     d["P"] = df["P"]
