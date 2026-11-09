@@ -1,30 +1,39 @@
 {
+ "_rules_version": "1.0",
  "sp500": {
   "name": "S&P 500",
-  "color": "red",
+  "color": "orange",
   "trend_broken": false,
   "falling_knife": false,
+  "cher": true,
+  "cher_tendu": false,
   "date": "2026-11-06"
  },
  "ndx": {
   "name": "Nasdaq-100",
-  "color": "red",
+  "color": "orange",
   "trend_broken": false,
   "falling_knife": false,
+  "cher": true,
+  "cher_tendu": false,
   "date": "2026-11-06"
  },
  "world": {
   "name": "MSCI World (USD)",
-  "color": "red",
+  "color": "orange",
   "trend_broken": false,
   "falling_knife": false,
-  "date": "2026-11-08"
+  "cher": true,
+  "cher_tendu": false,
+  "date": "2026-11-09"
  },
  "btc": {
   "name": "Bitcoin",
-  "color": "green",
+  "color": "orange",
   "trend_broken": false,
   "falling_knife": false,
-  "date": "2026-11-07"
+  "cher": false,
+  "cher_tendu": false,
+  "date": "2026-11-08"
  }
 }

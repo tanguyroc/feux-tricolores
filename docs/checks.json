@@ -22,7 +22,7 @@
   },
   {
    "contrôle": "world : données de moins de 5 jours",
-   "observé": "2026-11-08 (1 j)",
+   "observé": "2026-11-09 (0 j)",
    "ok": true
   },
   {
@@ -32,7 +32,7 @@
   },
   {
    "contrôle": "btc : données de moins de 4 jours",
-   "observé": "2026-11-07 (2 j)",
+   "observé": "2026-11-08 (1 j)",
    "ok": true
   },
   {
@@ -76,7 +76,7 @@
   {
    "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux)",
    "attendu": "orange",
-   "observé": "orange (MVRV 1.41, prix/MM200s 1.12)",
+   "observé": "orange (MVRV 1.39, prix/MM200s 1.11)",
    "ok": true,
    "critique": true
   },

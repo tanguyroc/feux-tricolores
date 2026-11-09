@@ -101,3 +101,5 @@ date_calcul,date_données,ticker,règles,couleur,couleur_confirmée,V,V_cross,so
 2026-11-09,2026-11-06,T,1.0,orange,orange,53.74166,14.864865,False,21.629999,USD
 2026-11-09,2026-11-06,MSTR,1.0,orange,orange,,,,128.929993,
 2026-11-09,2026-11-09,9984.T,1.0,orange,orange,,,,3400.0,
+2026-11-09,2026-11-09,SHEL.L,1.0,orange,orange,85.832472,12.162162,False,3722.5,GBp
+2026-11-09,2026-11-09,AZN.L,1.0,orange,orange,10.510716,43.243243,False,13930.0,GBp
