@@ -49,12 +49,22 @@ def _stocks_latest() -> dict:
 # ----------------------------------------------------------------------------------------------
 # Archive quotidienne
 # ----------------------------------------------------------------------------------------------
+def _session_closed(data_date, now: dt.datetime | None = None) -> bool:
+    """Une valeur datée d'aujourd'hui avant 21 h UTC (clôture de New York, été comme hiver) est intrajournalière :
+    on ne l'archive pas (l'archive est en ajout seul : la première valeur inscrite pour une date resterait)."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    return not (data_date and str(data_date) == now.date().isoformat() and now.hour < 21)
+
+
 def archive_today() -> int:
     HIST_DIR.mkdir(exist_ok=True)
     version = str(rules()["version"])
     lat = _latest()
     rows = []
     for key, d in lat.items():
+        if not _session_closed(d.get("date")):
+            log.info("Archive : %s daté d'aujourd'hui avant la clôture, non archivé", key)
+            continue
         rows.append({"date_calcul": dt.date.today().isoformat(), "date_données": d.get("date"), "actif": key, "règles": version,
                      "couleur": d.get("color"), "couleur_confirmée": d.get("color_confirmed"), "cher": d.get("cher"),
                      "cher_tendu": d.get("cher_tendu"), "tendance_cassée": d.get("trend_broken"), "V": _clean(d.get("V")),
@@ -63,6 +73,8 @@ def archive_today() -> int:
     n = _append(HIST_DIR / "states.csv", rows, key=("date_données", "actif"))
     srows = []
     for key, s in _stocks_latest().items():
+        if not _session_closed(s.get("date")):
+            continue
         srows.append({"date_calcul": dt.date.today().isoformat(), "date_données": s.get("date"), "ticker": s.get("ticker") or key,
                       "règles": version, "couleur": s.get("color"), "couleur_confirmée": s.get("color_confirmed"),
                       "V": _clean(s.get("V")), "V_cross": _clean(s.get("V_cross")), "solide": s.get("quality_ok"),
