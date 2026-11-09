@@ -64,8 +64,44 @@ def common_valuation(calendar: pd.DatetimeIndex, px_daily: pd.Series) -> pd.Data
     out["aiae"] = store.as_of(aiae, calendar)
     out["aiae_pct"] = store.as_of(store.make_series(aiae.ref_date, aiae_pct_q.reindex(aiae_q.index).to_numpy(),
                                                     available_dates=aiae.available_date, dropna=False), calendar)
-    out["V"] = _nanmedian([out["cape_pct"], out["ecy_pct_inv"], out["aiae_pct"]])
+    # v1.0 : V = percentile du CAPE parmi TOUTES les valeurs mensuelles depuis 1881 (fenêtre croissante, minimum 30 ans)
+    vr = r["indices"]["valuation"]
+    out["V"] = ind.pct_against_reference(out["cape_live"], m["cape"], 10 ** 7, int(vr["min_months"]))
+    out["V_25y"] = _nanmedian([out["cape_pct"], out["ecy_pct_inv"], out["aiae_pct"]])   # ancienne V (v0.x), contexte
+    # rendement réel attendu à 10 ans (CAPE), modèle réestimé chaque mois avec les seules issues connues à la date
+    model = expected_return_model(m)
+    for col in ("er_a", "er_b", "er_q10", "er_q90", "er_n_decades"):
+        out[col] = store.as_of(store.make_series(model.index, model[col].to_numpy(), dropna=False), calendar)
+    out["er10"] = out["er_a"] + out["er_b"] * np.log(out["cape_live"])
+    out["er10_lo"] = out["er10"] + out["er_q10"]
+    out["er10_hi"] = out["er10"] + out["er_q90"]
     return out
+
+
+def real_total_return_index(m: pd.DataFrame) -> pd.Series:
+    """Indice de rendement total réel (dividendes réinvestis, déflaté par le CPI), comme la colonne de Shiller."""
+    D = store.to_indexed(store.load("shiller_D")).reindex(m.index)
+    gross = (m["P"] + D / 12.0) / m["P"].shift(1) * (m["CPI"].shift(1) / m["CPI"])
+    return gross.fillna(1.0).cumprod()
+
+
+def expected_return_model(m: pd.DataFrame, min_months: int = 360) -> pd.DataFrame:
+    """Régression rendement réel annualisé 10 ans ~ ln(CAPE), réestimée chaque mois t avec les mois s tels que s + 120 ≤ t.
+    Renvoie a, b et les quantiles 10 % / 90 % des résidus (fourchette 80 %), indexés par mois de disponibilité."""
+    tr = real_total_return_index(m)
+    y = (tr.shift(-120) / tr) ** 0.1 - 1.0
+    lc = np.log(m["cape"])
+    d = pd.DataFrame({"y": y, "lc": lc}).dropna()
+    rows = []
+    for t in m.index:
+        known = d[d.index <= t - pd.DateOffset(months=120)]
+        if len(known) < min_months:
+            continue
+        X = np.column_stack([np.ones(len(known)), known["lc"].to_numpy()])
+        coef, *_ = np.linalg.lstsq(X, known["y"].to_numpy(), rcond=None)
+        res = known["y"].to_numpy() - X @ coef
+        rows.append((t, coef[0], coef[1], np.quantile(res, 0.10), np.quantile(res, 0.90), len(known) / 120.0))
+    return pd.DataFrame(rows, columns=["t", "er_a", "er_b", "er_q10", "er_q90", "er_n_decades"]).set_index("t")
 
 
 def common_euphoria(calendar: pd.DatetimeIndex) -> pd.DataFrame:
@@ -74,7 +110,7 @@ def common_euphoria(calendar: pd.DatetimeIndex) -> pd.DataFrame:
     s = store.to_indexed(md)
     yoy = s / s.shift(12) - 1.0
     pct = ind.expanding_pct(yoy, 12 * r["windows"]["margin_expanding_min_years"])
-    extreme = yoy >= r["indices"]["euphoria"]["margin_debt_yoy_extreme"]
+    extreme = yoy >= r["indices"]["context"]["euphoria"]["margin_debt_yoy_extreme"]
     e_val = pct.where(~extreme, 100.0)
     out = pd.DataFrame(index=calendar)
     out["margin_yoy"] = store.as_of(store.make_series(md.ref_date, yoy.reindex(s.index).to_numpy(),
@@ -104,7 +140,7 @@ def common_fear(calendar: pd.DatetimeIndex) -> pd.DataFrame:
 # ----------------------------------------------------------------------------------------------
 def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd.DataFrame:
     r = rules()
-    w, xr = r["windows"], r["indices"]["extension"]
+    w, xr = r["windows"], r["indices"]["context"]["extension"]
     px = store.to_indexed(store.load(f"px_{key}"))
     px = px[~px.index.duplicated()].sort_index()
     cal = px.index
@@ -117,7 +153,9 @@ def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd
     df["mom_12m_pct"] = ind.rolling_pct(df["mom_12m"], TD * w["pct_years"], TD * w["pct_min_years"])
     g = xr["gsy"]
     df["gsy"] = ind.gsy_flag(px, 21 * g["runup_months"], 21 * g["accel_short_months"], g["runup_min"])
-    df["X"] = _nanmedian([df["gap_ma200_pct"], df["mom_12m_pct"]]).where(~df["gsy"], 100.0)
+    df["X"] = _nanmedian([df["gap_ma200_pct"], df["mom_12m_pct"]]).where(~df["gsy"], 100.0)   # contexte (v0.x)
+    ct = r["indices"]["context"]["cher_tendu"]
+    df["x_hist_pct"] = ind.pct_against_reference(df["gap_ma200"], df["gap_ma200"].dropna(), 10 ** 7, TD * int(ct["x_min_years"]))
     df["drawdown"] = ind.drawdown(px)
 
     # familles communes (valorisation S&P 500, euphorie US, peur)
@@ -139,13 +177,14 @@ def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd
     # drapeaux de tendance (mensuels, connus en fin de mois, appliqués ensuite)
     fk = r["indices"]["falling_knife"]
     broken_m = ind.sma_month_flag(px, r["indices"]["leverage_flag"]["sma_months"])
-    broken = store.make_series(broken_m.index, broken_m.astype(float).to_numpy())
+    # clôture du dernier jour du mois connue le soir même : drapeau appliqué à partir du jour suivant (pas de fuite d'un jour)
+    broken = store.make_series(broken_m.index, broken_m.astype(float).to_numpy(), lag=pd.Timedelta(days=1))
     df["trend_broken"] = store.as_of(broken, cal).fillna(0.0).astype(bool)
     mclose = ind.monthly_closes(px)
     below_sma = (mclose < mclose.rolling(fk["sma_months"], min_periods=fk["sma_months"]).mean())
     mom3 = mclose / mclose.shift(fk["mom_months"]) - 1.0
     knife_m = (below_sma & (mom3 < 0)).astype(float)
-    df["falling_knife_cond"] = store.as_of(store.make_series(knife_m.index, knife_m.to_numpy()), cal).fillna(0.0).astype(bool)
+    df["falling_knife_cond"] = store.as_of(store.make_series(knife_m.index, knife_m.to_numpy(), lag=pd.Timedelta(days=1)), cal).fillna(0.0).astype(bool)
 
     df = _colorize_index(df)
     df["asset"] = key
@@ -153,21 +192,21 @@ def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd
 
 
 def _colorize_index(df: pd.DataFrame) -> pd.DataFrame:
+    """v1.0 (protocole §8.4) : vert = valorisation basse ou capitulation ; sinon orange. « Cher » est une information."""
     r = rules()["indices"]
-    V, X, E, P = df["V"], df["X"], df["E"], df["P"]
-    red = (V >= r["valuation"]["red_min"]) & (
-        (X >= r["extension"]["red_min"]) | (E >= r["euphoria"]["red_min"]) | df["gsy"])
+    V, P = df["V"], df["P"]
     green_cap = (df["drawdown"] >= r["fear"]["drawdown_min"]) & (P >= r["fear"]["green_min"])
     green_val = V <= r["valuation"]["green_max"]
     color = pd.Series("orange", index=df.index, dtype=object)
     reason = pd.Series("", index=df.index, dtype=object)
     color[green_val] = "green"; reason[green_val] = "valorisation basse (V ≤ 40)"
-    color[red] = "red"
-    reason[red] = "cher (V ≥ 80) et " + np.where(df["gsy"][red], "hausse ≥100 %/2 ans avec accélération",
-                                                np.where(X[red] >= r["extension"]["red_min"], "extension (X ≥ 90)", "euphorie (dette sur marge, E ≥ 80)"))
-    color[green_cap] = "green"
-    reason[green_cap] = "capitulation (baisse ≥ 25 % et peur P ≥ 80)"
-    color[V.isna() & ~green_cap] = "orange"
+    color[green_cap] = "green"; reason[green_cap] = "capitulation (baisse ≥ 25 % et peur P ≥ 80)"
+    df["cher"] = (V >= r["valuation"]["cher_min"]).fillna(False)
+    ct = r["context"]["cher_tendu"]
+    df["cher_tendu"] = ((V >= ct["v_min"]) & (df["x_hist_pct"] >= ct["x_min"])).fillna(False)
+    orange = color == "orange"
+    reason[orange & df["cher"]] = "cher (V ≥ 80) : information, pas de règle de report"
+    reason[orange & df["cher_tendu"]] = "cher et tendu (V ≥ 80, écart MM200 ≥ 90e percentile) : information, pas de règle de report"
     df["color"] = color
     df["reason"] = reason
     df["falling_knife"] = (df["color"] == "green") & df["falling_knife_cond"]
@@ -178,8 +217,11 @@ def _colorize_index(df: pd.DataFrame) -> pd.DataFrame:
 # Bitcoin
 # ----------------------------------------------------------------------------------------------
 def bitcoin_signals() -> pd.DataFrame:
+    """v1.0, règle B1 : vert si MVRV < 1 ou prix < moyenne 200 semaines ; rouge si MVRV ≥ 3 ; orange sinon.
+    z-scores, critère GSY, financement et Fear & Greed : contexte."""
     r = rules()
-    w, b = r["windows"], r["bitcoin"]
+    b = r["bitcoin"]
+    ctx = b["context"]
     px = store.to_indexed(store.load("btc_price"))
     mvrv = store.to_indexed(store.load("btc_mvrv"))
     cal = px.index
@@ -187,11 +229,11 @@ def bitcoin_signals() -> pd.DataFrame:
     df["mvrv"] = mvrv.reindex(cal).ffill(limit=3)   # MVRV publié avec un jour de retard sur le prix
     df["ma200w"] = px.rolling(1400, min_periods=1400).mean()          # 200 semaines ≈ 1400 jours calendaires
     df["ratio_200w"] = px / df["ma200w"]
-    zw, zmin = 365 * w["btc_z_years"], 365 * w["btc_z_min_years"]
+    zw, zmin = 365 * ctx["z"]["years"], 365 * ctx["z"]["min_years"]
     df["z_ratio_200w"] = ind.rolling_z(np.log(df["ratio_200w"]), zw, zmin)
     df["z_mvrv"] = ind.rolling_z(np.log(df["mvrv"]), zw, zmin)
-    df["V"] = df[["z_ratio_200w", "z_mvrv"]].mean(axis=1, skipna=True)
-    g = b["extension"]["gsy"]
+    df["V"] = df[["z_ratio_200w", "z_mvrv"]].mean(axis=1, skipna=True)   # ancienne V (v0.x), contexte
+    g = ctx["gsy"]
     df["gsy"] = ind.gsy_flag(px, int(30.4 * g["runup_months"]), int(30.4 * g["accel_short_months"]), g["runup_min"])
     df["drawdown"] = ind.drawdown(px)
     df["gap_ma200d"] = ind.gap_to_ma(px, b["leverage_flag"]["sma_days"])
@@ -200,7 +242,6 @@ def bitcoin_signals() -> pd.DataFrame:
     fng_s = store.to_indexed(fng)
     df["fng"] = store.as_of(fng, cal)
     df["fng_30d"] = store.as_of(store.make_series(fng_s.index, fng_s.rolling(30, min_periods=20).mean().to_numpy(), dropna=False), cal)
-    # taux de financement (Deribit, depuis 06/2019) : moyenne 30 j, percentile sur fenêtre croissante (min 18 mois)
     if store.exists("btc_funding"):
         fu = store.to_indexed(store.load("btc_funding"))
         fu30 = fu.rolling(30, min_periods=20).mean()
@@ -210,19 +251,18 @@ def bitcoin_signals() -> pd.DataFrame:
     else:
         df["funding_30d"] = np.nan
         df["funding_pct"] = np.nan
-    euphoric = df["gsy"] | (df["funding_pct"] >= b["euphoria"]["funding_30d_pct_red_min"])
 
-    red = (df["V"] >= b["valuation"]["red_min_z"]) & euphoric
-    green_cap = (df["drawdown"] >= b["capitulation"]["drawdown_min"]) & (df["fng_30d"] <= b["capitulation"]["fng_30d_max"])
-    green_val = df["V"] <= b["valuation"]["green_max_z"]
+    green = (df["mvrv"] < b["green"]["mvrv_max"]) | (df["ratio_200w"] < b["green"]["ratio_200w_max"])
+    red = df["mvrv"] >= b["red"]["mvrv_min"]
     color = pd.Series("orange", index=cal, dtype=object)
     reason = pd.Series("", index=cal, dtype=object)
-    color[green_val] = "green"; reason[green_val] = "valorisation basse (z ≤ −0,5)"
-    color[red] = "red"
-    reason[red] = np.where(df["gsy"][red], f"cher (z ≥ {b['valuation']['red_min_z']}) et hausse ≥100 %/2 ans avec accélération",
-                           f"cher (z ≥ {b['valuation']['red_min_z']}) et financement des perpétuels extrême (≥ p90)")
-    color[green_cap] = "green"; reason[green_cap] = "capitulation (baisse ≥ 50 % et peur extrême 30 j)"
-    color[df["V"].isna() & ~green_cap] = "orange"
+    color[red.fillna(False)] = "red"
+    reason[red.fillna(False)] = f"MVRV ≥ {b['red']['mvrv_min']:g} : les détenteurs ont en moyenne triplé leur mise"
+    gm = green.fillna(False)
+    color[gm] = "green"
+    reason[gm] = np.where((df["mvrv"] < b["green"]["mvrv_max"])[gm], "MVRV < 1 : les détenteurs sont en perte en moyenne",
+                          "prix sous sa moyenne des 200 semaines")
+    color[df["mvrv"].isna() | df["ratio_200w"].isna()] = "orange"
     df["color"], df["reason"] = color, reason
     df["falling_knife"] = (df["color"] == "green") & df["trend_broken"]
     df["asset"] = "btc"

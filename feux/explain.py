@@ -24,45 +24,52 @@ def _f(x, fmt="{:.0f}", suffix=""):
 
 
 def explain_index(name: str, row: pd.Series) -> str:
-    r = rules()["indices"]
+    """v1.0 : la couleur ne dépend que de la valorisation en niveau et de la capitulation ; le reste est du contexte."""
     parts = [f"{name} : {LABEL[row.get('color_confirmed', row['color'])]}."]
     if row["reason"]:
         parts.append(f"Motif : {row['reason']}.")
+    proxy = " (mesurée sur le S&P 500 : proxy)" if bool(row.get("valuation_is_proxy", False)) else ""
     parts.append(
-        f"Valorisation V = {_f(row['V'])} (CAPE {_f(row['cape_live'], '{:.1f}')}, {_f(row['cape_pct'])}e percentile sur 25 ans ; "
-        f"Excess CAPE Yield {_f(100 * row['ecy_live'], '{:.2f}', ' %')} ; allocation actions des ménages {_f(100 * row['aiae'], '{:.1f}', ' %')}, "
-        f"{_f(row['aiae_pct'])}e percentile).")
+        f"Valorisation V = {_f(row['V'])}e percentile{proxy} : CAPE {_f(row['cape_live'], '{:.1f}')} comparé à tous les mois depuis 1881. "
+        f"Rendement réel attendu à 10 ans selon le CAPE : {_f(100 * row.get('er10'), '{:+.1f}', ' %/an')} "
+        f"(fourchette 80 % : {_f(100 * row.get('er10_lo'), '{:+.1f}')} à {_f(100 * row.get('er10_hi'), '{:+.1f}', ' %')} ; "
+        f"depuis 1990 ce modèle a été trop pessimiste d'environ 5 points par an).")
     parts.append(
-        f"Extension X = {_f(row['X'])} (écart à la moyenne 200 jours {_f(100 * row['gap_ma200'], '{:+.1f}', ' %')}, "
-        f"performance 12 mois {_f(100 * row['mom_12m'], '{:+.1f}', ' %')}"
-        + (" ; critère hausse ≥100 %/2 ans avec accélération ACTIF" if bool(row["gsy"]) else "") + ").")
+        f"Contexte, hors règle : excess CAPE yield {_f(100 * row['ecy_live'], '{:.2f}', ' %')} ; allocation actions des ménages "
+        f"{_f(100 * row['aiae'], '{:.1f}', ' %')} ; écart à la moyenne 200 jours {_f(100 * row['gap_ma200'], '{:+.1f}', ' %')} "
+        f"({_f(row.get('x_hist_pct'))}e percentile) ; performance 12 mois {_f(100 * row['mom_12m'], '{:+.1f}', ' %')} ; "
+        f"dette sur marge {_f(100 * row['margin_yoy'], '{:+.0f}', ' %')} sur un an"
+        + (" ; hausse ≥ 100 % en deux ans avec accélération" if bool(row["gsy"]) else "") + ".")
     parts.append(
-        f"Euphorie E = {_f(row['E'])} (dette sur marge {_f(100 * row['margin_yoy'], '{:+.0f}', ' %')} sur un an). "
         f"Peur P = {_f(row['P'])} (VIX {_f(row['vix'], '{:.1f}')}, spread Baa {_f(row['credit_spread'], '{:.2f}', ' pt')}). "
         f"Baisse depuis le plus haut : {_f(100 * row['drawdown'], '{:.1f}', ' %')}.")
     if bool(row["trend_broken"]):
-        parts.append("Drapeau TENDANCE CASSÉE : dernière clôture mensuelle sous la moyenne 10 mois → levier ramené à 0-5 % sous 5 jours de bourse.")
+        parts.append("Drapeau TENDANCE CASSÉE : dernière clôture mensuelle sous la moyenne 10 mois → levier ramené à 5 % au plus sous 5 jours de bourse.")
     else:
         parts.append("Tendance : clôture mensuelle au-dessus de la moyenne 10 mois (levier autorisé dans la limite de la couleur).")
     if bool(row.get("falling_knife", False)):
         parts.append("Sous-drapeau COUTEAU QUI TOMBE : vert, mais prix sous la moyenne 10 mois et baisse sur 3 mois → déploiement par sixièmes sur 6 mois.")
-    return " ".join(parts)
+    return fr_num(" ".join(parts))
 
 
 def explain_btc(row: pd.Series) -> str:
+    b = rules()["bitcoin"]
     parts = [f"Bitcoin : {LABEL[row.get('color_confirmed', row['color'])]}."]
     if row["reason"]:
         parts.append(f"Motif : {row['reason']}.")
     parts.append(
-        f"Valorisation V = {_f(row['V'], '{:+.2f}')}σ (prix / moyenne 200 semaines {_f(row['ratio_200w'], '{:.2f}')}x, z {_f(row['z_ratio_200w'], '{:+.2f}')} ; "
-        f"MVRV {_f(row['mvrv'], '{:.2f}')}, z {_f(row['z_mvrv'], '{:+.2f}')}).")
+        f"Règle (niveaux) : vert si MVRV < {b['green']['mvrv_max']:g} ou prix sous sa moyenne 200 semaines ; rouge si MVRV ≥ {b['red']['mvrv_min']:g}. "
+        f"Aujourd'hui : MVRV {_f(row['mvrv'], '{:.2f}')}, prix à {_f(row['ratio_200w'], '{:.2f}')}× sa moyenne 200 semaines.")
     parts.append(
-        f"Baisse depuis le record : {_f(100 * row['drawdown'], '{:.0f}', ' %')} ; Fear & Greed moyen 30 jours {_f(row['fng_30d'])} ; "
-        f"écart à la moyenne 200 jours {_f(100 * row['gap_ma200d'], '{:+.0f}', ' %')}"
-        + (" ; critère hausse ≥100 %/2 ans avec accélération ACTIF" if bool(row["gsy"]) else "") + ".")
+        f"Contexte, hors règle : z-scores 4 ans {_f(row['z_ratio_200w'], '{:+.2f}')} et {_f(row['z_mvrv'], '{:+.2f}')} ; "
+        f"baisse depuis le record {_f(100 * row['drawdown'], '{:.0f}', ' %')} ; Fear & Greed moyen 30 jours {_f(row['fng_30d'])} ; "
+        f"financement des perpétuels {_f(row.get('funding_pct'))}e percentile ; écart à la moyenne 200 jours {_f(100 * row['gap_ma200d'], '{:+.0f}', ' %')}"
+        + (" ; hausse ≥ 100 % en deux ans avec accélération" if bool(row["gsy"]) else "") + ".")
+    parts.append("Limite : le MVRV n'a pas atteint 3 aux sommets de novembre 2021 (2,72), mars 2024 (2,68) et octobre 2025 (2,29) : "
+                 "le rouge peut manquer le prochain sommet.")
     if bool(row["trend_broken"]):
         parts.append("Tendance cassée (sous la moyenne 200 jours) : aucun proxy à levier ; achats verts par tranches.")
-    return " ".join(parts)
+    return fr_num(" ".join(parts))
 
 
 def conduct_text(color: str) -> list[str]:
@@ -74,6 +81,15 @@ def conduct_text(color: str) -> list[str]:
         + (" (et seulement si la tendance est OK)" if c.get("leverage_requires_trend_ok") else "") + ".",
         f"Rééquilibrage : bandes ±{c['rebalance_band_pts']} points.",
     ]
+
+
+def conduct_text_btc(color: str) -> list[str]:
+    return [f"Bitcoin ({LABEL[color].lower()}) : {rules()['conduct']['bitcoin'][color]}."]
+
+
+def fr_num(text: str) -> str:
+    """Virgule décimale française dans un texte (« 1.12× » → « 1,12× ») sans toucher « v1.0 » ni les identifiants."""
+    return re.sub(r"(?<![\w.])([+\-−]?\d+)\.(\d+)(?![\w.])", r"\1,\2", text)
 
 
 def check_numbers(text: str, row: pd.Series, tolerance: float = 0.6) -> list[str]:

@@ -96,7 +96,7 @@ def _payload() -> dict:
         universe_as_of = str(pd.read_csv(up, nrows=1)["as_of"].iloc[0])
     return {
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC"), "generated_iso": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-        "frozen_at": r["frozen_at"], "version": "0.6",
+        "frozen_at": r["frozen_at"], "version": str(r["version"]),
         "states": states, "headline": headline(states), "actions": monthly_actions(states), "base_rates": base,
         "stocks": rows, "universe_as_of": universe_as_of, "themes": themes, "breadth": breadth,
         "quality_rules": {"roic_min": q["roic_min"], "fcf_ni_min": q["fcf_to_net_income_min"], "nd_ebitda_max": q["net_debt_to_ebitda_max"],
@@ -209,10 +209,11 @@ Le <b>feu</b> reste à trois couleurs et ne change que sur une conjonction : rou
 </section>
 
 <section class="tab" id="tab-validation">
-<h2>Ce que les feux ont donné dans le passé (point-in-time)</h2>
+<h2>Ce que les feux valent vraiment (point-in-time)</h2>
 {d._validation_summary()}
-<details open><summary><b>Validation détaillée 1990-2026 : rendements par couleur, épisodes, coût des faux positifs, levier x2</b></summary>{_fragment('backtest')}</details>
-<details><summary><b>Robustesse : sous-périodes, bootstrap, sensibilité des seuils, 1985-1989</b></summary>{_fragment('robustness')}</details>
+<details><summary><b>Détail 1990-2026 : rendements par couleur, dates clés, plan type, levier x2, sensibilité Bitcoin</b></summary>{_fragment('backtest')}</details>
+<div id="sanity"></div>
+<div id="prereg"></div>
 </section>
 
 <section class="tab" id="tab-rules">

@@ -32,6 +32,7 @@ main{max-width:1180px;margin:0 auto;padding:24px 20px 60px}h1{font-size:26px;mar
 .kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}.kv .lbl{color:var(--muted)}
 .flag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
 .flag.on{border-color:var(--red);color:var(--red);font-weight:600}
+.flag.info{border-color:#b35c00;color:#8a4500}
 .timeline{width:100%;height:26px;display:block;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
 .legend{font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{background:#f3f4f6}
@@ -88,24 +89,26 @@ def _raw_note(row) -> str:
 
 
 TIPS = {
-    "Valorisation V": "Médiane des percentiles 25 ans de trois mesures : CAPE, Excess CAPE Yield, allocation actions des ménages. 80 et plus = cher.",
-    "— CAPE (vivant)": "Prix payé pour 1 € de bénéfice moyen des 10 dernières années (inflation corrigée). p = percentile 25 ans.",
-    "— Excess CAPE Yield": "Rendement des actions (1/CAPE) moins le taux réel à 10 ans : ce que les actions rapportent en plus du sans-risque.",
-    "— Allocation actions (AIAE)": "Part du patrimoine financier des ménages américains déjà placée en actions.",
-    "Extension X": "Médiane des percentiles de l'écart à la moyenne 200 jours et de la performance 12 mois ; 100 si le critère de bulle GSY est actif.",
-    "— écart MM200 j": "Prix du jour par rapport au prix moyen des 200 derniers jours de bourse.",
-    "— perf. 12 mois": "Variation sur un an.",
-    "Euphorie E (dette sur marge)": "Croissance annuelle de l'argent emprunté par les investisseurs américains pour acheter des actions (percentile depuis 1997 ; 100 si ≥ +50 %).",
-    "Peur P": "Médiane des percentiles du VIX et du spread de crédit : confirme un vert de capitulation.",
+    "Valorisation V": "Percentile du CAPE du S&P 500 parmi tous les mois depuis 1881 (fenêtre croissante). 40 ou moins = vert ; 80 ou plus = « cher » (information).",
+    "Valorisation V (S&P 500, proxy)": "Valorisation du S&P 500 utilisée comme repère : pas d'historique long de valorisation pour cet indice.",
+    "— CAPE": "Prix payé pour 1 € de bénéfice moyen des 10 dernières années (inflation corrigée), recalé chaque jour sur le prix.",
+    "— CAPE du S&P 500": "CAPE du S&P 500, utilisé comme repère pour cet indice.",
+    "— rendement réel attendu 10 ans": "Régression historique (1881-2016) du rendement réel à 10 ans sur le CAPE, réestimée chaque mois ; fourchette 80 %. Trop pessimiste d'environ 5 points/an depuis 1990.",
+    "Peur P (capitulation)": "Médiane des percentiles du VIX et du spread de crédit : confirme un vert de capitulation (≥ 80 avec une baisse ≥ 25 %).",
     "Baisse depuis le plus haut": "Écart au record historique.",
+    "Contexte — écart MM200 j": "Prix du jour par rapport au prix moyen des 200 derniers jours ; p = percentile sur tout l'historique (≥ 15 ans). Hors règle.",
+    "Contexte — perf. 12 mois": "Variation sur un an. Hors règle.",
+    "Contexte — excess CAPE yield": "Rendement des actions (1/CAPE) moins le taux réel à 10 ans. Hors règle depuis la v1.0.",
+    "Contexte — allocation des ménages": "Part du patrimoine financier des ménages américains placée en actions (Fed, trimestriel). Hors règle depuis la v1.0.",
+    "Contexte — dette sur marge": "Croissance annuelle de l'argent emprunté pour acheter des actions (FINRA, mensuel). Hors règle depuis la v1.0.",
     "Prix": "Dernière clôture.",
-    "Valorisation V (σ)": "Moyenne de deux z-scores 4 ans (log) : prix / moyenne 200 semaines et MVRV. ≥ +1 = cher ; ≤ −0,5 = décoté.",
-    "— prix / MM200 semaines": "Prix rapporté à son prix moyen des quatre dernières années (plancher historique des marchés baissiers).",
-    "— MVRV": "Prix rapporté au prix moyen payé par les détenteurs actuels.",
+    "MVRV (règle : vert < 1, rouge ≥ 3)": "Prix rapporté au prix moyen payé par les détenteurs actuels (Coin Metrics).",
+    "Prix / moyenne 200 semaines (vert < 1)": "Prix rapporté à son prix moyen des quatre dernières années (plancher historique des marchés baissiers).",
     "Baisse depuis le record": "Écart au record historique.",
-    "Fear & Greed (30 j)": "Indice crypto 0 (peur extrême) à 100 (avidité extrême), moyenne 30 jours.",
-    "Financement 30 j": "Taux de financement quotidien moyen du perpétuel BTC (Deribit) et son percentile : élevé = euphorie à crédit.",
-    "Écart MM200 jours": "Prix du jour par rapport au prix moyen des 200 derniers jours.",
+    "Écart MM200 jours (proxys à levier)": "Sous zéro : tendance cassée, pas de société « proxy » à levier.",
+    "Contexte — z-scores 4 ans": "Ancienne règle (v0.x) : écart à la normale des quatre dernières années, prix/MM200s puis MVRV. Hors règle.",
+    "Contexte — Fear & Greed 30 j": "Indice crypto 0 (peur extrême) à 100 (avidité extrême), moyenne 30 jours. Hors règle.",
+    "Contexte — financement 30 j": "Taux de financement du perpétuel BTC (Deribit) et son percentile. Hors règle.",
 }
 
 
@@ -145,29 +148,37 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
     row = _row_with_extras(key, df)
     c = row["color_confirmed"]
     proxy = bool(row.get("valuation_is_proxy", False))
-    v_label = "Valorisation V (S&P 500, proxy)" if proxy else "Valorisation V"
     aiae_when = f" · au {_fr(row['aiae_ref_date'])}" if row.get("aiae_ref_date") else ""
     margin_when = f" · au {_fr(row['margin_ref_date'])}" if row.get("margin_ref_date") else ""
+    er = row.get("er10")
+    er_txt = "n.d." if er is None or pd.isna(er) else f"{100 * er:+.1f} %/an ({100 * row['er10_lo']:+.0f} à {100 * row['er10_hi']:+.0f})"
     kv = [
-        (v_label, _fmt(row["V"])), ("— CAPE (vivant" + (", S&P 500" if proxy else "") + ")", _fmt(row["cape_live"], "{:.1f}") + f" · p{_fmt(row['cape_pct'])}"),
-        ("— Excess CAPE Yield", _fmt(row["ecy_live"], "{:.2f}", " %", 100)), ("— Allocation actions (AIAE)", _fmt(row["aiae"], "{:.1f}", " %", 100) + f" · p{_fmt(row['aiae_pct'])}{aiae_when}"),
-        ("Extension X", _fmt(row["X"])), ("— écart MM200 j", _fmt(row["gap_ma200"], "{:+.1f}", " %", 100)), ("— perf. 12 mois", _fmt(row["mom_12m"], "{:+.1f}", " %", 100)),
-        ("Achats à crédit E (dette sur marge)", _fmt(row["E"]) + f" · {_fmt(row['margin_yoy'], '{:+.0f}', ' %/an', 100)}{margin_when}"),
-        ("Peur P", _fmt(row["P"]) + f" · VIX {_fmt(row['vix'], '{:.1f}')}"), ("Baisse depuis le plus haut", _fmt(row["drawdown"], "{:.1f}", " %", 100)),
+        ("Valorisation V" + (" (S&P 500, proxy)" if proxy else ""), _fmt(row["V"]) + "e percentile depuis 1881"),
+        ("— CAPE" + (" du S&P 500" if proxy else ""), _fmt(row["cape_live"], "{:.1f}")),
+        ("— rendement réel attendu 10 ans", er_txt),
+        ("Peur P (capitulation)", _fmt(row["P"]) + f" · VIX {_fmt(row['vix'], '{:.1f}')}"),
+        ("Baisse depuis le plus haut", _fmt(row["drawdown"], "{:.1f}", " %", 100)),
+        ("Contexte — écart MM200 j", _fmt(row["gap_ma200"], "{:+.1f}", " %", 100) + f" · p{_fmt(row.get('x_hist_pct'))}"),
+        ("Contexte — perf. 12 mois", _fmt(row["mom_12m"], "{:+.1f}", " %", 100)),
+        ("Contexte — excess CAPE yield", _fmt(row["ecy_live"], "{:.2f}", " %", 100)),
+        ("Contexte — allocation des ménages", _fmt(row["aiae"], "{:.1f}", " %", 100) + aiae_when),
+        ("Contexte — dette sur marge", _fmt(row["margin_yoy"], "{:+.0f}", " %/an", 100) + margin_when),
         ("Prix", _fmt(row["price"], "{:,.0f}")),
     ]
     kvh = _kv_html(kv)
     flags = (f"<span class='flag {'on' if row['trend_broken'] else ''}'>tendance {'CASSÉE' if row['trend_broken'] else 'OK'} (MM10 mois)</span>"
-             f"<span class='flag {'on' if row['gsy'] else ''}'>bulle GSY {'ACTIVE' if row['gsy'] else 'non'}</span>"
+             + (f"<span class='flag info'>cher</span>" if row.get("cher", False) else "")
+             + (f"<span class='flag info'>cher et tendu (information)</span>" if row.get("cher_tendu", False) else "")
+             + (f"<span class='flag info'>hausse ≥ 100 % en 2 ans (contexte)</span>" if row.get("gsy", False) else "")
              + (f"<span class='flag on'>couteau qui tombe</span>" if row.get("falling_knife", False) else ""))
+    tag = " · cher" if (c == "orange" and row.get("cher", False)) else ""
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>{html.escape(name)}</div>"
-            f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
+            f"<div class='state {c}'>{LABEL[c]}{tag}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
             f"<div class='plain simple-only'>{html.escape(simple_index(key, row))}</div>"
             + (f"<div class='since-perf'>{html.escape(since_sentence(row))}</div>" if since_sentence(row) else "")
-            + (f"<div class='note'>Valorisation mesurée sur le S&P 500 (CAPE, excess CAPE yield, allocation des ménages américains) : proxy, faute d'équivalent long pour cet indice.</div>" if proxy else "")
-            + 
-            f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>{_raw_note(row)}"
-            f"<div class='detail-only'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
+            + (f"<div class='note'>Valorisation mesurée sur le S&P 500 : proxy, faute d'historique long de valorisation pour cet indice.</div>" if proxy else "")
+            + f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême'}</div>{_raw_note(row)}"
+            f"<div class='flags'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
             f"<details class='detail-only'><summary>Explication chiffrée</summary><div class='expl'>{html.escape(explain_index(name, row))}</div></details>"
             f"{_timeline_svg(df, '1990-01-01')}</section>")
 
@@ -176,22 +187,24 @@ def _card_btc(df: pd.DataFrame) -> str:
     row = _row_with_extras("btc", df)
     c = row["color_confirmed"]
     kv = [
-        ("Valorisation V (σ)", _fmt(row["V"], "{:+.2f}")), ("— prix / MM200 semaines", _fmt(row["ratio_200w"], "{:.2f}", "x") + f" · z {_fmt(row['z_ratio_200w'], '{:+.2f}')}"),
-        ("— MVRV", _fmt(row["mvrv"], "{:.2f}") + f" · z {_fmt(row['z_mvrv'], '{:+.2f}')}"),
-        ("Baisse depuis le record", _fmt(row["drawdown"], "{:.0f}", " %", 100)), ("Fear & Greed (30 j)", _fmt(row["fng_30d"])),
-        ("Financement 30 j", _fmt(row.get("funding_30d"), "{:.3f}", " %/j", 100) + f" · p{_fmt(row.get('funding_pct'))}"),
-        ("Écart MM200 jours", _fmt(row["gap_ma200d"], "{:+.0f}", " %", 100)), ("Prix", _fmt(row["price"], "{:,.0f}", " $")),
+        ("MVRV (règle : vert < 1, rouge ≥ 3)", _fmt(row["mvrv"], "{:.2f}")),
+        ("Prix / moyenne 200 semaines (vert < 1)", _fmt(row["ratio_200w"], "{:.2f}", "×")),
+        ("Baisse depuis le record", _fmt(row["drawdown"], "{:.0f}", " %", 100)),
+        ("Écart MM200 jours (proxys à levier)", _fmt(row["gap_ma200d"], "{:+.0f}", " %", 100)),
+        ("Contexte — z-scores 4 ans", _fmt(row["z_ratio_200w"], "{:+.2f}") + " / " + _fmt(row["z_mvrv"], "{:+.2f}")),
+        ("Contexte — Fear & Greed 30 j", _fmt(row["fng_30d"])),
+        ("Contexte — financement 30 j", _fmt(row.get("funding_30d"), "{:.3f}", " %/j", 100) + f" · p{_fmt(row.get('funding_pct'))}"),
+        ("Prix", _fmt(row["price"], "{:,.0f}", " $")),
     ]
     kvh = _kv_html(kv)
     flags = (f"<span class='flag {'on' if row['trend_broken'] else ''}'>tendance {'CASSÉE' if row['trend_broken'] else 'OK'} (MM200 j)</span>"
-             f"<span class='flag {'on' if row['gsy'] else ''}'>bulle GSY {'ACTIVE' if row['gsy'] else 'non'}</span>")
+             + (f"<span class='flag info'>hausse ≥ 100 % en 2 ans (contexte)</span>" if row.get("gsy", False) else ""))
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>Bitcoin</div>"
             f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
             f"<div class='plain simple-only'>{html.escape(simple_btc(row))}</div>"
             + (f"<div class='since-perf'>{html.escape(since_sentence(row, 'le Bitcoin'))}</div>" if since_sentence(row, 'le Bitcoin') else "")
-            + 
-            f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'aucune condition extrême : état normal ou ambigu'}</div>{_raw_note(row)}"
-            f"<div class='detail-only'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
+            + f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'ni zone de capitulation ni euphorie (règle B1)'}</div>{_raw_note(row)}"
+            f"<div class='flags'>{flags}</div><div class='kv detail-only'>{kvh}</div>"
             f"<details class='detail-only'><summary>Explication chiffrée</summary><div class='expl'>{html.escape(explain_btc(row))}</div></details>"
             f"{_timeline_svg(df, '2014-01-01')}</section>")
 
@@ -251,9 +264,12 @@ def _stocks_section() -> str:
 
 def _conduct_table() -> str:
     rows = ""
-    for color in ["green", "orange", "red"]:
+    for color, sub in (("green", ""), ("orange", "<br><small>(y compris « cher »)</small>"), ("red", "<br><small>(Bitcoin seulement)</small>")):
         items = "".join(f"<li>{html.escape(t)}</li>" for t in conduct_text(color))
-        rows += f"<tr><td class='c {color}'>{LABEL[color]}</td><td><ul style='margin:0;padding-left:18px'>{items}</ul></td></tr>"
+        rows += f"<tr><td class='c {color}'>{LABEL[color]}{sub}</td><td><ul style='margin:0;padding-left:18px'>{items}</ul></td></tr>"
+    cb = rules()["conduct"]["bitcoin"]
+    rows += ("<tr><td class='c'>Bitcoin</td><td><ul style='margin:0;padding-left:18px'>"
+             + "".join(f"<li><b class='c {c}'>{LABEL[c]}</b> : {html.escape(cb[c])}.</li>" for c in ("green", "orange", "red")) + "</ul></td></tr>")
     tb = rules()["conduct"]["trend_broken"]
     rows += (f"<tr><td class='c'>Tendance cassée<br><small>(toute couleur)</small></td><td>Clôture mensuelle sous la moyenne 10 mois : levier ramené à "
              f"{100 * tb['leverage_cap_share_equities']:.0f} % au plus de la poche actions sous {tb['action_within_trading_days']} jours de bourse. "
@@ -277,47 +293,98 @@ def episode_counts(key: str, min_days: int = 20) -> dict[str, int]:
     return out
 
 
-def _validation_summary() -> str:
+def _pct(x, signed=True, digits=1):
+    if x is None or (isinstance(x, float) and x != x):
+        return "–"
+    return f"{100 * x:+.{digits}f} %" if signed else f"{100 * x:.0f} %"
+
+
+def _protocol_section() -> str:
+    """Résultats du protocole v1.0 (research/v1_protocol.md), tels que calculés en une seule exécution."""
+    p = DOCS_DIR.parent / "research" / "longrun_summary_2026-11-09.json"   # résultats figés du 9 novembre 2026 (une seule exécution)
+    if not p.exists():
+        return "<p>Protocole non exécuté.</p>"
+    o = json.loads(p.read_text(encoding="utf-8"))
+    names = {"R1": "R1 cher et tendu", "R2": "R2 cher et cassé", "R3": "R3 très cher", "v0": "v0.6 (ancienne règle)"}
+
+    def row(label, s):
+        c = s.get("critères", {})
+        mark = lambda k: "" if k not in c else (" ✓" if c[k] else " ✗")
+        gap = s["écart_3ans"]
+        gap_txt = "–" if gap is None else f"{100 * gap:+.1f} pts"
+        return (f"<tr><td>{label}</td><td>{_pct(s['part']['red'], False)}</td><td>{s['épisodes']['red']}</td>"
+                f"<td>{_pct(s['rdt_3ans']['green'])}</td><td>{_pct(s['rdt_3ans']['orange'])}</td><td>{_pct(s['rdt_3ans']['red'])}</td>"
+                f"<td class='{'ok' if c.get('a_écart') else 'ko'}'>{gap_txt}{mark('a_écart')}</td>"
+                f"<td>{_pct(s['baisse24m_p90']['orange'], False)} / {_pct(s['baisse24m_p90']['red'], False)}{mark('d_queue')}</td>"
+                f"<td class='{'ok' if c.get('tout') else 'ko'}'>{'passe' if c.get('tout') else 'échoue'}</td></tr>")
+    head = ("<tr><th>Règle rouge candidate</th><th>Rouge (part du temps)</th><th>Épisodes rouges</th><th>3 ans après vert</th><th>après orange</th>"
+            "<th>après rouge</th><th>Écart vert − rouge (≥ 5 pts)</th><th>Pire baisse 24 mois (p90) orange / rouge</th><th>Critères</th></tr>")
+    ho = "".join(row(names[v], o["hors_échantillon"][v]) for v in ("R1", "R2", "R3"))
+    ds = "".join(row(names[v], o["conception_quotidienne"]["sp500"][v]) for v in ("v0", "R1", "R2", "R3"))
+    nd = o["conception_quotidienne"]["ndx"]["R1"]
+    return (f"<p><b>Protocole écrit et publié avant tout calcul</b> (research/v1_protocol.md, 9 novembre 2026, 07:40), une seule exécution. "
+            f"Issue : <b>aucune règle rouge ne passe sur le S&P 500 depuis 1990</b>, alors que les trois passent sur 1920-1989. "
+            f"Le rouge des indices devient donc l'étiquette d'information « cher ».</p>"
+            f"<h3>Hors échantillon : S&P Composite 1920-1989 (mensuel, rendements réels dividendes inclus, jamais utilisé pour concevoir les feux)</h3>"
+            f"<table>{head}{ho}</table>"
+            f"<h3>Conception : S&P 500 1990-2026 (quotidien) — critère décisif</h3><table>{head}{ds}</table>"
+            f"<p class='note'>Pourquoi : le CAPE a été au-dessus de son 80e percentile historique 88 % du temps depuis 1990, contre 20 % sur 1920-1989. "
+            f"Observation non retenue (choisie après coup) : R1 passerait sur le Nasdaq-100 (écart {100 * nd['écart_3ans']:+.1f} pts) ; il est affiché comme drapeau "
+            f"d'information et suivi en avant.</p>")
+
+
+def _current_rules_section() -> str:
     p = DOCS_DIR / "backtest_summary.json"
     if not p.exists():
         return "<p>Backtest non exécuté.</p>"
     s = json.loads(p.read_text(encoding="utf-8"))
     names = {**{k: v["name"] for k, v in rules()["indices"]["assets"].items()}, "btc": "Bitcoin"}
-    rows, fails, notes = "", [], []
+    rows = ""
     for a, name in names.items():
         if a not in s:
             continue
         f3 = {r["couleur"]: r for r in s[a]["fwd"] if r["horizon"] == "3 ans"}
         dd = {r["couleur"]: r for r in s[a]["dd24"]}
-        chk = s[a]["checks"]
-        eps = chk["épisodes_ok"]
-        spread = chk.get("écart_3ans_vert_moins_rouge", {})
-        ok = spread.get("ok")
-        if ok is False:
-            fails.append(f"{name} ({100 * spread['valeur']:.1f} pts)")
-        ne = episode_counts(a)
+        ne = s[a].get("episodes_n", {})
         rows += (f"<tr><td>{name}</td>"
                  + "".join(f"<td class='c {c}'>{100 * s[a]['share'][c]:.0f} %<br><small>{ne.get(c, 0)} épisodes</small></td>" for c in ["green", "orange", "red"])
                  + "".join(f"<td>{100 * f3[c]['médiane_annualisée']:+.1f} %</td>" if c in f3 else "<td>–</td>" for c in ["green", "orange", "red"])
-                 + (f"<td class='{'ok' if ok else 'ko'}'>{100 * spread['valeur']:+.1f} pts {'✓' if ok else '✗'}</td>" if spread else "<td>–</td>")
                  + "".join(f"<td>{100 * dd[c]['drawdown_24m_médian']:.0f} %<br><small>p90 {100 * dd[c]['drawdown_24m_p90']:.0f} %</small></td>" if c in dd else "<td>–</td>" for c in ["green", "orange", "red"])
-                 + f"<td>{eps['valeur']}/{eps['total']}</td></tr>")
-        for e in s[a].get("episodes", []):
-            if "2007" in e.get("date", "") and e.get("obtenu") == "orange":
-                notes.append(f"{name} : sommet d'octobre 2007 <b>orange</b> (compté comme « attendu orange/rouge »)")
-    table = ("<table><tr><th rowspan='2'>Actif</th><th colspan='3'>Part du temps (et nombre d'épisodes ≥ 20 jours)</th><th colspan='3'>Rendement médian annualisé, 3 ans suivants</th>"
-             "<th rowspan='2'>Écart vert − rouge à 3 ans<br><small>critère pré-enregistré : ≥ 5 pts</small></th>"
-             "<th colspan='3'>Baisse médiane (et p90) dans les 24 mois</th><th rowspan='2'>Épisodes reproduits</th></tr>"
-             "<tr>" + "".join(f"<th class='c {c}'>{LABEL[c]}</th>" for c in ["green", "orange", "red"]) * 3 + "</tr>" + rows + "</table>")
-    honest = "<div class='honest'><b>Ce que ce tableau ne doit pas cacher.</b><ul>"
-    if fails:
-        honest += f"<li>Le critère d'acceptation « écart vert − rouge ≥ 5 points par an à 3 ans » <b>n'est pas atteint</b> pour : {', '.join(fails)}. Le protocole prévoyait de simplifier une règle qui échoue ; c'est l'objet de la refonte v1.0 en préparation.</li>"
-    for n in notes:
-        honest += f"<li>{n}.</li>"
-    honest += ("<li>Sur le S&P 500, la baisse à 24 mois au 90e percentile est plus profonde après un jour <b>orange</b> qu'après un jour rouge : le rouge n'a pas précédé les pires baisses de l'échantillon.</li>"
-               "<li>Les règles ont été écrites, gelées et testées le même jour (8 novembre 2026) par quelqu'un qui connaissait l'histoire : la « pré-inscription » n'a pas de valeur probante. Le seul test hors échantillon est le futur ; les états du jour sont archivés pour être jugés à dates fixes.</li>"
-               "<li>Les statistiques par couleur reposent sur quelques épisodes (colonne « part du temps ») : des jours d'un même épisode ne sont pas des observations indépendantes.</li></ul></div>")
-    return table + honest
+                 + "</tr>")
+    plan = s.get("plan_sp500", {})
+    plan_txt = ""
+    if plan:
+        plan_txt = (f"<p class='note'>Plan type sur le S&P 500 depuis 1990 (1 000 €/mois + 10 000 €/an) : déployer l'exceptionnel en trois tranches mensuelles "
+                    f"(règle v1.0) coûte {_pct(plan.get('C_moins_A_pct'))} par rapport à un investissement immédiat ; attendre le vert aurait coûté "
+                    f"{_pct(plan.get('B_moins_A_pct'))}. Nasdaq-100 : attendre le vert {_pct(s.get('plan_ndx', {}).get('B_moins_A_pct'))}.</p>")
+    return ("<table><tr><th rowspan='2'>Actif</th><th colspan='3'>Part du temps (et épisodes ≥ 20 jours)</th><th colspan='3'>Rendement médian annualisé, 3 ans suivants</th>"
+            "<th colspan='3'>Baisse médiane (et p90) dans les 24 mois</th></tr>"
+            "<tr>" + "".join(f"<th class='c {c}'>{LABEL[c]}</th>" for c in ["green", "orange", "red"]) * 3 + "</tr>" + rows + "</table>"
+            "<p class='note'>Indices : vert = valorisation basse ou capitulation ; plus de rouge depuis la v1.0. Le vert n'a été suivi que de rendements "
+            "modérément meilleurs que l'orange depuis 1990 (2 à 3 points par an) : sa vraie valeur est de dire quand une réserve peut être engagée sans attendre.</p>"
+            + plan_txt)
+
+
+def _validation_summary() -> str:
+    old = ""
+    pv = DOCS_DIR.parent / "archive" / "backtest_summary_v0.6.json"
+    if pv.exists():
+        s = json.loads(pv.read_text(encoding="utf-8"))
+        bits = []
+        for a, name in (("sp500", "S&P 500"), ("ndx", "Nasdaq-100"), ("world", "MSCI World")):
+            if a in s:
+                g = s[a]["checks"]["écart_3ans_vert_moins_rouge"]
+                bits.append(f"{name} {100 * g['valeur']:+.1f} pts {'✓' if g['ok'] else '✗'}")
+        old = ("<div class='honest'><b>Règles v0.6 (archivées) :</b> écart vert − rouge à 3 ans " + " ; ".join(bits)
+               + ". Critère pré-enregistré non atteint sur le S&P 500 et le MSCI World ; sommet de 2007 orange ; dette sur marge seule derrière 55 % "
+               "des jours rouges du S&P 500 ; Bitcoin vert un tiers du temps. Ces échecs ont motivé le protocole v1.0.</div>")
+    return ("<h3>1. Le test qui a fixé les règles v1.0</h3>" + _protocol_section()
+            + "<h3>2. Les règles en vigueur, sur le passé (1990-2026 ; Bitcoin 2014-2026)</h3>" + _current_rules_section()
+            + "<h3>3. Ce qu'il faut garder en tête</h3><div class='honest'><ul>"
+            "<li>Le test 1990-2026 a servi à concevoir : il n'est pas hors échantillon. Seul 1920-1989 l'est, et seulement pour les indices.</li>"
+            "<li>Les statistiques par couleur reposent sur quelques épisodes : des jours d'un même épisode ne sont pas des observations indépendantes.</li>"
+            "<li>Le seul test qui ne dépend pas de ce que l'on sait du passé est l'avenir : les états du jour sont archivés chaque jour, avec leur empreinte, "
+            "et seront confrontés aux rendements réalisés le 9 novembre 2027, 2028 et 2029.</li></ul></div>" + old)
 
 
 def _glossary() -> str:
@@ -331,7 +398,10 @@ def _states(dfs: dict[str, pd.DataFrame]) -> dict:
     for key, df in dfs.items():
         row = df.iloc[-1]
         st[key] = {"name": r["indices"]["assets"].get(key, {}).get("name", "Bitcoin"), "color": row["color_confirmed"],
-                   "trend_broken": bool(row["trend_broken"]), "falling_knife": bool(row.get("falling_knife", False))}
+                   "trend_broken": bool(row["trend_broken"]), "falling_knife": bool(row.get("falling_knife", False)),
+                   "cher": bool(row.get("cher", False)), "cher_tendu": bool(row.get("cher_tendu", False)),
+                   "V": None if pd.isna(row.get("V")) else float(row["V"]),
+                   "er10": None if pd.isna(row.get("er10", float("nan"))) else float(row["er10"])}
     return st
 
 
@@ -354,7 +424,7 @@ def build() -> None:
     now = dt.datetime.now(dt.timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
     page = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Feux tricolores — investissement long terme</title><style>{CSS}</style></head><body data-mode="simple"><main>
-<h1>Feux tricolores <span class="toggle"><button data-m="simple">Mode simple</button><button data-m="detail">Mode détaillé</button></span></h1><p class="sub">Lecture générée le {now} · règles gelées le {r['frozen_at']} (v{r['version']}) · <a href="backtest.html">validation 1990-2026</a> · <a href="robustness.html">robustesse</a> · <a href="latest.json">données brutes</a></p>
+<h1>Feux tricolores <span class="toggle"><button data-m="simple">Mode simple</button><button data-m="detail">Mode détaillé</button></span></h1><p class="sub">Lecture générée le {now} · règles gelées le {r['frozen_at']} (v{r['version']}) · <a href="backtest.html">validation 1990-2026</a> · <a href="latest.json">données brutes</a></p>
 <div class="warn">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais, quelle que soit la couleur.</div>
 <p class="headline">{html.escape(headline(states))}</p>
 <div class="actions"><b>Ce mois-ci, concrètement</b><ul style="margin:6px 0 0;padding-left:18px">{acts}</ul></div>

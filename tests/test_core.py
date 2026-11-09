@@ -54,24 +54,48 @@ def test_cape_pit_matches_hand_computation():
 
 
 def _frame(**kw):
-    base = dict(V=50.0, X=50.0, E=50.0, P=50.0, drawdown=0.0, gsy=False, falling_knife_cond=False)
+    base = dict(V=50.0, X=50.0, x_hist_pct=50.0, E=50.0, P=50.0, drawdown=0.0, gsy=False, falling_knife_cond=False)
     base.update(kw)
     return pd.DataFrame({k: [v] for k, v in base.items()}, index=pd.DatetimeIndex(["2024-01-02"]))
 
 
 def test_colors_and_precedence():
+    """v1.0 (protocole §8.4) : plus de rouge sur les indices ; « cher » et « cher et tendu » sont des informations."""
     assert _colorize_index(_frame())["color"].iloc[0] == "orange"
-    assert _colorize_index(_frame(V=85, X=95))["color"].iloc[0] == "red"
-    assert _colorize_index(_frame(V=85, E=85))["color"].iloc[0] == "red"
-    assert _colorize_index(_frame(V=85, gsy=True))["color"].iloc[0] == "red"
-    assert _colorize_index(_frame(V=85))["color"].iloc[0] == "orange"        # cher mais ni tendu ni euphorique
+    f = _colorize_index(_frame(V=85, X=95, x_hist_pct=95, E=85, gsy=True))
+    assert f["color"].iloc[0] == "orange" and bool(f["cher"].iloc[0]) and bool(f["cher_tendu"].iloc[0])
+    f = _colorize_index(_frame(V=85))
+    assert f["color"].iloc[0] == "orange" and bool(f["cher"].iloc[0]) and not bool(f["cher_tendu"].iloc[0])
     assert _colorize_index(_frame(V=30))["color"].iloc[0] == "green"
     assert _colorize_index(_frame(V=60, drawdown=0.3, P=90))["color"].iloc[0] == "green"   # capitulation
-    assert _colorize_index(_frame(V=85, E=85, drawdown=0.3, P=90))["color"].iloc[0] == "green"  # capitulation > rouge
-    assert _colorize_index(_frame(V=np.nan, X=95))["color"].iloc[0] == "orange"           # V inconnu : jamais rouge
+    assert _colorize_index(_frame(V=95, drawdown=0.3, P=90))["color"].iloc[0] == "green"   # capitulation même si cher
+    assert _colorize_index(_frame(V=60, drawdown=0.3, P=70))["color"].iloc[0] == "orange"  # baisse sans peur : pas de vert
+    f = _colorize_index(_frame(V=np.nan, X=95))
+    assert f["color"].iloc[0] == "orange" and not bool(f["cher"].iloc[0])                   # V inconnu : ni vert ni « cher »
 
 
 def test_check_numbers_flags_invented_values():
     row = pd.Series({"V": 97.6, "cape_live": 39.3, "drawdown": 0.057})
     assert check_numbers("V = 98 (CAPE 39,3), baisse 5,7 %", row) == []
     assert check_numbers("V = 98, CAPE 42,0", row) == ["42,0"]
+
+
+def test_bitcoin_b1_levels():
+    """Règle B1 : vert si MVRV < 1 ou prix < MM200 semaines ; rouge si MVRV ≥ 3 ; le vert l'emporte."""
+    from feux.longrun import btc_colorize
+
+    d = pd.DataFrame({"mvrv": [0.9, 1.4, 1.4, 3.2, 3.2], "ratio_200w": [1.5, 1.1, 0.95, 2.5, 0.9]},
+                     index=pd.date_range("2024-01-01", periods=5))
+    assert btc_colorize(d).tolist() == ["green", "orange", "green", "red", "green"]
+
+
+def test_longrun_candidates_definitions():
+    """Les candidats du protocole sont codés tels qu'écrits (aucun seuil ajusté)."""
+    from feux.longrun import colorize
+
+    idx = pd.date_range("2000-01-31", periods=4, freq="ME")
+    V = pd.Series([85, 85, 92, 30.0], index=idx); X = pd.Series([95, 50, 50, 50.0], index=idx)
+    T = pd.Series([0.0, 1.0, 0.0, 0.0], index=idx); P = pd.Series([50.0] * 4, index=idx); dd = pd.Series([0.0] * 4, index=idx)
+    assert colorize(V, X, T, P, dd, "R1").tolist() == ["red", "orange", "orange", "green"]
+    assert colorize(V, X, T, P, dd, "R2").tolist() == ["orange", "red", "orange", "green"]
+    assert colorize(V, X, T, P, dd, "R3").tolist() == ["orange", "orange", "red", "green"]

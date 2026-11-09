@@ -119,9 +119,8 @@ def cmd_decide(args) -> None:
 
 
 def cmd_robustness(args) -> None:
-    from .robustness import run_all
-
-    run_all()
+    log.warning("Robustesse v0.6 archivée (archive/robustness_v0.6.html) : depuis la v1.0, la robustesse est le protocole "
+                "pré-enregistré (python -m feux longrun) et la pré-inscription en avant.")
 
 
 def cmd_dashboard(args) -> None:

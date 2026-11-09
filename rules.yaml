@@ -1,8 +1,9 @@
-# Règles des feux tricolores — GELÉES avant le premier backtest.
-# Toute modification doit être commitée séparément, justifiée dans CHANGELOG.md,
-# et suivie d'un re-test sur une période non utilisée pour la décision.
-version: 1
-frozen_at: "2026-11-08"
+# Règles des feux tricolores — v1.0, adoptées le 2026-11-09 selon le protocole pré-enregistré
+# research/v1_protocol.md (commit e92b515) ; résultats publiés tels quels dans research/v1_results.md.
+# Toute modification : commit séparé, justifiée dans CHANGELOG.md, testée selon un protocole écrit AVANT le calcul.
+# Règles v0.6 archivées dans archive/rules_v0.6.yaml.
+version: "1.0"
+frozen_at: "2026-11-09"
 
 windows:
   # Percentiles glissants (indices) : fenêtre de 25 ans, valeur produite dès 15 ans d'historique.
@@ -28,22 +29,12 @@ indices:
     sp500:  {ticker: "^GSPC", name: "S&P 500", splice: null}
     ndx:    {ticker: "^NDX",  name: "Nasdaq-100", splice: "^IXIC"}   # Composite avant 10/1985
     world:  {ticker: "^990100-USD-STRD", name: "MSCI World (USD)", splice: null}
-  valuation:            # famille V — commune à tous les indices (plafond S&P 500)
-    indicators: [cape_pit_pct, ecy_pit_pct_inv, aiae_pct]
-    red_min: 80
-    green_max: 40
-  extension:            # famille X — propre à chaque indice
-    indicators: [gap_ma200_pct, mom_12m_pct]
-    red_min: 90
-    gsy:                # Greenwood-Shleifer-You : hausse ≥ 100 % sur 24 mois ET accélération
-      runup_months: 24
-      runup_min: 1.00
-      accel_short_months: 6   # pente annualisée 6 mois > pente annualisée 24 mois
-  euphoria:             # famille E — commune (marché US)
-    indicators: [margin_debt_yoy_pct]
-    red_min: 80
-    margin_debt_yoy_extreme: 0.50   # croissance annuelle ≥ 50 % → E = 100
-  fear:                 # famille P — confirmation du vert de capitulation
+  valuation:            # V — valorisation EN NIVEAU, commune aux trois indices (S&P 500 ; proxy affiché pour Nasdaq-100 et World)
+    method: cape_pit_pct_since_1881   # percentile du CAPE point-in-time parmi toutes les valeurs mensuelles depuis 1881
+    min_months: 360
+    green_max: 40       # V ≤ 40 → vert
+    cher_min: 80        # V ≥ 80 → étiquette « cher » : INFORMATION, pas de règle de report (protocole v1.0 §8.4)
+  fear:                 # P — confirmation du vert de capitulation
     indicators: [vix_pct, credit_spread_pct]   # spread = Baa Moody's − Treasury 10 ans (BAA10Y)
     green_min: 80
     drawdown_min: 0.25
@@ -51,32 +42,40 @@ indices:
     sma_months: 10
     mom_months: 3
   leverage_flag:
-    sma_months: 10      # clôture mensuelle < moyenne 10 mois → drapeau « tendance cassée »
+    sma_months: 10      # clôture mensuelle < moyenne 10 mois → « tendance cassée », appliqué le jour de bourse suivant
+  context:              # affiché, HORS règles depuis la v1.0
+    extension:          # tension des cours
+      indicators: [gap_ma200_pct, mom_12m_pct]
+      tense_min: 90
+      gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You (établi sur des industries)
+    euphoria:           # achats à crédit (dette sur marge FINRA)
+      indicators: [margin_debt_yoy_pct]
+      high_min: 80
+      margin_debt_yoy_extreme: 0.50
+    cher_tendu:         # drapeau R1 (V ≥ 80 et écart MM200 ≥ 90e percentile, fenêtre croissante ≥ 15 ans) : passe sur le
+      v_min: 80         # Nasdaq-100 (+8,5 pts), échoue sur S&P 500 et World ; NON retenu comme règle (choisi après coup),
+      x_min: 90         # affiché comme information et suivi en avant (pré-inscription)
+      x_min_years: 15
 
-bitcoin:
-  valuation:
-    indicators: [log_price_ma200w_z, log_mvrv_z]   # moyenne des deux z-scores
-    red_min_z: 1.0    # 1,5 à l'origine ; ajustement unique du 2026-11-08, voir CHANGELOG.md
-    green_max_z: -0.5
-  extension:
+bitcoin:                # règle B1 (protocole v1.0 §9), en niveaux
+  green: {mvrv_max: 1.0, ratio_200w_max: 1.0}   # vert si MVRV < 1 OU prix < moyenne des 200 semaines
+  red: {mvrv_min: 3.0}                          # rouge si MVRV ≥ 3 (les détenteurs ont en moyenne triplé leur mise)
+  leverage_flag: {sma_days: 200}                # gouverne les « proxys » à levier (type Strategy)
+  context:              # affiché, HORS règles depuis la v1.0
+    z: {years: 4, min_years: 3}                 # z-scores 4 ans de log(prix/MM200s) et log(MVRV) (règle v0.x)
     gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
-  euphoria:
-    # Taux de financement du perpétuel BTC (Deribit, horaire depuis 06/2019 ; Binance/Bybit géobloqués) :
-    # moyenne 30 jours, percentile sur fenêtre croissante (minimum 18 mois). Implémenté le 2026-11-08 (v0.2).
-    funding_30d_pct_red_min: 90
-  capitulation:
-    drawdown_min: 0.50
-    fng_30d_max: 25
-  leverage_flag: {sma_days: 200}
+    funding_30d_pct_high: 90                    # taux de financement Deribit
+    fng_30d_low: 25
+    drawdown_deep: 0.50
 
 # Confirmation (couche d'affichage et d'alerte, pas la règle) : une nouvelle couleur n'est affichée
 # qu'après N jours de bourse consécutifs. Ajouté le 2026-11-08 (v0.2) : divise par ~3 les changements
 # par an sans modifier les rendements par couleur (docs/robustness.html).
 confirmation_days: 5
 
-# Préséance quand plusieurs conditions sont vraies :
-# 1) vert de capitulation (drawdown + peur), 2) rouge, 3) vert de valorisation, 4) orange.
-precedence: [green_capitulation, red, green_valuation, orange]
+# Préséance (indices) : 1) vert de capitulation (baisse + peur), 2) vert de valorisation, 3) orange.
+# Bitcoin : vert, puis rouge, puis orange (vert et rouge sont incompatibles par construction).
+precedence: [green_capitulation, green_valuation, orange]
 
 acceptance:   # critères de validation, évalués par backtest.py, non négociables
   red_time_share_max_indices: 0.25
@@ -92,20 +91,26 @@ conduct:
     leverage_cap_share_equities: 0.15
     leverage_requires_trend_ok: true
     rebalance_band_pts: 10
-  orange:
+  orange:               # y compris « cher » (protocole v1.0 §8.4)
     regular_contribution: "maintenu"
-    reserve: "montants exceptionnels déployés par tiers sur 3 mois (attendre le vert coûte cher : voir CHANGELOG 2026-11-08)"
+    reserve: "montants exceptionnels déployés en trois tranches mensuelles ; aucune attente d'un meilleur moment (attendre a coûté cher depuis 1990)"
     leverage_cap_share_equities: 0.10
     rebalance_band_pts: 5
-  red:
+  red:                  # Bitcoin seulement depuis la v1.0
     regular_contribution: "maintenu"
-    reserve: "aucun déploiement ; les montants exceptionnels attendent en réserve rémunérée (fonds euros, livret, monétaire)"
+    reserve: "aucun achat exceptionnel ; aucune société « proxy » à levier"
     leverage_cap_share_equities: 0.05
     rebalance_band_pts: 5
   trend_broken:
     leverage_cap_share_equities: 0.05
     action_within_trading_days: 5
   exceptional_order_checklist_hours: 48
+  bitcoin:              # conduite propre au Bitcoin (règle B1)
+    green: "achat exceptionnel possible, par tiers sur trois mois ; pas de société « proxy » à levier si le prix est sous sa moyenne 200 jours"
+    orange: "versements habituels seulement ; pas d'achat exceptionnel"
+    red: "aucun achat exceptionnel ; aucune société « proxy » à levier ; versements habituels maintenus"
+  sell_cooling_days_in_stress: 7    # ventes en vert de capitulation ou couteau qui tombe : délai 7 jours (repris de Kairys Alpha)
+  concentration_max_single_stock: 0.12   # alerte si une action dépasse 12 % du portefeuille risqué (repris de Kairys Alpha)
 
 stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeurs
   valuation:

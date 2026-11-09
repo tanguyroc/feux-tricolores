@@ -48,7 +48,7 @@ jobs:
         run: python -m feux alert
       - name: Backtest et robustesse (le vendredi, ou lancement manuel)
         run: |
-          if [ "$(date -u +%u)" = "5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python -m feux backtest && python -m feux robustness; fi
+          if [ "$(date -u +%u)" = "5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python -m feux backtest; fi
       - name: Commit des données et du tableau de bord
         run: |
           git config user.name "feux-bot"
