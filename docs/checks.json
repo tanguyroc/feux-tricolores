@@ -3,52 +3,86 @@
   {
    "contrôle": "sp500 : données de moins de 5 jours",
    "observé": "2026-11-06 (3 j)",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "sp500 : couleur calculée",
    "observé": "orange",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "ndx : données de moins de 5 jours",
    "observé": "2026-11-06 (3 j)",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "ndx : couleur calculée",
    "observé": "orange",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "world : données de moins de 5 jours",
    "observé": "2026-11-09 (0 j)",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "world : couleur calculée",
    "observé": "orange",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "btc : données de moins de 4 jours",
    "observé": "2026-11-08 (1 j)",
-   "ok": true
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "btc : couleur calculée",
    "observé": "orange",
-   "ok": true
+   "ok": true,
+   "bloquant": true
+  },
+  {
+   "contrôle": "VIX (FRED) : moins de 7 jours",
+   "observé": "2026-11-05 (4 j)",
+   "ok": true,
+   "bloquant": true
+  },
+  {
+   "contrôle": "écart de crédit Baa (FRED) : moins de 7 jours",
+   "observé": "2026-11-05 (4 j)",
+   "ok": true,
+   "bloquant": true
+  },
+  {
+   "contrôle": "dernier mois de Shiller : moins de 75 jours",
+   "observé": "2026-10-31 (9 j)",
+   "ok": true,
+   "bloquant": true
   },
   {
    "contrôle": "actions : au moins 80 sociétés suivies",
    "observé": 102,
-   "ok": true
+   "ok": true,
+   "bloquant": false
   },
   {
-   "contrôle": "actions : au moins 60 valorisées",
-   "observé": 88,
-   "ok": true
+   "contrôle": "actions : au moins 60 valorisées (comptes SEC)",
+   "observé": 87,
+   "ok": true,
+   "bloquant": false
+  },
+  {
+   "contrôle": "actions : cours de moins de 7 jours",
+   "observé": "102 à jour",
+   "ok": true,
+   "bloquant": false
   }
  ],
  "témoins": [
@@ -82,31 +116,52 @@
   },
   {
    "témoin": "Banques en mode P/E et P/B (EV et flux libre n'ont pas de sens)",
-   "attendu": "financial",
+   "attendu": "financial (au moins 3 banques)",
    "observé": "JPM:financial, BAC:financial, WFC:financial, HSBA.L:financial, RY.TO:financial, 8306.T:financial",
    "ok": true,
    "critique": false
   },
   {
    "témoin": "Réseaux de paiement en mode industriel",
-   "attendu": "industrial",
+   "attendu": "industrial (Visa et Mastercard)",
    "observé": "V:industrial, MA:industrial",
    "ok": true,
    "critique": false
   },
   {
    "témoin": "Une foncière n'est jamais verte",
-   "attendu": "aucune foncière verte",
+   "attendu": "aucune foncière verte (au moins une foncière suivie)",
    "observé": "1 foncière(s), vertes : 0",
    "ok": true,
    "critique": false
   },
   {
-   "témoin": "Comptes de plus de 15 mois : jamais colorée",
+   "témoin": "Comptes de plus de 15 mois : feu affiché orange",
    "attendu": "orange",
    "observé": "2330.TW:orange, 7203.T:orange, BHP.AX:orange, 6758.T:orange",
    "ok": true,
    "critique": true
+  },
+  {
+   "témoin": "Dette connue (sociétés industrielles aux comptes récents) ; inconnue = pas d'EV ni de test de dette, jamais zéro",
+   "attendu": "au plus 3 inconnues",
+   "observé": "SHOP, DE",
+   "ok": true,
+   "critique": false
+  },
+  {
+   "témoin": "Aucune valeur d'entreprise calculée avec une dette inconnue",
+   "attendu": "aucune",
+   "observé": "aucune",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Flux libre connu (sociétés industrielles aux comptes récents) ; capex ancien jamais reporté",
+   "attendu": "au plus 5 inconnus",
+   "observé": "9988.HK, NEE, TTE.PA, COP",
+   "ok": true,
+   "critique": false
   },
   {
    "témoin": "Sans comptes à la SEC : prix seul, orange",
@@ -121,6 +176,20 @@
    "observé": "écarts : aucun",
    "ok": true,
    "critique": true
+  },
+  {
+   "témoin": "Pré-inscriptions : empreintes recalculées identiques à celles inscrites",
+   "attendu": "toutes identiques",
+   "observé": "2026-11-09:ok",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Capitalisation connue pour les sociétés aux comptes SEC",
+   "attendu": "au plus 3 inconnues",
+   "observé": "toutes connues",
+   "ok": true,
+   "critique": false
   },
   {
    "témoin": "Nombre d'actions implicite (capitalisation / cours) sans saut de plus de 50 % d'un jour à l'autre sur dix ans (91 sociétés) : divisions d'actions, erreurs d'échelle et valeurs aberrantes de la SEC traitées",

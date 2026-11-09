@@ -1,22 +1,22 @@
 {
  "sp500": {
   "share": {
-   "green": 0.0771,
-   "orange": 0.9229,
+   "green": 0.0774,
+   "orange": 0.9226,
    "red": 0.0
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.025920435284674248,
+    "valeur": 0.02595768694115086,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
    "baisse24m_p90": {
-    "green": 0.29408872039440814,
-    "orange": 0.3375237709732706,
+    "green": 0.294018146416582,
+    "orange": 0.3375670494145171,
     "red": null
    },
    "épisodes_verts": 4,
-   "changements_par_an": 2.497064724678606
+   "changements_par_an": 2.3884966931708402
   },
   "key_dates": [
    {
@@ -31,21 +31,21 @@
     "événement": "creux d'octobre 2002",
     "couleur": "green",
     "cher": true,
-    "V": 80.85616438356165
+    "V": 81.18574366004113
    },
    {
     "date": "2007-10-09",
     "événement": "sommet d'octobre 2007",
     "couleur": "orange",
     "cher": true,
-    "V": 95.625
+    "V": 95.6221198156682
    },
    {
     "date": "2009-03-09",
     "événement": "creux de mars 2009",
     "couleur": "green",
     "cher": false,
-    "V": 26.252439817826936
+    "V": 26.399739583333332
    },
    {
     "date": "2020-02-19",
@@ -66,14 +66,14 @@
     "événement": "sommet de janvier 2022",
     "couleur": "orange",
     "cher": true,
-    "V": 98.66942637492608
+    "V": 98.72781065088758
    },
    {
     "date": "2022-10-12",
     "événement": "creux d'octobre 2022",
     "couleur": "orange",
     "cher": true,
-    "V": 88.97058823529412
+    "V": 89.55267804590936
    }
   ],
   "episodes_n": {
@@ -85,93 +85,93 @@
    {
     "horizon": "1 an",
     "couleur": "green",
-    "n_jours": 716,
+    "n_jours": 718,
     "médiane_annualisée": 0.17975723248844933,
-    "moyenne_annualisée": 0.15785918576855984,
-    "p10_annualisé": -0.1817598594807115,
-    "part_négative": 0.18156424581005587
+    "moyenne_annualisée": 0.158079934533649,
+    "p10_annualisé": -0.18170111551192836,
+    "part_négative": 0.1796657381615599
    },
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 8313,
+    "n_jours": 8311,
     "médiane_annualisée": 0.11504264071513992,
-    "moyenne_annualisée": 0.09737381842847403,
-    "p10_annualisé": -0.11516777934227862,
-    "part_négative": 0.19283050643570313
+    "moyenne_annualisée": 0.09734019210817402,
+    "p10_annualisé": -0.11573092424403597,
+    "part_négative": 0.1929972325833233
    },
    {
     "horizon": "3 ans",
     "couleur": "green",
-    "n_jours": 716,
+    "n_jours": 718,
     "médiane_annualisée": 0.12279468305576624,
-    "moyenne_annualisée": 0.11970784378555877,
-    "p10_annualisé": 0.020935493471709643,
-    "part_négative": 0.01675977653631285
+    "moyenne_annualisée": 0.11985239996152619,
+    "p10_annualisé": 0.020951221990529678,
+    "part_négative": 0.016713091922005572
    },
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 7809,
-    "médiane_annualisée": 0.09687424777109199,
-    "moyenne_annualisée": 0.09754308199539019,
-    "p10_annualisé": -0.07572309392733989,
-    "part_négative": 0.1847867844794468
+    "n_jours": 7807,
+    "médiane_annualisée": 0.09683699611461538,
+    "moyenne_annualisée": 0.09752344919898714,
+    "p10_annualisé": -0.07573020964961863,
+    "part_négative": 0.1848341232227488
    },
    {
     "horizon": "5 ans",
     "couleur": "green",
-    "n_jours": 716,
-    "médiane_annualisée": 0.1310346960765314,
-    "moyenne_annualisée": 0.12361527724845711,
-    "p10_annualisé": 0.050096859416288275,
+    "n_jours": 718,
+    "médiane_annualisée": 0.13147409801523424,
+    "moyenne_annualisée": 0.1237345366943825,
+    "p10_annualisé": 0.050162789896384785,
     "part_négative": 0.0
    },
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 7305,
-    "médiane_annualisée": 0.09761323477474959,
-    "moyenne_annualisée": 0.09429202003583614,
-    "p10_annualisé": -0.026936101182189476,
-    "part_négative": 0.24490075290896646
+    "n_jours": 7303,
+    "médiane_annualisée": 0.0975179393148311,
+    "moyenne_annualisée": 0.09427051061403868,
+    "p10_annualisé": -0.02693818417011684,
+    "part_négative": 0.2449678214432425
    }
   ],
   "dd24": [
    {
     "couleur": "green",
-    "n_jours": 716,
-    "drawdown_24m_médian": 0.08879423298032635,
-    "drawdown_24m_p90": 0.29408872039440814,
-    "part_drawdown_>20%": 0.2877094972067039
+    "n_jours": 718,
+    "drawdown_24m_médian": 0.0868783776032796,
+    "drawdown_24m_p90": 0.294018146416582,
+    "part_drawdown_>20%": 0.28551532033426186
    },
    {
     "couleur": "orange",
-    "n_jours": 8061,
-    "drawdown_24m_médian": 0.05595722354916799,
-    "drawdown_24m_p90": 0.3375237709732706,
-    "part_drawdown_>20%": 0.18657734772360748
+    "n_jours": 8059,
+    "drawdown_24m_médian": 0.055969935922526526,
+    "drawdown_24m_p90": 0.3375670494145171,
+    "part_drawdown_>20%": 0.18674773545104853
    }
   ]
  },
  "ndx": {
   "share": {
-   "green": 0.1262,
-   "orange": 0.8738,
+   "green": 0.1265,
+   "orange": 0.8735,
    "red": 0.0
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.011636760162285986,
+    "valeur": 0.011481727731357028,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
    "baisse24m_p90": {
-    "green": 0.6091210278256786,
-    "orange": 0.3520001380617459,
+    "green": 0.6072839638225792,
+    "orange": 0.3510837564795105,
     "red": null
    },
    "épisodes_verts": 9,
-   "changements_par_an": 3.6913130712640263
+   "changements_par_an": 3.745597087017909
   },
   "key_dates": [
    {
@@ -186,21 +186,21 @@
     "événement": "creux d'octobre 2002",
     "couleur": "green",
     "cher": true,
-    "V": 80.85616438356165
+    "V": 81.18574366004113
    },
    {
     "date": "2007-10-09",
     "événement": "sommet d'octobre 2007",
     "couleur": "orange",
     "cher": true,
-    "V": 95.625
+    "V": 95.6221198156682
    },
    {
     "date": "2009-03-09",
     "événement": "creux de mars 2009",
     "couleur": "green",
     "cher": false,
-    "V": 26.252439817826936
+    "V": 26.399739583333332
    },
    {
     "date": "2020-02-19",
@@ -221,14 +221,14 @@
     "événement": "sommet de janvier 2022",
     "couleur": "orange",
     "cher": true,
-    "V": 98.66942637492608
+    "V": 98.72781065088758
    },
    {
     "date": "2022-10-12",
     "événement": "creux d'octobre 2022",
     "couleur": "orange",
     "cher": true,
-    "V": 88.97058823529412
+    "V": 89.55267804590936
    }
   ],
   "episodes_n": {
@@ -240,93 +240,93 @@
    {
     "horizon": "1 an",
     "couleur": "green",
-    "n_jours": 1171,
-    "médiane_annualisée": 0.16965418541039234,
-    "moyenne_annualisée": 0.06951942490954033,
-    "p10_annualisé": -0.3857630498340947,
-    "part_négative": 0.4030742954739539
+    "n_jours": 1174,
+    "médiane_annualisée": 0.16836437977344199,
+    "moyenne_annualisée": 0.0690067821861835,
+    "p10_annualisé": -0.38679591728816276,
+    "part_négative": 0.403747870528109
    },
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 7858,
-    "médiane_annualisée": 0.18792501125682914,
-    "moyenne_annualisée": 0.20077786566387146,
-    "p10_annualisé": -0.034812584033262484,
-    "part_négative": 0.12662255026724356
+    "n_jours": 7855,
+    "médiane_annualisée": 0.18794836273917936,
+    "moyenne_annualisée": 0.20090461523477976,
+    "p10_annualisé": -0.03439428683453194,
+    "part_négative": 0.12641629535327817
    },
    {
     "horizon": "3 ans",
     "couleur": "green",
-    "n_jours": 1171,
-    "médiane_annualisée": 0.1684297601538296,
-    "moyenne_annualisée": 0.1244044590087312,
-    "p10_annualisé": -0.10609762754700836,
-    "part_négative": 0.20836891545687447
+    "n_jours": 1174,
+    "médiane_annualisée": 0.16827886844166584,
+    "moyenne_annualisée": 0.12431783290787446,
+    "p10_annualisé": -0.10515883367756917,
+    "part_négative": 0.20868824531516184
    },
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 7354,
-    "médiane_annualisée": 0.1567929999915436,
-    "moyenne_annualisée": 0.18626833993205794,
-    "p10_annualisé": -0.01414346499836816,
-    "part_négative": 0.11830296437313027
+    "n_jours": 7351,
+    "médiane_annualisée": 0.1567971407103088,
+    "moyenne_annualisée": 0.18630472062360348,
+    "p10_annualisé": -0.014005490639986684,
+    "part_négative": 0.11821520881512719
    },
    {
     "horizon": "5 ans",
     "couleur": "green",
-    "n_jours": 1171,
-    "médiane_annualisée": 0.14078328732464374,
-    "moyenne_annualisée": 0.13048947964235924,
-    "p10_annualisé": -0.04090623182628783,
-    "part_négative": 0.15883859948761742
+    "n_jours": 1174,
+    "médiane_annualisée": 0.14055035979596986,
+    "moyenne_annualisée": 0.13053797980426274,
+    "p10_annualisé": -0.03893086687546532,
+    "part_négative": 0.15928449744463374
    },
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 6850,
-    "médiane_annualisée": 0.1573686875305651,
-    "moyenne_annualisée": 0.18198631811561117,
-    "p10_annualisé": -0.023367320961527493,
-    "part_négative": 0.1324087591240876
+    "n_jours": 6847,
+    "médiane_annualisée": 0.15735880728537532,
+    "moyenne_annualisée": 0.18200003949061538,
+    "p10_annualisé": -0.023372233905319728,
+    "part_négative": 0.13232072440484885
    }
   ],
   "dd24": [
    {
     "couleur": "green",
-    "n_jours": 1171,
-    "drawdown_24m_médian": 0.14647469212681874,
-    "drawdown_24m_p90": 0.6091210278256786,
-    "part_drawdown_>20%": 0.45260461144321096
+    "n_jours": 1174,
+    "drawdown_24m_médian": 0.14676266569115515,
+    "drawdown_24m_p90": 0.6072839638225792,
+    "part_drawdown_>20%": 0.45315161839863716
    },
    {
     "couleur": "orange",
-    "n_jours": 7606,
-    "drawdown_24m_médian": 0.07578824343928625,
-    "drawdown_24m_p90": 0.3520001380617459,
-    "part_drawdown_>20%": 0.176176702603208
+    "n_jours": 7603,
+    "drawdown_24m_médian": 0.07579712730001409,
+    "drawdown_24m_p90": 0.3510837564795105,
+    "part_drawdown_>20%": 0.17598316454031304
    }
   ]
  },
  "world": {
   "share": {
-   "green": 0.0947,
-   "orange": 0.9053,
+   "green": 0.0948,
+   "orange": 0.9052,
    "red": 0.0
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.03199021149370851,
+    "valeur": 0.03148862733323643,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
    "baisse24m_p90": {
-    "green": 0.29970354376901787,
-    "orange": 0.3677655635385508,
+    "green": 0.3003374470943021,
+    "orange": 0.3677702384136147,
     "red": null
    },
    "épisodes_verts": 5,
-   "changements_par_an": 2.442236255572065
+   "changements_par_an": 2.4965081723625557
   },
   "key_dates": [
    {
@@ -341,21 +341,21 @@
     "événement": "creux d'octobre 2002",
     "couleur": "green",
     "cher": true,
-    "V": 80.85616438356165
+    "V": 81.18574366004113
    },
    {
     "date": "2007-10-09",
     "événement": "sommet d'octobre 2007",
     "couleur": "orange",
     "cher": true,
-    "V": 95.625
+    "V": 95.6221198156682
    },
    {
     "date": "2009-03-09",
     "événement": "creux de mars 2009",
     "couleur": "green",
     "cher": false,
-    "V": 26.252439817826936
+    "V": 26.399739583333332
    },
    {
     "date": "2020-02-19",
@@ -376,14 +376,14 @@
     "événement": "sommet de janvier 2022",
     "couleur": "orange",
     "cher": true,
-    "V": 98.66942637492608
+    "V": 98.72781065088758
    },
    {
     "date": "2022-10-12",
     "événement": "creux d'octobre 2022",
     "couleur": "orange",
     "cher": true,
-    "V": 88.97058823529412
+    "V": 89.55267804590936
    }
   ],
   "episodes_n": {
@@ -395,72 +395,72 @@
    {
     "horizon": "1 an",
     "couleur": "green",
-    "n_jours": 888,
-    "médiane_annualisée": 0.1405565163707032,
-    "moyenne_annualisée": 0.1301893022266567,
-    "p10_annualisé": -0.18310377088171625,
-    "part_négative": 0.2533783783783784
+    "n_jours": 889,
+    "médiane_annualisée": 0.1380507330443741,
+    "moyenne_annualisée": 0.12996929298012772,
+    "p10_annualisé": -0.18299325817569023,
+    "part_négative": 0.2530933633295838
    },
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 8236,
-    "médiane_annualisée": 0.10491391300849973,
-    "moyenne_annualisée": 0.07089200667765239,
-    "p10_annualisé": -0.13442160793493874,
-    "part_négative": 0.2667557066537154
+    "n_jours": 8235,
+    "médiane_annualisée": 0.10498988351563199,
+    "moyenne_annualisée": 0.07090871022626688,
+    "p10_annualisé": -0.1347020307525646,
+    "part_négative": 0.26678809957498484
    },
    {
     "horizon": "3 ans",
     "couleur": "green",
-    "n_jours": 888,
-    "médiane_annualisée": 0.10869712221646499,
-    "moyenne_annualisée": 0.10479166627828285,
-    "p10_annualisé": 0.01848812956800283,
-    "part_négative": 0.057432432432432436
+    "n_jours": 889,
+    "médiane_annualisée": 0.10820733519020709,
+    "moyenne_annualisée": 0.10459734160928247,
+    "p10_annualisé": 0.018376907067957138,
+    "part_négative": 0.05849268841394826
    },
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 7732,
-    "médiane_annualisée": 0.07670691072275648,
-    "moyenne_annualisée": 0.06886554425518576,
-    "p10_annualisé": -0.07827043103850806,
-    "part_négative": 0.19968960165545785
+    "n_jours": 7731,
+    "médiane_annualisée": 0.07671870785697066,
+    "moyenne_annualisée": 0.06888467920412267,
+    "p10_annualisé": -0.0782764026600058,
+    "part_négative": 0.19958608200750227
    },
    {
     "horizon": "5 ans",
     "couleur": "green",
-    "n_jours": 888,
-    "médiane_annualisée": 0.10658392227500668,
-    "moyenne_annualisée": 0.11115580905392664,
-    "p10_annualisé": 0.06410185999112628,
+    "n_jours": 889,
+    "médiane_annualisée": 0.10648459382060982,
+    "moyenne_annualisée": 0.11108054123980282,
+    "p10_annualisé": 0.06399699259497305,
     "part_négative": 0.0
    },
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 7228,
-    "médiane_annualisée": 0.06736837978880383,
-    "moyenne_annualisée": 0.06261077079695032,
-    "p10_annualisé": -0.03416543749331857,
-    "part_négative": 0.24806308799114554
+    "n_jours": 7227,
+    "médiane_annualisée": 0.06738970030215485,
+    "moyenne_annualisée": 0.06261451696320885,
+    "p10_annualisé": -0.03416684687251814,
+    "part_négative": 0.2480974124809741
    }
   ],
   "dd24": [
    {
     "couleur": "green",
-    "n_jours": 888,
-    "drawdown_24m_médian": 0.09803402225787972,
-    "drawdown_24m_p90": 0.29970354376901787,
-    "part_drawdown_>20%": 0.3130630630630631
+    "n_jours": 889,
+    "drawdown_24m_médian": 0.0980238359643576,
+    "drawdown_24m_p90": 0.3003374470943021,
+    "part_drawdown_>20%": 0.31158605174353204
    },
    {
     "couleur": "orange",
-    "n_jours": 7984,
-    "drawdown_24m_médian": 0.0710851207503867,
-    "drawdown_24m_p90": 0.3677655635385508,
-    "part_drawdown_>20%": 0.22144288577154309
+    "n_jours": 7983,
+    "drawdown_24m_médian": 0.07103651705476521,
+    "drawdown_24m_p90": 0.3677702384136147,
+    "part_drawdown_>20%": 0.22159589126894652
    }
   ]
  },
@@ -662,49 +662,49 @@
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
   "A_valeur_finale": 5666691.247824737,
-  "B_valeur_finale": 5149172.23284612,
-  "B_moins_A": -517519.0149786165,
-  "B_moins_A_pct": -0.09132648883548677,
-  "C_valeur_finale": 5652306.479889772,
-  "C_moins_A": -14384.76793496497,
-  "C_moins_A_pct": -0.002538477447573406,
-  "C_drawdown_max": 0.49650158303838543,
-  "réserve_B_finale": 195070.89006590622,
-  "réserve_B_max": 195070.89006590622,
+  "B_valeur_finale": 5124015.452129243,
+  "B_moins_A": -542675.7956954939,
+  "B_moins_A_pct": -0.09576590146918806,
+  "C_valeur_finale": 5666395.562868122,
+  "C_moins_A": -295.6849566148594,
+  "C_moins_A_pct": -5.2179471879409967e-05,
+  "C_drawdown_max": 0.4964740023864125,
+  "réserve_B_finale": 193282.06182064328,
+  "réserve_B_max": 193282.06182064328,
   "A_drawdown_max": 0.4974941079632539,
-  "B_drawdown_max": 0.4613313040991842
+  "B_drawdown_max": 0.46841771662044607
  },
  "plan_ndx": {
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
   "A_valeur_finale": 19515387.924822614,
-  "B_valeur_finale": 14346661.065597076,
-  "B_moins_A": -5168726.859225538,
-  "B_moins_A_pct": -0.26485391318566465,
-  "C_valeur_finale": 19462549.308427103,
-  "C_moins_A": -52838.61639551073,
-  "C_moins_A_pct": -0.0027075360530396386,
-  "C_drawdown_max": 0.799435842143517,
+  "B_valeur_finale": 13904033.848032942,
+  "B_moins_A": -5611354.076789672,
+  "B_moins_A_pct": -0.28753484677864416,
+  "C_valeur_finale": 19498539.306977987,
+  "C_moins_A": -16848.617844626307,
+  "C_moins_A_pct": -0.0008633503935218112,
+  "C_drawdown_max": 0.7995597544903328,
   "réserve_B_finale": 178300.31756928237,
   "réserve_B_max": 178300.31756928237,
   "A_drawdown_max": 0.8002725608196152,
-  "B_drawdown_max": 0.7697118985602951
+  "B_drawdown_max": 0.7805029422511595
  },
  "plan_world": {
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
-  "A_valeur_finale": 3443558.300921919,
-  "B_valeur_finale": 3351444.017028497,
-  "B_moins_A": -92114.28389342176,
-  "B_moins_A_pct": -0.026749738451868454,
-  "C_valeur_finale": 3441313.3424640163,
-  "C_moins_A": -2244.9584579025395,
-  "C_moins_A_pct": -0.000651929853286215,
-  "C_drawdown_max": 0.5236270768129375,
-  "réserve_B_finale": 179734.80525614825,
-  "réserve_B_max": 179734.80525614825,
+  "A_valeur_finale": 3447515.5777054224,
+  "B_valeur_finale": 3393411.410548792,
+  "B_moins_A": -54104.167156630196,
+  "B_moins_A_pct": -0.015693668654179205,
+  "C_valeur_finale": 3454565.7520432128,
+  "C_moins_A": 7050.174337790348,
+  "C_moins_A_pct": 0.002045001444919592,
+  "C_drawdown_max": 0.523614130493937,
+  "réserve_B_finale": 169742.5293675899,
+  "réserve_B_max": 169742.5293675899,
   "A_drawdown_max": 0.5244677845226637,
-  "B_drawdown_max": 0.49075734517448566
+  "B_drawdown_max": 0.4965074379698149
  },
  "levier_ndx": {
   "Nasdaq-100 sans levier": {
@@ -784,14 +784,14 @@
  },
  "tendance_world": {
   "achat-conservation": {
-   "cagr": 0.08056583202773648,
+   "cagr": 0.08059549530899202,
    "drawdown_max": 0.5906794533676618,
-   "volatilité": 0.15448771443556342
+   "volatilité": 0.15448812141087304
   },
   "filtre 10 mois (monétaire hors tendance)": {
-   "cagr": 0.08174130266081447,
+   "cagr": 0.0817709982106416,
    "drawdown_max": 0.26082197126276874,
-   "volatilité": 0.10122145966535154
+   "volatilité": 0.10122208694400371
   },
   "_part_du_temps_investi": 0.7367631899540812,
   "_allers_retours_par_an": 1.3619815517466962
