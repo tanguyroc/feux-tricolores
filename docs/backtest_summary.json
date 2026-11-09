@@ -675,7 +675,7 @@
     "événement": "sommet d'octobre 2025",
     "couleur": "orange",
     "cher": null,
-    "V": 0.9884490489051181
+    "V": 0.9884490489051176
    }
   ],
   "episodes_n": {
@@ -698,7 +698,7 @@
     "couleur": "orange",
     "n_jours": 3231,
     "médiane_annualisée": 0.5254302836685434,
-    "moyenne_annualisée": 1.480723652751116,
+    "moyenne_annualisée": 1.480725516192361,
     "p10_annualisé": -0.5179018643719118,
     "part_négative": 0.3593314763231198
    },
@@ -725,7 +725,7 @@
     "couleur": "orange",
     "n_jours": 2501,
     "médiane_annualisée": 0.5385424796013432,
-    "moyenne_annualisée": 0.8205287339794995,
+    "moyenne_annualisée": 0.8205294105806309,
     "p10_annualisé": 0.22832763210268592,
     "part_négative": 0.0
    },
@@ -752,7 +752,7 @@
     "couleur": "orange",
     "n_jours": 2091,
     "médiane_annualisée": 0.6081997707893858,
-    "moyenne_annualisée": 0.9119473369315803,
+    "moyenne_annualisée": 0.9119474041502955,
     "p10_annualisé": 0.14684123552260808,
     "part_négative": 0.0
    },
@@ -952,7 +952,7 @@
     "couleur": "orange",
     "n_jours": 3363,
     "médiane_annualisée": 0.4527470883486089,
-    "moyenne_annualisée": 1.400159708049971,
+    "moyenne_annualisée": 1.4001614983499007,
     "p10_annualisé": -0.5531214770667723,
     "part_négative": 0.38447814451382695
    },
@@ -979,7 +979,7 @@
     "couleur": "orange",
     "n_jours": 2633,
     "médiane_annualisée": 0.5018363531101253,
-    "moyenne_annualisée": 0.8003013496077642,
+    "moyenne_annualisée": 0.8003020068117923,
     "p10_annualisé": 0.210392801076428,
     "part_négative": 0.001139384732244588
    },
@@ -1006,7 +1006,7 @@
     "couleur": "orange",
     "n_jours": 2223,
     "médiane_annualisée": 0.6030260311993787,
-    "moyenne_annualisée": 0.8960338692374397,
+    "moyenne_annualisée": 0.8960339346143087,
     "p10_annualisé": 0.15262509775300948,
     "part_négative": 0.0
    },
@@ -1045,7 +1045,7 @@
     "couleur": "orange",
     "n_jours": 3545,
     "médiane_annualisée": 0.38510666797407733,
-    "moyenne_annualisée": 1.3393079245620614,
+    "moyenne_annualisée": 1.3393096229481438,
     "p10_annualisé": -0.5544039610352042,
     "part_négative": 0.39492242595204513
    },
@@ -1072,7 +1072,7 @@
     "couleur": "orange",
     "n_jours": 2815,
     "médiane_annualisée": 0.4610401078825519,
-    "moyenne_annualisée": 0.7737843858805509,
+    "moyenne_annualisée": 0.7737850191104887,
     "p10_annualisé": 0.1573190286905266,
     "part_négative": 0.0017761989342806395
    },
@@ -1099,7 +1099,7 @@
     "couleur": "orange",
     "n_jours": 2405,
     "médiane_annualisée": 0.5801840632771229,
-    "moyenne_annualisée": 0.8709414548798,
+    "moyenne_annualisée": 0.8709415186168665,
     "p10_annualisé": 0.11837401596853603,
     "part_négative": 0.0012474012474012475
    },

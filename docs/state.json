@@ -1,8 +1,8 @@
 {
- "_rules_version": "1.0",
+ "_rules_version": "1.1",
  "sp500": {
   "name": "S&P 500",
-  "color": "orange",
+  "color": "red",
   "trend_broken": false,
   "falling_knife": false,
   "cher": true,
@@ -11,7 +11,7 @@
  },
  "ndx": {
   "name": "Nasdaq-100",
-  "color": "orange",
+  "color": "red",
   "trend_broken": false,
   "falling_knife": false,
   "cher": true,
@@ -20,7 +20,7 @@
  },
  "world": {
   "name": "MSCI World (USD)",
-  "color": "orange",
+  "color": "red",
   "trend_broken": false,
   "falling_knife": false,
   "cher": true,
