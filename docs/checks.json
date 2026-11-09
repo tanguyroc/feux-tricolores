@@ -26,7 +26,7 @@
   },
   {
    "contrôle": "world : données de moins de 5 jours",
-   "observé": "2026-11-09 (0 j)",
+   "observé": "2026-11-06 (3 j)",
    "ok": true,
    "bloquant": true
   },
@@ -38,7 +38,7 @@
   },
   {
    "contrôle": "btc : données de moins de 4 jours",
-   "observé": "2026-11-08 (1 j)",
+   "observé": "2026-11-09 (0 j)",
    "ok": true,
    "bloquant": true
   },
@@ -108,9 +108,9 @@
    "critique": false
   },
   {
-   "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux)",
+   "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux) ; sans MVRV ou sans moyenne 200 semaines, pas de feu",
    "attendu": "orange",
-   "observé": "orange (MVRV 1.39, prix/MM200s 1.11)",
+   "observé": "orange (MVRV 1.39, prix/MM200s 1.10)",
    "ok": true,
    "critique": true
   },
@@ -136,9 +136,9 @@
    "critique": false
   },
   {
-   "témoin": "Comptes de plus de 15 mois : feu affiché orange",
-   "attendu": "orange",
-   "observé": "2330.TW:orange, 7203.T:orange, BHP.AX:orange, 6758.T:orange",
+   "témoin": "Comptes de plus de 15 mois : pas de feu (jamais un orange par défaut)",
+   "attendu": "pas de feu",
+   "observé": "aucune",
    "ok": true,
    "critique": true
   },
@@ -158,15 +158,36 @@
   },
   {
    "témoin": "Flux libre connu (sociétés industrielles aux comptes récents) ; capex ancien jamais reporté",
-   "attendu": "au plus 5 inconnus",
-   "observé": "9988.HK, ANET, NEE, TTE.PA, COP",
+   "attendu": "au plus 8 inconnus",
+   "observé": "9988.HK, 7203.T, ANET, NEE, TTE.PA, COP",
    "ok": true,
    "critique": false
   },
   {
-   "témoin": "Sans comptes à la SEC : prix seul, orange",
-   "attendu": "orange",
+   "témoin": "Sans comptes à la SEC : pas de feu",
+   "attendu": "pas de feu",
    "observé": "10 sociétés, colorées : 0",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Action sans feu : raison écrite",
+   "attendu": "raison pour chacune",
+   "observé": "7 sans feu, sans raison : aucune",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Zones, secteurs et thèmes : un feu seulement avec une mesure, sinon une raison écrite",
+   "attendu": "toujours",
+   "observé": "31 lignes ; sans raison : aucune ; colorées sans mesure : aucune",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Zones, secteurs et thèmes : cours de moins de 7 jours",
+   "attendu": "tous",
+   "observé": "31 à jour",
    "ok": true,
    "critique": false
   },
@@ -197,6 +218,86 @@
    "observé": "aucun",
    "ok": true,
    "critique": true
+  }
+ ],
+ "fraîcheur": [
+  {
+   "source": "S&P 500, Nasdaq-100 (Yahoo Finance)",
+   "date": "2026-11-06",
+   "âge": 3,
+   "rythme": "chaque séance, clôture"
+  },
+  {
+   "source": "MSCI World (Yahoo Finance)",
+   "date": "2026-11-06",
+   "âge": 3,
+   "rythme": "chaque séance, clôture"
+  },
+  {
+   "source": "VIX (FRED, complété par Yahoo pour les derniers jours)",
+   "date": "2026-11-06",
+   "âge": 3,
+   "rythme": "chaque séance"
+  },
+  {
+   "source": "Écart de crédit Baa − 10 ans (FRED)",
+   "date": "2026-11-05",
+   "âge": 4,
+   "rythme": "chaque séance, publié le lendemain"
+  },
+  {
+   "source": "CAPE de Shiller : dernier mois de prix",
+   "date": "2026-10-31",
+   "âge": 9,
+   "rythme": "mensuel"
+  },
+  {
+   "source": "CAPE de Shiller : derniers bénéfices",
+   "date": "2026-06-30",
+   "âge": 132,
+   "rythme": "trimestriel, environ 3 mois de décalage"
+  },
+  {
+   "source": "Dette sur marge (FINRA)",
+   "date": "2026-09-30",
+   "âge": 40,
+   "rythme": "mensuel, environ 3 semaines de décalage"
+  },
+  {
+   "source": "Allocation des ménages en actions (Fed Z.1)",
+   "date": "2026-06-30",
+   "âge": 132,
+   "rythme": "trimestriel, environ 10 semaines de décalage"
+  },
+  {
+   "source": "Bitcoin : prix (Coin Metrics, complété par Yahoo)",
+   "date": "2026-11-09",
+   "âge": 0,
+   "rythme": "quotidien"
+  },
+  {
+   "source": "Bitcoin : MVRV (Coin Metrics)",
+   "date": "2026-11-08",
+   "âge": 1,
+   "rythme": "quotidien, 1 à 2 jours de décalage"
+  },
+  {
+   "source": "Actions du Top 100 : cours (Yahoo Finance)",
+   "date": "2026-11-06",
+   "âge": 3,
+   "rythme": "chaque séance (la plus ancienne)"
+  },
+  {
+   "source": "Actions : comptes SEC les plus anciens (RY.TO)",
+   "date": "2025-10-31",
+   "âge": 374,
+   "rythme": "trimestriel (10-Q) ou annuel (20-F, 40-F)"
+  },
+  {
+   "source": "Zones, secteurs et thèmes : cours des 31 ETF (le plus ancien)",
+   "date": "2026-11-06",
+   "âge": 3,
+   "rythme": "chaque séance"
   }
  ],
  "date": "2026-11-09"
