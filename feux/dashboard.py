@@ -96,6 +96,8 @@ TIPS = {
     "— rendement réel attendu 10 ans": "Régression historique (1881-2016) du rendement réel à 10 ans sur le CAPE, réestimée chaque mois ; fourchette 80 %. Trop pessimiste d'environ 5 points/an depuis 1990.",
     "Peur P (capitulation)": "Médiane des percentiles du VIX et du spread de crédit : confirme un vert de capitulation (≥ 80 avec une baisse ≥ 25 %).",
     "Baisse depuis le plus haut": "Écart au record historique.",
+    "Par le bas — P/E de ses plus grosses sociétés": "Prix payé pour 1 € de bénéfice des 12 derniers mois, agrégé sur les sociétés de l'indice présentes dans le Top 100 (pondération MSCI). Aujourd'hui seulement, sans historique : contexte.",
+    "Par le bas — vs leur propre passé": "Moyenne pondérée de la jauge de chaque société contre ses dix dernières années (0 = la moins chère de son histoire). Contexte.",
     "Contexte — écart MM200 j": "Prix du jour par rapport au prix moyen des 200 derniers jours ; p = percentile sur tout l'historique (≥ 15 ans). Hors règle.",
     "Contexte — perf. 12 mois": "Variation sur un an. Hors règle.",
     "Contexte — excess CAPE yield": "Rendement des actions (1/CAPE) moins le taux réel à 10 ans. Hors règle depuis la v1.0.",
@@ -129,11 +131,29 @@ def _latest_extras(key: str) -> dict:
         return {}
 
 
+_BU: dict | None = None
+
+
+def _bottom_up() -> dict:
+    global _BU
+    if _BU is None:
+        try:
+            from .stocks import bottom_up_by_index
+            _BU = bottom_up_by_index()
+        except Exception:   # module actions absent : pas bloquant
+            _BU = {}
+    return _BU
+
+
 def _row_with_extras(key: str, df: pd.DataFrame) -> pd.Series:
     row = df.iloc[-1].copy()
     for k, v in _latest_extras(key).items():
         if k not in row.index or k in ("state_since", "state_days", "perf_since_state"):
             row[k] = v
+    bu = _bottom_up()
+    if key in bu:
+        row["bu_n"], row["bu_pe"], row["bu_v_own"] = bu[key]["n"], bu[key]["pe"], bu[key]["v_own"]
+        row["bu_pe_sp500"] = bu.get("sp500", {}).get("pe")
     return row
 
 
@@ -158,6 +178,8 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
         ("— rendement réel attendu 10 ans", er_txt),
         ("Peur P (capitulation)", _fmt(row["P"]) + f" · VIX {_fmt(row['vix'], '{:.1f}')}"),
         ("Baisse depuis le plus haut", _fmt(row["drawdown"], "{:.1f}", " %", 100)),
+        ("Par le bas — P/E de ses plus grosses sociétés", (_fmt(row.get("bu_pe"), "{:.1f}") + f" ({_fmt(row.get('bu_n'))} sociétés)") if row.get("bu_pe") else "n.d."),
+        ("Par le bas — vs leur propre passé", ("p" + _fmt(row.get("bu_v_own"))) if row.get("bu_v_own") is not None else "n.d."),
         ("Contexte — écart MM200 j", _fmt(row["gap_ma200"], "{:+.1f}", " %", 100) + f" · p{_fmt(row.get('x_hist_pct'))}"),
         ("Contexte — perf. 12 mois", _fmt(row["mom_12m"], "{:+.1f}", " %", 100)),
         ("Contexte — excess CAPE yield", _fmt(row["ecy_live"], "{:.2f}", " %", 100)),

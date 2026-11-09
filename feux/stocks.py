@@ -331,7 +331,9 @@ def targets() -> list[dict]:
         for row in u.itertuples():
             if not isinstance(row.symbol, str):
                 continue
-            spec = {"key": row.symbol, "name": row.name, "ticker": row.symbol, "country": row.country, "sector": row.sector,
+            flags = {k: (None if pd.isna(getattr(row, k, np.nan)) else bool(getattr(row, k))) for k in ("in_sp500", "in_ndx", "in_world")}
+            flags["w_sp500"] = None if pd.isna(getattr(row, "w_sp500", np.nan)) else float(getattr(row, "w_sp500"))
+            spec = {"key": row.symbol, "name": row.name, "ticker": row.symbol, "country": row.country, "sector": row.sector, **flags,
                     "industry": row.industry, "weight": float(row.weight), "rank": int(row.rank), "pea": bool(row.pea_eligible_approx),
                     "cik": None if pd.isna(row.cik) else int(row.cik), "type": "operating" if not pd.isna(row.cik) else "price_only",
                     "source": "top100"}
@@ -371,7 +373,7 @@ def compute_all(limit: int | None = None) -> dict[str, pd.DataFrame]:
                 df = analyse_crypto_proxy(spec["key"], spec)
             else:
                 df = analyse_price_only(spec["key"], spec)
-            for k in ("name", "country", "sector", "industry", "weight", "rank", "pea", "source", "ticker"):
+            for k in ("name", "country", "sector", "industry", "weight", "rank", "pea", "source", "ticker", "in_sp500", "in_ndx", "in_world", "w_sp500"):
                 df.attrs[k] = spec.get(k)
             out[spec["key"]] = df
             n_ok += 1
@@ -466,6 +468,29 @@ def _since(df: pd.DataFrame) -> str:
     changes = col[col != last]
     start = col.index[0] if changes.empty else col.index[col.index.get_loc(changes.index[-1]) + 1]
     return str(start.date())
+
+
+def bottom_up_by_index(latest: dict | None = None) -> dict:
+    """Valorisation « par le bas » de chaque indice à partir de ses plus grosses sociétés du Top 100 (contexte, sans historique) :
+    P/E agrégé (pondéré par les poids MSCI ACWI, moyenne harmonique ≈ Σ capitalisations / Σ bénéfices), et moyennes pondérées
+    des deux lentilles. Les sociétés sans comptes ou aux comptes de plus de 15 mois sont exclues."""
+    latest = latest if latest is not None else load_latest()
+    out = {}
+    for key, flag in (("sp500", "in_sp500"), ("ndx", "in_ndx"), ("world", "in_world")):
+        mem = [s for s in latest.values() if s.get(flag) and s.get("kind") == "operating" and not s.get("stale_accounts")
+               and s.get("mcap") and s.get("net_income") is not None and s.get("weight")]
+        if len(mem) < 5:
+            continue
+        w = np.array([float(s["weight"]) for s in mem])
+        ey = np.array([float(s["net_income"]) / float(s["mcap"]) for s in mem])
+        pe = float(w.sum() / (w * ey).sum()) if (w * ey).sum() > 0 else None
+
+        def wavg(field):
+            v = [(float(s["weight"]), float(s[field])) for s in mem if s.get(field) is not None]
+            return None if not v else float(sum(a * b for a, b in v) / sum(a for a, _ in v))
+        out[key] = {"n": len(mem), "pe": pe, "v_own": wavg("V"), "v_cross": wavg("V_cross"),
+                    "weight_sp500": float(sum(s.get("w_sp500") or 0 for s in mem)) if key == "sp500" else None}
+    return out
 
 
 def load_latest() -> dict:

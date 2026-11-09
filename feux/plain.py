@@ -67,6 +67,12 @@ def simple_index(key: str, row: pd.Series) -> str:
              + _er_sentence(row))
     else:
         s = f"Feu orange sur {name} : rien d'extrême. On investit normalement, les montants exceptionnels en trois tranches mensuelles."
+    if row.get("bu_pe") and row.get("bu_pe_sp500") and key != "sp500":
+        s += (f" Par le bas : ses {int(row['bu_n'])} plus grosses sociétés se paient {row['bu_pe']:.1f} fois leurs bénéfices des 12 derniers mois "
+              f"(S&P 500 : {row['bu_pe_sp500']:.1f}), et se situent en moyenne au {row['bu_v_own']:.0f}e percentile de leur propre passé.")
+    elif row.get("bu_pe") and key == "sp500":
+        s += (f" Par le bas : ses {int(row['bu_n'])} plus grosses sociétés se paient {row['bu_pe']:.1f} fois leurs bénéfices des 12 derniers mois "
+              f"et se situent en moyenne au {row['bu_v_own']:.0f}e percentile de leur propre passé : chères contre un siècle d'histoire, pas contre leurs dix dernières années.")
     if bool(row.get("cher_tendu", False)):
         s += (" Drapeau d'information « cher et tendu » : les cours sont aussi très au-dessus de leur moyenne des 200 jours (sur le Nasdaq-100, "
               "ce drapeau a été suivi de rendements plus faibles depuis 1990, mais il n'a pas marché sur le S&P 500 ; ce n'est pas une règle).")
