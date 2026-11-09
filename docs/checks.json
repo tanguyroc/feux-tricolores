@@ -110,7 +110,7 @@
   {
    "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux) ; sans MVRV ou sans moyenne 200 semaines, pas de feu",
    "attendu": "orange",
-   "observé": "orange (MVRV 1.41, prix/MM200s 1.10)",
+   "observé": "orange (MVRV 1.39, prix/MM200s 1.10)",
    "ok": true,
    "critique": true
   },
@@ -284,8 +284,8 @@
   },
   {
    "source": "Bitcoin : MVRV (Coin Metrics)",
-   "date": "2026-11-06",
-   "âge": 3,
+   "date": "2026-11-08",
+   "âge": 1,
    "rythme": "quotidien, 1 à 2 jours de décalage"
   },
   {
