@@ -137,6 +137,14 @@ def cmd_alert(args) -> None:
     notify_changes(dry_run=args.dry_run)
 
 
+def cmd_longrun(args) -> None:
+    from .longrun import run
+
+    out = run()
+    log.info("Protocole v1.0 : candidats retenus %s ; choix %s ; Bitcoin B1 %s", out["retenus"] or "aucun", out["choix"],
+             "adopté" if out["bitcoin"]["B1"]["critères"]["tout"] else "non validé")
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(prog="feux", description="Feux tricolores d'investissement long terme")
     p.add_argument("-v", "--verbose", action="store_true")
@@ -173,6 +181,8 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_decide)
     s = sub.add_parser("robustness", help="sous-périodes, bootstrap, sensibilité, confirmation")
     s.set_defaults(fn=cmd_robustness)
+    s = sub.add_parser("longrun", help="protocole v1.0 : candidats sur 1920-1989 (Shiller) et 1990-aujourd'hui")
+    s.set_defaults(fn=cmd_longrun)
     s = sub.add_parser("dashboard", help="générer docs/index.html")
     s.set_defaults(fn=cmd_dashboard)
     s = sub.add_parser("alert", help="alerter si une couleur ou un drapeau a changé")
