@@ -120,10 +120,14 @@ def evaluate(asset: str, df: pd.DataFrame, start: str, per_year: int) -> AssetRe
             "c_épisodes_rouges": {"valeur": res.episodes_n.get("red", 0), "seuil": 2, "ok": res.episodes_n.get("red", 0) >= 2},
             "changements_par_an": res.changes_per_year,
         }
-    else:                # indices : pas de rouge depuis la v1.0 (protocole §8.4) — on mesure ce que vaut le vert
+    else:                # indices : protocole §8.4 (vert/orange) + rouge extrême v1.1 (jugement, information sur le passé)
         gap = float(f3.get("green", np.nan) - f3.get("orange", np.nan))
+        gap_r = float(f3.get("orange", np.nan) - f3.get("red", np.nan))
         res.checks = {
             "écart_3ans_vert_moins_orange": {"valeur": gap, "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"},
+            "écart_3ans_orange_moins_rouge": {"valeur": gap_r, "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"},
+            "part_rouge": {"valeur": res.share.get("red", 0.0), "seuil": r["red_time_share_max_indices"], "ok": res.share.get("red", 0.0) <= r["red_time_share_max_indices"]},
+            "épisodes_rouges": res.episodes_n.get("red", 0),
             "baisse24m_p90": {c: (None if c not in dd.index else float(dd.loc[c, "drawdown_24m_p90"])) for c in COLORS},
             "épisodes_verts": res.episodes_n.get("green", 0),
             "changements_par_an": res.changes_per_year,
@@ -137,8 +141,8 @@ def evaluate(asset: str, df: pd.DataFrame, start: str, per_year: int) -> AssetRe
 def plan_simulation(df: pd.DataFrame, start: str = "1990-01-01") -> dict:
     """Compare : (A) exceptionnel investi chaque janvier sans regarder le feu ; (B) exceptionnel mis en
     réserve (rémunérée au taux des bons du Trésor 3 mois) et déployé par tiers mensuels uniquement en vert
-    (par sixièmes si « couteau qui tombe ») ; (C) règle v1.0 : réserve déployée en trois tranches mensuelles (les indices
-    n'ont plus de rouge).
+    (par sixièmes si « couteau qui tombe ») ; (C) règle en vigueur : réserve déployée en trois tranches mensuelles, six si le
+    feu est rouge extrême en janvier (v1.1).
     Les versements mensuels sont identiques dans les trois cas.
     Prix seuls (hors dividendes) : identiques pour A et B, donc sans effet sur la comparaison."""
     p = rules()["acceptance"]["plan_type"]
@@ -164,8 +168,8 @@ def plan_simulation(df: pd.DataFrame, start: str = "1990-01-01") -> dict:
             reserve_b += yearly
             reserve_c += yearly
             invested += yearly
-            left_c = 3
-            tranche_c = reserve_c / 3
+            left_c = 6 if color_m.loc[date] == "red" else 3     # v1.1 : six tranches en rouge extrême
+            tranche_c = reserve_c / left_c
         growth = (1 + tb.loc[date]) ** (1 / 12)
         reserve_b *= growth
         reserve_c *= growth
@@ -328,7 +332,7 @@ def run_all() -> dict:
         html.append(f"<p><b>{r['indices']['assets'][asset]['name']}</b> ({sim['période']}) : investi {sim['investi_total']:,.0f} € ; "
                     f"A (exceptionnel investi chaque janvier) = {sim['A_valeur_finale']:,.0f} € ; "
                     f"B (réserve déployée en vert) = {sim['B_valeur_finale']:,.0f} € ; B − A = {sim['B_moins_A']:,.0f} € "
-                    f"({_fmt_pct(sim['B_moins_A_pct'])}) ; C (règle v1.0 : trois tranches mensuelles) = {sim['C_valeur_finale']:,.0f} € ; C − A = {sim['C_moins_A']:,.0f} € "
+                    f"({_fmt_pct(sim['B_moins_A_pct'])}) ; C (règle v1.1 : trois tranches mensuelles, six en rouge extrême) = {sim['C_valeur_finale']:,.0f} € ; C − A = {sim['C_moins_A']:,.0f} € "
                     f"({_fmt_pct(sim['C_moins_A_pct'])}) ; réserve B finale non déployée {sim['réserve_B_finale']:,.0f} € "
                     f"(max {sim['réserve_B_max']:,.0f} €) ; drawdown max A {_fmt_pct(sim['A_drawdown_max'])}, B {_fmt_pct(sim['B_drawdown_max'])}, C {_fmt_pct(sim['C_drawdown_max'])}.</p>")
         log.info("plan %s : B−A = %.0f € (%s) | C−A = %.0f € (%s) | réserve B finale %.0f €", asset, sim["B_moins_A"], _fmt_pct(sim["B_moins_A_pct"]),

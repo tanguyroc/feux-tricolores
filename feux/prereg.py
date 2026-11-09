@@ -165,6 +165,46 @@ def register(day: str | None = None) -> dict:
     return content
 
 
+def register_amendment(tag: str, protocol: str, hypotheses: list[str]) -> dict:
+    """Pré-inscription d'un amendement de règles (v1.1 : rouge extrême), écrite le jour de son adoption, à côté de
+    l'inscription mensuelle : prereg/<jour>-<tag>.json, empreinte dans HASHES.txt. Indices et Bitcoin seulement."""
+    PREREG_DIR.mkdir(exist_ok=True)
+    day = dt.date.today().isoformat()
+    key = f"{day}-{tag}"
+    path = PREREG_DIR / f"{key}.json"
+    if path.exists():
+        log.info("Amendement %s déjà inscrit : inchangé", key)
+        return json.loads(path.read_text(encoding="utf-8"))
+    lat, base = _latest(), _base_rates()
+    d0 = dt.date.fromisoformat(day)
+    content = {
+        "date": day, "règles": str(rules()["version"]), "protocole": protocol, "amendement": tag,
+        "échéances": {h: (d0.replace(year=d0.year + y)).isoformat() for h, y in HORIZONS.items()},
+        "actifs": {k: {"date_données": v.get("date"), "couleur": v.get("color_confirmed"), "cher": v.get("cher"),
+                       "cher_tendu": v.get("cher_tendu"), "tendance_cassée": v.get("trend_broken"), "prix": _clean(v.get("price")),
+                       "V": _clean(v.get("V")), "rdt_réel_attendu_10a": _clean(v.get("er10")),
+                       "fourchette_10a": [_clean(v.get("er10_lo")), _clean(v.get("er10_hi"))],
+                       "attentes_historiques_couleur": base.get(k, {}).get(v.get("color_confirmed"), {})}
+                   for k, v in lat.items()},
+        "hypothèses": hypotheses,
+    }
+    blob = json.dumps(content, ensure_ascii=False, sort_keys=True, indent=1)
+    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    path.write_text(blob, encoding="utf-8")
+    with open(PREREG_DIR / "HASHES.txt", "a", encoding="utf-8") as fh:
+        fh.write(f"{key} sha256={digest}\n")
+    log.info("Amendement %s : sha256 %s", key, digest)
+    return content
+
+
+AMENDMENT_V1_1 = [
+    "Indices (rouge extrême, V ≥ 98) : à 3 et 5 ans, le rendement après un jour rouge est inférieur à celui après un jour orange "
+    "(1990-2026, vu après coup : −2 à −5 points par an à 3 ans selon l'indice ; 1911-2026 en mensuel : +1,9 %/an réels à 3 ans et −2,8 %/an à 5 ans "
+    "contre +7 à +11 % ailleurs). Échec si, sur les épisodes postérieurs au 9 novembre 2026, l'écart est nul ou de signe contraire.",
+    "Indices : à 1 an, le rouge extrême ne dit rien (1911-2026 : +9,1 %/an après rouge, +8 à +10,5 % ailleurs) : il ne doit jamais servir à vendre.",
+]
+
+
 def register_monthly() -> dict | None:
     """Une pré-inscription par mois civil : la première exécution du mois l'écrit."""
     month = dt.date.today().strftime("%Y-%m")
@@ -213,6 +253,8 @@ def stock_scores() -> list[dict]:
     for path in sorted(PREREG_DIR.glob("20*.json")) if PREREG_DIR.exists() else []:
         c = json.loads(path.read_text(encoding="utf-8"))
         a = c.get("actions") or {}
+        if not a:                       # amendement de règles : pas de liste d'actions
+            continue
         p0s = {t: p for t, p in (a.get("prix") or {}).items() if p}
         d0 = pd.Timestamp(c["date"])
         groups = {"vertes": set(a.get("vertes", [])), "rouges": set(a.get("rouges", [])), "solides": set(a.get("solides", []))}
@@ -250,6 +292,7 @@ def scoreboard() -> list[dict]:
     prices = {}
     for path in sorted(PREREG_DIR.glob("20*.json")):
         c = json.loads(path.read_text(encoding="utf-8"))
+        key = path.stem                 # « 2026-11-09 » ou « 2026-11-09-v1.1 » (amendement)
         for asset, a in c["actifs"].items():
             if asset not in prices:
                 try:
@@ -257,8 +300,8 @@ def scoreboard() -> list[dict]:
                 except Exception:
                     prices[asset] = None
             px = prices[asset]
-            rec = {"date": c["date"], "empreinte": hashes.get(c["date"], "")[:12], "empreinte_ok": verified.get(c["date"], False),
-                   "actif": asset, "couleur": a["couleur"],
+            rec = {"date": c["date"], "empreinte": hashes.get(key, "")[:12], "empreinte_ok": verified.get(key, False),
+                   "règles": c.get("règles"), "amendement": c.get("amendement"), "actif": asset, "couleur": a["couleur"],
                    "cher": a.get("cher"), "attentes": a.get("attentes_historiques_couleur", {})}
             for h, due in c["échéances"].items():
                 if px is None or pd.Timestamp(due) > px.index[-1]:

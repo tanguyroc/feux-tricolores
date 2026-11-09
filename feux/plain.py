@@ -56,7 +56,15 @@ def simple_index(key: str, row: pd.Series) -> str:
     c = row.get("color_confirmed", row["color"])
     why = _why_index(row)
     proxy = " (valorisation du S&P 500 utilisée comme repère)" if bool(row.get("valuation_is_proxy", False)) else ""
-    if c == "green":
+    if c == "red":
+        s = (f"Feu rouge extrême sur {name}{proxy} : les actions américaines se paient plus cher que dans {row['V']:.0f} % des mois depuis 1881, "
+             f"un niveau atteint seulement en 1929, 1965, 1995-2000, 2021 et depuis 2024. Les mois à ce niveau ont été suivis en médiane de "
+             f"+1,9 %/an (inflation déduite) sur trois ans et −2,8 %/an sur cinq ans, contre +7 à +11 % ailleurs ; mais rien de tel à un an, et en 1995 "
+             f"le marché a encore monté cinq ans. On continue les versements, on étale les montants exceptionnels sur six mois, levier au minimum, "
+             f"on ne vend pas à cause du feu. Règle de jugement (v1.1), non validée : quatre épisodes ne prouvent rien. " + _er_sentence(row))
+    elif c == "none":
+        s = f"Pas de feu sur {name} : la valorisation n'est pas disponible aujourd'hui. Versements habituels, aucune décision exceptionnelle."
+    elif c == "green":
         s = f"Feu vert sur {name} : {why}. Depuis 1990, les jours verts ont été suivis de rendements à trois ans un peu meilleurs que les jours orange (+1 à +3 points par an selon l'indice), parfois après de nouvelles baisses : c'est le moment d'engager une réserve, en plusieurs fois."
         if bool(row.get("falling_knife", False)):
             s += " Attention : la baisse n'est peut-être pas finie (prix sous la moyenne des 10 derniers mois), d'où l'étalement sur six mois."
@@ -120,18 +128,21 @@ def monthly_actions(states: dict[str, dict]) -> list[str]:
     r = rules()["conduct"]
     acts = ["Versements programmés : maintenus sur tous les supports, quelle que soit la couleur."]
     idx = {k: v for k, v in states.items() if k != "btc"}
-    reds = [v["name"] for v in idx.values() if v["color"] == "red"]   # vide depuis la v1.0 (indices : vert ou orange)
+    reds = [v["name"] for v in idx.values() if v["color"] == "red"]   # rouge extrême (V ≥ 98), v1.1
     greens = [v["name"] for v in idx.values() if v["color"] == "green"]
     chers = [v["name"] for v in idx.values() if v["color"] == "orange" and v.get("cher")]
     if greens:
         acts.append(f"Réserve : à déployer par tiers sur trois mois sur {', '.join(greens)}"
                     + (" (par sixièmes sur six mois : la baisse n'est peut-être pas finie)" if any(v.get("falling_knife") for v in idx.values() if v["color"] == "green") else "") + ".")
+    if reds:
+        acts.append(f"Montants exceptionnels : étalés en six tranches mensuelles sur {', '.join(reds)} (rouge extrême) ; aucune vente à cause du feu, "
+                    "les versements réguliers continuent vers les mêmes supports.")
     oranges = [v["name"] for v in idx.values() if v["color"] == "orange"]
     if oranges:
         acts.append(f"Montants exceptionnels (prime, épargne accumulée) : en trois tranches mensuelles sur {', '.join(oranges)} (feu orange"
                     + (f" ; marché cher sur {', '.join(chers)}, ce qui réduit le rendement attendu à long terme mais n'a pas justifié d'attendre depuis 1990" if chers else "")
                     + ").")
-    worst = "orange" if (oranges or reds) else "green"
+    worst = "red" if reds else ("orange" if oranges else "green")
     cap = r[worst]["leverage_cap_share_equities"]
     broken = [v["name"] for v in idx.values() if v.get("trend_broken")]
     if broken:
@@ -155,7 +166,12 @@ def headline(states: dict[str, dict]) -> str:
     idx = {k: v for k, v in states.items() if k != "btc"}
     greens = [v["name"] for v in idx.values() if v["color"] == "green"]
     chers = [v["name"] for v in idx.values() if v["color"] == "orange" and v.get("cher")]
-    if greens:
+    reds = [v["name"] for v in idx.values() if v["color"] == "red"]
+    if reds and len(reds) == len(idx):
+        a = "marchés actions au plus cher de leur histoire (rouge extrême)"
+    elif reds:
+        a = f"rouge extrême sur {', '.join(reds)}" + (f", vert sur {', '.join(greens)}" if greens else "")
+    elif greens:
         a = f"vert sur {', '.join(greens)}"
     elif len(chers) == len(idx):
         a = "marchés actions chers mais sans signal d'action (orange)"
@@ -172,7 +188,7 @@ def headline(states: dict[str, dict]) -> str:
 GLOSSARY = [
     ("Percentile", "Où se situe la valeur du jour dans l'historique. « 98e percentile » = plus haut que 98 % des valeurs passées. Pour le CAPE, "
                    "l'historique est TOUT ce qui est connu depuis 1881 ; pour les indicateurs de contexte, les 25 dernières années.",
-     "V (valorisation) : vert à 40 ou moins ; étiquette « cher » à 80 ou plus (information, pas de règle)."),
+     "V (valorisation) : vert à 40 ou moins ; étiquette « cher » à 80 ou plus (information) ; rouge extrême à 98 ou plus (v1.1)."),
     ("CAPE (PER de Shiller)", "Le prix payé pour 1 € de bénéfice moyen des dix dernières années, corrigé de l'inflation. Comme le prix d'un appartement rapporté aux loyers "
                               "qu'il a réellement rapportés sur dix ans. À 40, on paie 40 € pour 1 € de bénéfice ; la moyenne depuis 1881 est autour de 17.",
      "Seul indicateur de la couleur des indices (v1.0), en percentile depuis 1881. Il dit quelque chose du rendement à dix ans, rien du moment des baisses."),
@@ -180,10 +196,14 @@ GLOSSARY = [
                                        "avec une fourchette de ±6 points. Précédents à ce niveau : 1998-2001, suivis de −6 % à +1 %/an. Mais depuis 1990, ce modèle a été trop "
                                        "pessimiste d'environ 5 points par an (il classe bien les périodes, il se trompe sur le niveau).",
      "Information, pas une règle. Sert à régler ses attentes, pas à attendre."),
-    ("« Cher » (et pourquoi ce n'est plus rouge)", "Avant 1990, un marché « cher » (CAPE au-dessus de son 80e percentile) était rare (20 % du temps) et suivi de mauvais rendements. "
+    ("« Cher » (et pourquoi ce n'est pas rouge)", "Avant 1990, un marché « cher » (CAPE au-dessus de son 80e percentile) était rare (20 % du temps) et suivi de mauvais rendements. "
                                                   "Depuis 1990, le marché américain a été cher 88 % du temps et attendre a coûté cher. Le test pré-enregistré du 9 novembre 2026 "
-                                                  "l'a confirmé : aucune règle « rouge » fondée sur la valorisation n'a passé l'épreuve depuis 1990.",
+                                                  "l'a confirmé : aucune règle « rouge » partant du 80e percentile n'a passé l'épreuve depuis 1990. Le rouge extrême (98e percentile), ajouté ensuite, n'a pas subi ce test.",
      "Étiquette d'information sur un feu orange. Les montants exceptionnels partent en trois tranches mensuelles."),
+    ("Rouge extrême (V ≥ 98)", "Le marché se paie plus cher que dans 98 % des mois connus depuis 1881 : 1929, 1965, 1995-2000, 2021 et depuis 2024. Les mois à ce niveau "
+                               "ont été suivis en médiane de +1,9 %/an réels à trois ans et −2,8 %/an à cinq ans (contre +7 à +11 % ailleurs), mais de rien de particulier à un an, "
+                               "et 1995-1997 a été suivi de trois à cinq excellentes années. Quatre épisodes achevés : c'est un jugement, pas une preuve.",
+     "Règle v1.1 : versements maintenus ; montants exceptionnels en six tranches mensuelles au lieu de trois ; levier 5 % au plus ; aucune vente motivée par le feu."),
     ("Excess CAPE Yield", "Le rendement des actions (1 / CAPE) moins ce que rapporte l'État sur dix ans après inflation. Il dit si les actions paient plus qu'un placement "
                           "sans risque. Défaut connu : quand les taux sont à zéro, tout paraît bon marché (été 2020).", "Contexte, hors règle depuis la v1.0."),
     ("Allocation actions des ménages (AIAE)", "La part de leur patrimoine financier que les Américains ont placée en actions. Très liée aux rendements des dix années suivantes "

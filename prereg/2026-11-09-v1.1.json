@@ -1,0 +1,120 @@
+{
+ "actifs": {
+  "btc": {
+   "V": -0.715183,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.52543,
+     "p10": -0.517902,
+     "part_négative": 0.359331
+    },
+    "3 ans": {
+     "médiane": 0.538542,
+     "p10": 0.228328,
+     "part_négative": 0.0
+    }
+   },
+   "cher": null,
+   "cher_tendu": null,
+   "couleur": "orange",
+   "date_données": "2026-11-09",
+   "fourchette_10a": [
+    null,
+    null
+   ],
+   "prix": 74424.226562,
+   "rdt_réel_attendu_10a": null,
+   "tendance_cassée": false
+  },
+  "ndx": {
+   "V": 98.140732,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.272401,
+     "p10": -0.457709,
+     "part_négative": 0.281006
+    },
+    "3 ans": {
+     "médiane": 0.105822,
+     "p10": -0.300751,
+     "part_négative": 0.345355
+    }
+   },
+   "cher": true,
+   "cher_tendu": false,
+   "couleur": "red",
+   "date_données": "2026-11-06",
+   "fourchette_10a": [
+    -0.055724,
+    0.066081
+   ],
+   "prix": 26989.990234,
+   "rdt_réel_attendu_10a": 0.006677,
+   "tendance_cassée": false
+  },
+  "sp500": {
+   "V": 98.140732,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.157607,
+     "p10": -0.162744,
+     "part_négative": 0.278212
+    },
+    "3 ans": {
+     "médiane": 0.078352,
+     "p10": -0.129496,
+     "part_négative": 0.350244
+    }
+   },
+   "cher": true,
+   "cher_tendu": false,
+   "couleur": "red",
+   "date_données": "2026-11-06",
+   "fourchette_10a": [
+    -0.055724,
+    0.066081
+   ],
+   "prix": 7376.859863,
+   "rdt_réel_attendu_10a": 0.006677,
+   "tendance_cassée": false
+  },
+  "world": {
+   "V": 98.140732,
+   "attentes_historiques_couleur": {
+    "1 an": {
+     "médiane": 0.118948,
+     "p10": -0.1984,
+     "part_négative": 0.295907
+    },
+    "3 ans": {
+     "médiane": 0.051478,
+     "p10": -0.148248,
+     "part_négative": 0.391041
+    }
+   },
+   "cher": true,
+   "cher_tendu": false,
+   "couleur": "red",
+   "date_données": "2026-11-06",
+   "fourchette_10a": [
+    -0.055724,
+    0.066081
+   ],
+   "prix": 4739.899902,
+   "rdt_réel_attendu_10a": 0.006677,
+   "tendance_cassée": false
+  }
+ },
+ "amendement": "v1.1",
+ "date": "2026-11-09",
+ "hypothèses": [
+  "Indices (rouge extrême, V ≥ 98) : à 3 et 5 ans, le rendement après un jour rouge est inférieur à celui après un jour orange (1990-2026, vu après coup : −2 à −5 points par an à 3 ans selon l'indice ; 1911-2026 en mensuel : +1,9 %/an réels à 3 ans et −2,8 %/an à 5 ans contre +7 à +11 % ailleurs). Échec si, sur les épisodes postérieurs au 9 novembre 2026, l'écart est nul ou de signe contraire.",
+  "Indices : à 1 an, le rouge extrême ne dit rien (1911-2026 : +9,1 %/an après rouge, +8 à +10,5 % ailleurs) : il ne doit jamais servir à vendre."
+ ],
+ "protocole": "research/v1_1_amendment.md",
+ "règles": "1.1",
+ "échéances": {
+  "1 an": "2027-11-09",
+  "3 ans": "2029-11-09"
+ }
+}

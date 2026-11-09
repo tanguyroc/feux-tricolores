@@ -19,6 +19,7 @@ from .signals import load_signals
 
 log = logging.getLogger("feux.alerts")
 STATE_PATH = DOCS_DIR / "state.json"
+APP_URL = "https://tanguyroc.github.io/feux-tricolores/"
 
 
 def _rows() -> dict:
@@ -60,12 +61,14 @@ def diff(prev: dict, cur: dict) -> list[str]:
 
 
 def compose(changes: list[str], cur: dict, detailed: bool = True) -> str:
+    # l'essentiel d'abord (changements, conduite du mois) : une notification push est tronquée vers 3 800 caractères (v1.1)
     lines = ["🚦 Feux tricolores — changement d'état", ""] + [f"• {m}" for m in changes] + ["", headline({k: v for k, v in cur.items() if not k.startswith("_")}), ""]
     rows = _rows()
     cur = {k: v for k, v in cur.items() if not k.startswith("_")}
+    lines += ["Ce mois-ci, concrètement :"] + [f"• {a}" for a in monthly_actions(cur)]
+    lines += ["", f"Détail : {APP_URL}", ""]
     for key, c in cur.items():
         lines.append(simple_btc(rows[key]) if key == "btc" else simple_index(key, rows[key]))
-    lines += ["", "Ce mois-ci, concrètement :"] + [f"• {a}" for a in monthly_actions(cur)]
     if detailed:
         lines.append("")
         lines.append("— Détail chiffré —")
@@ -118,7 +121,10 @@ def send(text: str, title: str = "Feux tricolores") -> bool:
 RULES_CHANGE_NOTE = {
     "1.0": ("Changement de RÈGLES (v1.0, 9 novembre 2026), pas de marché : un test publié avant calcul a montré qu'aucune règle « rouge » "
             "fondée sur la valorisation n'a fonctionné sur le S&P 500 depuis 1990 (elle fonctionnait sur 1920-1989). Les indices passent donc "
-            "de rouge à orange avec l'étiquette « cher » ; le Bitcoin suit une règle en niveaux (MVRV, moyenne 200 semaines).")}
+            "de rouge à orange avec l'étiquette « cher » ; le Bitcoin suit une règle en niveaux (MVRV, moyenne 200 semaines)."),
+    "1.1": ("Changement de RÈGLES (v1.1, 9 novembre 2026), pas de marché : ajout d'un « rouge extrême » des indices quand le marché américain "
+            "se paie plus cher que 98 % des mois depuis 1881 (1929, 1965, 1995-2000, 2021, et maintenant). Règle de jugement, non validée. "
+            "Conduite : versements maintenus, montants exceptionnels en six tranches mensuelles au lieu de trois, levier 5 % au plus, aucune vente.")}
 
 
 def notify_changes(dry_run: bool = False) -> list[str]:

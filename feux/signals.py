@@ -204,15 +204,22 @@ def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd
 
 
 def _colorize_index(df: pd.DataFrame) -> pd.DataFrame:
-    """v1.0 (protocole §8.4) : vert = valorisation basse ou capitulation ; sinon orange. « Cher » est une information."""
+    """v1.0 (protocole §8.4) : vert = valorisation basse ou capitulation ; sinon orange. « Cher » est une information.
+    v1.1 : rouge extrême si V ≥ 98 (règle de jugement, prioritaire sur le vert de capitulation)."""
     r = rules()["indices"]
     V, P = df["V"], df["P"]
     green_cap = (df["drawdown"] >= r["fear"]["drawdown_min"]) & (P >= r["fear"]["green_min"])
     green_val = V <= r["valuation"]["green_max"]
+    red_min = r["valuation"].get("red_min")
+    red = (V >= red_min).fillna(False) if red_min is not None else pd.Series(False, index=df.index)
     color = pd.Series("orange", index=df.index, dtype=object)
     reason = pd.Series("", index=df.index, dtype=object)
     color[green_val] = "green"; reason[green_val] = "valorisation basse (V ≤ 40)"
     color[green_cap] = "green"; reason[green_cap] = "capitulation (baisse ≥ 25 % et peur P ≥ 80)"
+    color[red] = "red"; reason[red] = f"rouge extrême : V ≥ {red_min:g}, plus cher que {red_min:g} % des mois connus depuis 1881"
+    missing = V.isna() & ~green_cap.fillna(False)
+    color[missing] = "none"; reason[missing] = "valorisation indisponible : pas de feu"
+    df["red_extreme"] = red
     df["cher"] = (V >= r["valuation"]["cher_min"]).fillna(False)
     ct = r["context"]["cher_tendu"]
     df["cher_tendu"] = ((V >= ct["v_min"]) & (df["x_hist_pct"] >= ct["x_min"])).fillna(False)

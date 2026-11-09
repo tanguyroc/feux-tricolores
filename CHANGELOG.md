@@ -1,5 +1,29 @@
 # Journal des modifications des règles
 
+## 2026-11-09 — v1.1 (rouge extrême des indices ; zones, secteurs et thèmes en information)
+
+**Rouge extrême des indices** (`rules.yaml`, `indices.valuation.red_min: 98` ; `research/v1_1_amendment.md`).
+- Rouge si le CAPE du S&P 500 est plus élevé que dans 98 % des mois connus depuis 1881 ; prioritaire sur le vert de capitulation.
+- Conduite : versements maintenus vers les mêmes supports ; montants exceptionnels en six tranches mensuelles au lieu de trois ;
+  levier ≤ 5 % ; aucune vente motivée par le feu.
+- **Règle de jugement**, seuil choisi après avoir vu l'histoire : 1911-2026, mois à V ≥ 98 suivis de +1,9 %/an réels à 3 ans et
+  −2,8 %/an à 5 ans (médianes ; +7 à +11 % ailleurs), rien à 1 an ; quatre épisodes achevés, dont 1995-1997 suivi de trois à cinq
+  excellentes années. 1990-2026 (quotidien) : rouge 22 % du temps, rendement médian à 3 ans inférieur à l'orange de 2,1 (S&P 500),
+  5,4 (Nasdaq-100) et 2,9 points (MSCI World) ; 35 % de cas négatifs à 3 ans contre 14 % (S&P 500). Coût de l'étalement sur un plan
+  type : −0,1 % (S&P 500).
+- Préséance : les 108 jours du Nasdaq-100 d'avril 2000 à février 2001 (baisse ≥ 25 %, peur forte, V ≥ 98), verts en v1.0, sont rouges.
+- Pré-inscription : `prereg/2026-11-09-v1.1.json` (hypothèses et critère d'échec écrits le jour de l'adoption).
+- Allumé aujourd'hui sur les trois indices (V = 98,1, au ras du seuil).
+- Indices sans valorisation : « pas de feu » au lieu d'orange (sauf capitulation mesurée).
+- Témoin : « rouge si et seulement si V ≥ 98 » remplace « plus de rouge depuis la v1.0 ».
+
+**Zones, secteurs et thèmes : la valorisation devient une information, plus un feu.**
+- Test sur 16 pays, 1870-2020 (`research/zones_test_protocol.md`, écrit avant calcul ; `research/zones_test_results.md`) : la mesure
+  « prix / dividendes réels moyens sur 10 ans contre ses 20 dernières années » a été suivie de +1,9 point par an à 5 ans pour les
+  années « bon marché », sous le seuil de 2 points fixé d'avance (corrélation de rang −0,13, IC 90 % [−0,20 ; −0,07] ; 13 pays sur 16).
+- Affichage : très bon marché, bon marché, dans sa moyenne, cher, très cher, contre son propre passé ; « non mesurable » avec sa raison.
+- Témoin : aucune zone, aucun secteur, aucun thème ne porte de feu de couleur.
+
 ## 2026-11-09 — v1.0.2 (données à jour, « pas de feu », zones géographiques ; règles des indices et du Bitcoin inchangées)
 
 **Données à jour.**

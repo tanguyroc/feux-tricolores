@@ -90,7 +90,7 @@ def _raw_note(row) -> str:
 
 
 TIPS = {
-    "Valorisation V": "Percentile du CAPE du S&P 500 parmi tous les mois depuis 1881 (fenêtre croissante). 40 ou moins = vert ; 80 ou plus = « cher » (information).",
+    "Valorisation V": "Percentile du CAPE du S&P 500 parmi tous les mois depuis 1881 (fenêtre croissante). 40 ou moins = vert ; 80 ou plus = « cher » (information) ; 98 ou plus = rouge extrême (v1.1).",
     "Valorisation V (S&P 500, proxy)": "Valorisation du S&P 500 utilisée comme repère : pas d'historique long de valorisation pour cet indice.",
     "— CAPE": "Prix payé pour 1 € de bénéfice moyen des 10 dernières années (inflation corrigée), recalé chaque jour sur le prix.",
     "— CAPE du S&P 500": "CAPE du S&P 500, utilisé comme repère pour cet indice.",
@@ -293,8 +293,9 @@ def _stocks_section() -> str:
 
 def _conduct_table() -> str:
     rows = ""
-    # indices : vert et orange seulement depuis la v1.0 ; le rouge (Bitcoin) a sa propre ligne, plus bas
-    for color, sub in (("green", ""), ("orange", "<br><small>(y compris « cher »)</small>")):
+    # indices : vert, orange (y compris « cher ») et, depuis la v1.1, rouge extrême ; le Bitcoin a sa propre ligne, plus bas
+    for color, sub in (("green", ""), ("orange", "<br><small>(y compris « cher »)</small>"),
+                       ("red", "<br><small>(extrême : V ≥ 98, jugement v1.1)</small>")):
         items = "".join(f"<li>{html.escape(t)}</li>" for t in conduct_text(color))
         rows += f"<tr><td class='c {color}'>{LABEL[color]}{sub}</td><td><ul style='margin:0;padding-left:18px'>{items}</ul></td></tr>"
     cb = rules()["conduct"]["bitcoin"]
@@ -354,7 +355,8 @@ def _protocol_section() -> str:
     nd = o["conception_quotidienne"]["ndx"]["R1"]
     return (f"<p><b>Protocole écrit et publié avant tout calcul</b> (research/v1_protocol.md, 9 novembre 2026, 07:40), une seule exécution. "
             f"Issue : <b>aucune règle rouge ne passe sur le S&P 500 depuis 1990</b>, alors que les trois passent sur 1920-1989. "
-            f"Le rouge des indices devient donc l'étiquette d'information « cher ».</p>"
+            f"Le rouge des indices devient donc l'étiquette d'information « cher ». Depuis la v1.1, un rouge extrême (98e percentile, règle de "
+            f"jugement, non testée de cette façon) s'y ajoute : research/v1_1_amendment.md.</p>"
             f"<h3>Hors échantillon : S&P Composite 1920-1989 (mensuel, rendements réels dividendes inclus, jamais utilisé pour concevoir les feux)</h3>"
             f"<table>{head}{ho}</table>"
             f"<h3>Conception : S&P 500 1990-2026 (quotidien) — critère décisif</h3><table>{head}{ds}</table>"
@@ -384,15 +386,32 @@ def _current_rules_section() -> str:
     plan = s.get("plan_sp500", {})
     plan_txt = ""
     if plan:
-        plan_txt = (f"<p class='note'>Plan type sur le S&P 500 depuis 1990 (1 000 €/mois + 10 000 €/an) : déployer l'exceptionnel en trois tranches mensuelles "
-                    f"(règle v1.0) coûte {_pct(plan.get('C_moins_A_pct'))} par rapport à un investissement immédiat ; attendre le vert aurait coûté "
+        plan_txt = (f"<p class='note'>Plan type sur le S&P 500 depuis 1990 (1 000 €/mois + 10 000 €/an) : déployer l'exceptionnel en trois tranches mensuelles, "
+                    f"six en rouge extrême (règle v1.1), coûte {_pct(plan.get('C_moins_A_pct'))} par rapport à un investissement immédiat ; attendre le vert aurait coûté "
                     f"{_pct(plan.get('B_moins_A_pct'))}. Nasdaq-100 : attendre le vert {_pct(s.get('plan_ndx', {}).get('B_moins_A_pct'))}.</p>")
     return ("<table><tr><th rowspan='2'>Actif</th><th colspan='3'>Part du temps (et épisodes ≥ 20 jours)</th><th colspan='3'>Rendement médian annualisé, 3 ans suivants</th>"
             "<th colspan='3'>Baisse médiane (et p90) dans les 24 mois</th></tr>"
             "<tr>" + "".join(f"<th class='c {c}'>{LABEL[c]}</th>" for c in ["green", "orange", "red"]) * 3 + "</tr>" + rows + "</table>"
-            "<p class='note'>Indices : vert = valorisation basse ou capitulation ; plus de rouge depuis la v1.0. Le vert n'a été suivi que de rendements "
-            "modérément meilleurs que l'orange depuis 1990 (+1 à +3 points par an selon l'indice) ; sur le Nasdaq-100, les verts de 2000-2002 ont été suivis de nouvelles baisses (90e percentile de la baisse sur 24 mois : 61 %, contre 35 % après l'orange). Sa vraie valeur est de dire quand une réserve peut être engagée, en tranches.</p>"
-            + plan_txt)
+            + _indices_note(s) + plan_txt)
+
+
+def _indices_note(s: dict) -> str:
+    """Lecture honnête des résultats indices, calculée (plus de chiffres écrits à la main : ils vieillissaient à chaque règle)."""
+    bits_g, bits_r = [], []
+    for a, name in (("sp500", "S&P 500"), ("ndx", "Nasdaq-100"), ("world", "MSCI World")):
+        if a not in s:
+            continue
+        f3 = {r["couleur"]: r for r in s[a]["fwd"] if r["horizon"] == "3 ans"}
+        if "green" in f3 and "orange" in f3:
+            bits_g.append(f"{name} {100 * (f3['green']['médiane_annualisée'] - f3['orange']['médiane_annualisée']):+.1f} pts")
+        if "red" in f3 and "orange" in f3:
+            bits_r.append(f"{name} {100 * (f3['red']['médiane_annualisée'] - f3['orange']['médiane_annualisée']):+.1f} pts, "
+                          f"{100 * f3['red']['part_négative']:.0f} % de cas négatifs contre {100 * f3['orange']['part_négative']:.0f} %")
+    return ("<p class='note'>Indices : vert = valorisation basse ou capitulation ; rouge extrême = V ≥ 98 (v1.1) ; orange sinon. "
+            f"Rendement médian à 3 ans du vert par rapport à l'orange depuis 1990 : {' ; '.join(bits_g)}. Sa vraie valeur est de dire quand une réserve peut être "
+            f"engagée, en tranches. Rouge extrême par rapport à l'orange : {' ; '.join(bits_r)}. Ces chiffres du rouge sont vus après coup (règle décidée le "
+            "9 novembre 2026 en connaissant cette histoire) et reposent sur une poignée d'épisodes, dont 1995-1997, suivi de trois très bonnes années : "
+            "c'est pourquoi le rouge étale les achats exceptionnels et ne fait jamais vendre.</p>")
 
 
 def _validation_summary() -> str:

@@ -2,27 +2,37 @@
  "sp500": {
   "share": {
    "green": 0.0774,
-   "orange": 0.9226,
-   "red": 0.0
+   "orange": 0.7041,
+   "red": 0.2185
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.02595768694115086,
+    "valeur": 0.023041466752686812,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
+   "écart_3ans_orange_moins_rouge": {
+    "valeur": 0.021401603391223434,
+    "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"
+   },
+   "part_rouge": {
+    "valeur": 0.2185,
+    "seuil": 0.25,
+    "ok": true
+   },
+   "épisodes_rouges": 7,
    "baisse24m_p90": {
     "green": 0.294018146416582,
-    "orange": 0.3375670494145171,
-    "red": null
+    "orange": 0.32964163145486713,
+    "red": 0.354527230704443
    },
    "épisodes_verts": 4,
-   "changements_par_an": 2.3884966931708402
+   "changements_par_an": 3.609887047633202
   },
   "key_dates": [
    {
     "date": "2000-03-24",
     "événement": "sommet de mars 2000",
-    "couleur": "orange",
+    "couleur": "red",
     "cher": true,
     "V": 99.96501049685095
    },
@@ -64,7 +74,7 @@
    {
     "date": "2022-01-03",
     "événement": "sommet de janvier 2022",
-    "couleur": "orange",
+    "couleur": "red",
     "cher": true,
     "V": 98.72781065088758
    },
@@ -78,8 +88,8 @@
   ],
   "episodes_n": {
    "green": 4,
-   "orange": 10,
-   "red": 0
+   "orange": 13,
+   "red": 7
   },
   "fwd": [
    {
@@ -94,11 +104,20 @@
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 8311,
-    "médiane_annualisée": 0.11504264071513992,
-    "moyenne_annualisée": 0.09734019210817402,
-    "p10_annualisé": -0.11573092424403597,
-    "part_négative": 0.1929972325833233
+    "n_jours": 6521,
+    "médiane_annualisée": 0.10767109891121573,
+    "moyenne_annualisée": 0.09335810117946375,
+    "p10_annualisé": -0.07308752458405021,
+    "part_négative": 0.1696058886673823
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 1790,
+    "médiane_annualisée": 0.15760663937758657,
+    "moyenne_annualisée": 0.11184701610041992,
+    "p10_annualisé": -0.16274442129644529,
+    "part_négative": 0.2782122905027933
    },
    {
     "horizon": "3 ans",
@@ -112,11 +131,20 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 7807,
-    "médiane_annualisée": 0.09683699611461538,
-    "moyenne_annualisée": 0.09752344919898714,
-    "p10_annualisé": -0.07573020964961863,
-    "part_négative": 0.1848341232227488
+    "n_jours": 6171,
+    "médiane_annualisée": 0.09975321630307943,
+    "moyenne_annualisée": 0.10048143828981515,
+    "p10_annualisé": -0.035365358032198646,
+    "part_négative": 0.14098201263976665
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 1636,
+    "médiane_annualisée": 0.078351612911856,
+    "moyenne_annualisée": 0.08621978200689018,
+    "p10_annualisé": -0.12949580541781935,
+    "part_négative": 0.35024449877750613
    },
    {
     "horizon": "5 ans",
@@ -130,11 +158,20 @@
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 7303,
-    "médiane_annualisée": 0.0975179393148311,
-    "moyenne_annualisée": 0.09427051061403868,
-    "p10_annualisé": -0.02693818417011684,
-    "part_négative": 0.2449678214432425
+    "n_jours": 5725,
+    "médiane_annualisée": 0.10914242525520157,
+    "moyenne_annualisée": 0.10528476199936576,
+    "p10_annualisé": -0.01410765295552907,
+    "part_négative": 0.1605240174672489
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 1578,
+    "médiane_annualisée": -0.008862041512374352,
+    "moyenne_annualisée": 0.05006849629526222,
+    "p10_annualisé": -0.038992636617918075,
+    "part_négative": 0.5513307984790875
    }
   ],
   "dd24": [
@@ -147,37 +184,54 @@
    },
    {
     "couleur": "orange",
-    "n_jours": 8059,
-    "drawdown_24m_médian": 0.055969935922526526,
-    "drawdown_24m_p90": 0.3375670494145171,
-    "part_drawdown_>20%": 0.18674773545104853
+    "n_jours": 6422,
+    "drawdown_24m_médian": 0.05189050807390433,
+    "drawdown_24m_p90": 0.32964163145486713,
+    "part_drawdown_>20%": 0.16365618187480535
+   },
+   {
+    "couleur": "red",
+    "n_jours": 1637,
+    "drawdown_24m_médian": 0.09722624010255232,
+    "drawdown_24m_p90": 0.354527230704443,
+    "part_drawdown_>20%": 0.2773365913255956
    }
   ]
  },
  "ndx": {
   "share": {
-   "green": 0.1265,
-   "orange": 0.8735,
-   "red": 0.0
+   "green": 0.1149,
+   "orange": 0.6666,
+   "red": 0.2185
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.011481727731357028,
+    "valeur": 0.017134183784748958,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
-   "baisse24m_p90": {
-    "green": 0.6072839638225792,
-    "orange": 0.3510837564795105,
-    "red": null
+   "écart_3ans_orange_moins_rouge": {
+    "valeur": 0.053701316033303526,
+    "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"
    },
-   "épisodes_verts": 9,
-   "changements_par_an": 3.745597087017909
+   "part_rouge": {
+    "valeur": 0.2185,
+    "seuil": 0.25,
+    "ok": true
+   },
+   "épisodes_rouges": 7,
+   "baisse24m_p90": {
+    "green": 0.5002639332284295,
+    "orange": 0.2291839721509999,
+    "red": 0.7101044400400068
+   },
+   "épisodes_verts": 8,
+   "changements_par_an": 4.586999331203091
   },
   "key_dates": [
    {
     "date": "2000-03-24",
     "événement": "sommet de mars 2000",
-    "couleur": "orange",
+    "couleur": "red",
     "cher": true,
     "V": 99.96501049685095
    },
@@ -219,7 +273,7 @@
    {
     "date": "2022-01-03",
     "événement": "sommet de janvier 2022",
-    "couleur": "orange",
+    "couleur": "red",
     "cher": true,
     "V": 98.72781065088758
    },
@@ -232,107 +286,151 @@
    }
   ],
   "episodes_n": {
-   "green": 9,
-   "orange": 13,
-   "red": 0
+   "green": 8,
+   "orange": 14,
+   "red": 7
   },
   "fwd": [
    {
     "horizon": "1 an",
     "couleur": "green",
-    "n_jours": 1174,
-    "médiane_annualisée": 0.16836437977344199,
-    "moyenne_annualisée": 0.0690067821861835,
-    "p10_annualisé": -0.38679591728816276,
-    "part_négative": 0.403747870528109
+    "n_jours": 1066,
+    "médiane_annualisée": 0.19692820206531825,
+    "moyenne_annualisée": 0.12132032728301478,
+    "p10_annualisé": -0.34886421070622076,
+    "part_négative": 0.3433395872420263
    },
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 7855,
-    "médiane_annualisée": 0.18794836273917936,
-    "moyenne_annualisée": 0.20090461523477976,
-    "p10_annualisé": -0.03439428683453194,
-    "part_négative": 0.12641629535327817
+    "n_jours": 6173,
+    "médiane_annualisée": 0.16877812492474398,
+    "moyenne_annualisée": 0.17692467981726967,
+    "p10_annualisé": 0.001691769764686768,
+    "part_négative": 0.09687348128948647
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 1790,
+    "médiane_annualisée": 0.27240144882628003,
+    "moyenne_annualisée": 0.24448949584361745,
+    "p10_annualisé": -0.45770931931222303,
+    "part_négative": 0.2810055865921788
    },
    {
     "horizon": "3 ans",
     "couleur": "green",
-    "n_jours": 1174,
-    "médiane_annualisée": 0.16827886844166584,
-    "moyenne_annualisée": 0.12431783290787446,
-    "p10_annualisé": -0.10515883367756917,
-    "part_négative": 0.20868824531516184
+    "n_jours": 1066,
+    "médiane_annualisée": 0.17665708532772628,
+    "moyenne_annualisée": 0.1486334797759088,
+    "p10_annualisé": -0.017589379053314258,
+    "part_négative": 0.12851782363977485
    },
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 7351,
-    "médiane_annualisée": 0.1567971407103088,
-    "moyenne_annualisée": 0.18630472062360348,
-    "p10_annualisé": -0.014005490639986684,
-    "part_négative": 0.11821520881512719
+    "n_jours": 5823,
+    "médiane_annualisée": 0.15952290154297732,
+    "moyenne_annualisée": 0.1700419277364844,
+    "p10_annualisé": 0.023226541158998026,
+    "part_négative": 0.07075390692083118
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 1636,
+    "médiane_annualisée": 0.1058215855096738,
+    "moyenne_annualisée": 0.223779298981591,
+    "p10_annualisé": -0.30075098137591505,
+    "part_négative": 0.34535452322738386
    },
    {
     "horizon": "5 ans",
     "couleur": "green",
-    "n_jours": 1174,
-    "médiane_annualisée": 0.14055035979596986,
-    "moyenne_annualisée": 0.13053797980426274,
-    "p10_annualisé": -0.03893086687546532,
-    "part_négative": 0.15928449744463374
+    "n_jours": 1066,
+    "médiane_annualisée": 0.1535568759217807,
+    "moyenne_annualisée": 0.14592355695262804,
+    "p10_annualisé": 0.015918921497164673,
+    "part_négative": 0.07410881801125703
    },
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 6847,
-    "médiane_annualisée": 0.15735880728537532,
-    "moyenne_annualisée": 0.18200003949061538,
-    "p10_annualisé": -0.023372233905319728,
-    "part_négative": 0.13232072440484885
+    "n_jours": 5377,
+    "médiane_annualisée": 0.16968609003006185,
+    "moyenne_annualisée": 0.19878399522523704,
+    "p10_annualisé": 0.04440547202049183,
+    "part_négative": 0.038497303328993863
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 1578,
+    "médiane_annualisée": -0.004295239939460793,
+    "moyenne_annualisée": 0.100505941385574,
+    "p10_annualisé": -0.15347349912229646,
+    "part_négative": 0.5114068441064639
    }
   ],
   "dd24": [
    {
     "couleur": "green",
-    "n_jours": 1174,
-    "drawdown_24m_médian": 0.14676266569115515,
-    "drawdown_24m_p90": 0.6072839638225792,
-    "part_drawdown_>20%": 0.45315161839863716
+    "n_jours": 1066,
+    "drawdown_24m_médian": 0.11340922349066435,
+    "drawdown_24m_p90": 0.5002639332284295,
+    "part_drawdown_>20%": 0.3977485928705441
    },
    {
     "couleur": "orange",
-    "n_jours": 7603,
-    "drawdown_24m_médian": 0.07579712730001409,
-    "drawdown_24m_p90": 0.3510837564795105,
-    "part_drawdown_>20%": 0.17598316454031304
+    "n_jours": 6074,
+    "drawdown_24m_médian": 0.06849187080431568,
+    "drawdown_24m_p90": 0.2291839721509999,
+    "part_drawdown_>20%": 0.12364175172867962
+   },
+   {
+    "couleur": "red",
+    "n_jours": 1637,
+    "drawdown_24m_médian": 0.14299595119189168,
+    "drawdown_24m_p90": 0.7101044400400068,
+    "part_drawdown_>20%": 0.42455711667684787
    }
   ]
  },
  "world": {
   "share": {
    "green": 0.0948,
-   "orange": 0.9052,
-   "red": 0.0
+   "orange": 0.6869,
+   "red": 0.2182
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.031500424467450605,
+    "valeur": 0.027715699376849035,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
+   "écart_3ans_orange_moins_rouge": {
+    "valeur": 0.029013526186432825,
+    "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"
+   },
+   "part_rouge": {
+    "valeur": 0.2182,
+    "seuil": 0.25,
+    "ok": true
+   },
+   "épisodes_rouges": 7,
    "baisse24m_p90": {
     "green": 0.3003374470943021,
-    "orange": 0.36777491328867873,
-    "red": null
+    "orange": 0.30464929865357715,
+    "red": 0.3903148099775737
    },
    "épisodes_verts": 5,
-   "changements_par_an": 2.497064724678606
+   "changements_par_an": 3.7184550791409676
   },
   "key_dates": [
    {
     "date": "2000-03-24",
     "événement": "sommet de mars 2000",
-    "couleur": "orange",
+    "couleur": "red",
     "cher": true,
     "V": 99.96501049685095
    },
@@ -374,7 +472,7 @@
    {
     "date": "2022-01-03",
     "événement": "sommet de janvier 2022",
-    "couleur": "orange",
+    "couleur": "red",
     "cher": true,
     "V": 98.72781065088758
    },
@@ -388,8 +486,8 @@
   ],
   "episodes_n": {
    "green": 5,
-   "orange": 11,
-   "red": 0
+   "orange": 14,
+   "red": 7
   },
   "fwd": [
    {
@@ -404,11 +502,20 @@
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 8234,
-    "médiane_annualisée": 0.10502359258332294,
-    "moyenne_annualisée": 0.07090520019618296,
-    "p10_annualisé": -0.13474340562589115,
-    "part_négative": 0.26682050036434296
+    "n_jours": 6426,
+    "médiane_annualisée": 0.10017081168207342,
+    "moyenne_annualisée": 0.07354532975938644,
+    "p10_annualisé": -0.08931360720914427,
+    "part_négative": 0.2586367880485528
+   },
+   {
+    "horizon": "1 an",
+    "couleur": "red",
+    "n_jours": 1808,
+    "médiane_annualisée": 0.11894831674910322,
+    "moyenne_annualisée": 0.06152164235705393,
+    "p10_annualisé": -0.19840009649834411,
+    "part_négative": 0.2959070796460177
    },
    {
     "horizon": "3 ans",
@@ -422,11 +529,20 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 7730,
-    "médiane_annualisée": 0.07670691072275648,
-    "moyenne_annualisée": 0.06886861245345588,
-    "p10_annualisé": -0.07828107957695529,
-    "part_négative": 0.19961190168175938
+    "n_jours": 6078,
+    "médiane_annualisée": 0.08049163581335805,
+    "moyenne_annualisée": 0.07574110659878541,
+    "p10_annualisé": -0.042941871081949246,
+    "part_négative": 0.14758144126357353
+   },
+   {
+    "horizon": "3 ans",
+    "couleur": "red",
+    "n_jours": 1652,
+    "médiane_annualisée": 0.05147810962692523,
+    "moyenne_annualisée": 0.04278944086558689,
+    "p10_annualisé": -0.14824838391960704,
+    "part_négative": 0.3910411622276029
    },
    {
     "horizon": "5 ans",
@@ -440,11 +556,20 @@
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 7226,
-    "médiane_annualisée": 0.0673842937042477,
-    "moyenne_annualisée": 0.06261162529047737,
-    "p10_annualisé": -0.03416825625994413,
-    "part_négative": 0.24813174647107666
+    "n_jours": 5631,
+    "médiane_annualisée": 0.07584961958611514,
+    "moyenne_annualisée": 0.07263435282398478,
+    "p10_annualisé": -0.015141953472805558,
+    "part_négative": 0.15982951518380395
+   },
+   {
+    "horizon": "5 ans",
+    "couleur": "red",
+    "n_jours": 1595,
+    "médiane_annualisée": -0.01483509564686969,
+    "moyenne_annualisée": 0.023823199494083847,
+    "p10_annualisé": -0.04198991295672505,
+    "part_négative": 0.5598746081504702
    }
   ],
   "dd24": [
@@ -457,10 +582,17 @@
    },
    {
     "couleur": "orange",
-    "n_jours": 7982,
-    "drawdown_24m_médian": 0.07101954190363924,
-    "drawdown_24m_p90": 0.36777491328867873,
-    "part_drawdown_>20%": 0.22162365321974442
+    "n_jours": 6328,
+    "drawdown_24m_médian": 0.06830254203427971,
+    "drawdown_24m_p90": 0.30464929865357715,
+    "part_drawdown_>20%": 0.1950063211125158
+   },
+   {
+    "couleur": "red",
+    "n_jours": 1654,
+    "drawdown_24m_médian": 0.10902875515097743,
+    "drawdown_24m_p90": 0.3903148099775737,
+    "part_drawdown_>20%": 0.3234582829504232
    }
   ]
  },
@@ -543,7 +675,7 @@
     "événement": "sommet d'octobre 2025",
     "couleur": "orange",
     "cher": null,
-    "V": 0.9884490489051176
+    "V": 0.9884490489051181
    }
   ],
   "episodes_n": {
@@ -566,7 +698,7 @@
     "couleur": "orange",
     "n_jours": 3231,
     "médiane_annualisée": 0.5254302836685434,
-    "moyenne_annualisée": 1.4807251213855421,
+    "moyenne_annualisée": 1.480723652751116,
     "p10_annualisé": -0.5179018643719118,
     "part_négative": 0.3593314763231198
    },
@@ -593,7 +725,7 @@
     "couleur": "orange",
     "n_jours": 2501,
     "médiane_annualisée": 0.5385424796013432,
-    "moyenne_annualisée": 0.8205292668716087,
+    "moyenne_annualisée": 0.8205287339794995,
     "p10_annualisé": 0.22832763210268592,
     "part_négative": 0.0
    },
@@ -620,7 +752,7 @@
     "couleur": "orange",
     "n_jours": 2091,
     "médiane_annualisée": 0.6081997707893858,
-    "moyenne_annualisée": 0.911947389389832,
+    "moyenne_annualisée": 0.9119473369315803,
     "p10_annualisé": 0.14684123552260808,
     "part_négative": 0.0
    },
@@ -665,10 +797,10 @@
   "B_valeur_finale": 5124015.452129243,
   "B_moins_A": -542675.7956954939,
   "B_moins_A_pct": -0.09576590146918806,
-  "C_valeur_finale": 5666395.562868122,
-  "C_moins_A": -295.6849566148594,
-  "C_moins_A_pct": -5.2179471879409967e-05,
-  "C_drawdown_max": 0.4964740023864125,
+  "C_valeur_finale": 5658577.261335009,
+  "C_moins_A": -8113.986489728093,
+  "C_moins_A_pct": -0.0014318737575199636,
+  "C_drawdown_max": 0.496422202284571,
   "réserve_B_finale": 193282.06182064328,
   "réserve_B_max": 193282.06182064328,
   "A_drawdown_max": 0.4974941079632539,
@@ -678,17 +810,17 @@
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
   "A_valeur_finale": 19515387.924822614,
-  "B_valeur_finale": 13904033.848032942,
-  "B_moins_A": -5611354.076789672,
-  "B_moins_A_pct": -0.28753484677864416,
-  "C_valeur_finale": 19498539.306977987,
-  "C_moins_A": -16848.617844626307,
-  "C_moins_A_pct": -0.0008633503935218112,
-  "C_drawdown_max": 0.7995597544903328,
+  "B_valeur_finale": 14991321.65763251,
+  "B_moins_A": -4524066.267190104,
+  "B_moins_A_pct": -0.23182046314517346,
+  "C_valeur_finale": 19463409.391726483,
+  "C_moins_A": -51978.53309613094,
+  "C_moins_A_pct": -0.0026634639955077644,
+  "C_drawdown_max": 0.799356996994519,
   "réserve_B_finale": 178300.31756928237,
   "réserve_B_max": 178300.31756928237,
   "A_drawdown_max": 0.8002725608196152,
-  "B_drawdown_max": 0.7805029422511595
+  "B_drawdown_max": 0.7554074412085977
  },
  "plan_world": {
   "période": "1990-01-31 → 2026-11-30",
@@ -697,10 +829,10 @@
   "B_valeur_finale": 3383008.5332994596,
   "B_moins_A": -53381.582928318996,
   "B_moins_A_pct": -0.015534203371216027,
-  "C_valeur_finale": 3443417.5323794424,
-  "C_moins_A": 7027.416151663754,
-  "C_moins_A_pct": 0.002044999523912683,
-  "C_drawdown_max": 0.523614130493937,
+  "C_valeur_finale": 3440078.5094511756,
+  "C_moins_A": 3688.393223396968,
+  "C_moins_A_pct": 0.0010733336724428888,
+  "C_drawdown_max": 0.5235767578002921,
   "réserve_B_finale": 169742.5293675899,
   "réserve_B_max": 169742.5293675899,
   "A_drawdown_max": 0.5244677845226637,
@@ -820,7 +952,7 @@
     "couleur": "orange",
     "n_jours": 3363,
     "médiane_annualisée": 0.4527470883486089,
-    "moyenne_annualisée": 1.4001611190395136,
+    "moyenne_annualisée": 1.400159708049971,
     "p10_annualisé": -0.5531214770667723,
     "part_négative": 0.38447814451382695
    },
@@ -847,7 +979,7 @@
     "couleur": "orange",
     "n_jours": 2633,
     "médiane_annualisée": 0.5018363531101253,
-    "moyenne_annualisée": 0.8003018672226838,
+    "moyenne_annualisée": 0.8003013496077642,
     "p10_annualisé": 0.210392801076428,
     "part_négative": 0.001139384732244588
    },
@@ -874,7 +1006,7 @@
     "couleur": "orange",
     "n_jours": 2223,
     "médiane_annualisée": 0.6030260311993787,
-    "moyenne_annualisée": 0.8960339202582936,
+    "moyenne_annualisée": 0.8960338692374397,
     "p10_annualisé": 0.15262509775300948,
     "part_négative": 0.0
    },
@@ -913,7 +1045,7 @@
     "couleur": "orange",
     "n_jours": 3545,
     "médiane_annualisée": 0.38510666797407733,
-    "moyenne_annualisée": 1.3393092631115202,
+    "moyenne_annualisée": 1.3393079245620614,
     "p10_annualisé": -0.5544039610352042,
     "part_négative": 0.39492242595204513
    },
@@ -940,7 +1072,7 @@
     "couleur": "orange",
     "n_jours": 2815,
     "médiane_annualisée": 0.4610401078825519,
-    "moyenne_annualisée": 0.7737848846134385,
+    "moyenne_annualisée": 0.7737843858805509,
     "p10_annualisé": 0.1573190286905266,
     "part_négative": 0.0017761989342806395
    },
@@ -967,7 +1099,7 @@
     "couleur": "orange",
     "n_jours": 2405,
     "médiane_annualisée": 0.5801840632771229,
-    "moyenne_annualisée": 0.8709415046209334,
+    "moyenne_annualisée": 0.8709414548798,
     "p10_annualisé": 0.11837401596853603,
     "part_négative": 0.0012474012474012475
    },

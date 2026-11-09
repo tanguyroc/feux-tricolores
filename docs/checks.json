@@ -8,7 +8,7 @@
   },
   {
    "contrôle": "sp500 : couleur calculée",
-   "observé": "orange",
+   "observé": "red",
    "ok": true,
    "bloquant": true
   },
@@ -20,7 +20,7 @@
   },
   {
    "contrôle": "ndx : couleur calculée",
-   "observé": "orange",
+   "observé": "red",
    "ok": true,
    "bloquant": true
   },
@@ -32,7 +32,7 @@
   },
   {
    "contrôle": "world : couleur calculée",
-   "observé": "orange",
+   "observé": "red",
    "ok": true,
    "bloquant": true
   },
@@ -87,9 +87,9 @@
  ],
  "témoins": [
   {
-   "témoin": "Indices : plus de rouge depuis la v1.0 (protocole §8.4)",
-   "attendu": "vert ou orange",
-   "observé": "orange, orange, orange",
+   "témoin": "Indices : rouge si et seulement si V ≥ 98 (rouge extrême, v1.1)",
+   "attendu": "rouge ⇔ V ≥ 98",
+   "observé": "red (V 98.1), red (V 98.1), red (V 98.1)",
    "ok": true,
    "critique": true
   },
@@ -110,7 +110,7 @@
   {
    "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux) ; sans MVRV ou sans moyenne 200 semaines, pas de feu",
    "attendu": "orange",
-   "observé": "orange (MVRV 1.39, prix/MM200s 1.10)",
+   "observé": "orange (MVRV 1.41, prix/MM200s 1.10)",
    "ok": true,
    "critique": true
   },
@@ -178,9 +178,16 @@
    "critique": true
   },
   {
-   "témoin": "Zones, secteurs et thèmes : un feu seulement avec une mesure, sinon une raison écrite",
+   "témoin": "Zones, secteurs et thèmes : une valorisation seulement avec une mesure, sinon une raison écrite",
    "attendu": "toujours",
-   "observé": "31 lignes ; sans raison : aucune ; colorées sans mesure : aucune",
+   "observé": "31 lignes ; sans raison : aucune ; affichées sans mesure : aucune",
+   "ok": true,
+   "critique": true
+  },
+  {
+   "témoin": "Zones, secteurs et thèmes : aucun feu de couleur (information seulement, test du 9 novembre 2026)",
+   "attendu": "aucun",
+   "observé": "aucun",
    "ok": true,
    "critique": true
   },
@@ -201,7 +208,7 @@
   {
    "témoin": "Pré-inscriptions : empreintes recalculées identiques à celles inscrites",
    "attendu": "toutes identiques",
-   "observé": "2026-11-09:ok",
+   "observé": "2026-11-09-v1.1:ok, 2026-11-09:ok",
    "ok": true,
    "critique": true
   },
@@ -277,8 +284,8 @@
   },
   {
    "source": "Bitcoin : MVRV (Coin Metrics)",
-   "date": "2026-11-08",
-   "âge": 1,
+   "date": "2026-11-06",
+   "âge": 3,
    "rythme": "quotidien, 1 à 2 jours de décalage"
   },
   {

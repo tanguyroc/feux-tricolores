@@ -38,13 +38,13 @@ button.btn[disabled]{opacity:.45;cursor:not-allowed}.kpis{display:grid;grid-temp
 .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:20px}.kpi span{font-size:12px;color:var(--muted)}
 .bar{height:8px;background:#eee;border-radius:4px;overflow:hidden}.bar i{display:block;height:100%}.note{font-size:13px;color:var(--muted)}
 .rowred td:first-child{border-left:3px solid var(--red)}.rowgreen td:first-child{border-left:3px solid var(--green)}.rownone td:first-child{border-left:3px dashed #9aa0a6}
-.c.none{color:#6b7280}.dot.none{background:#d5d8dc;box-shadow:inset 0 0 0 2px #9aa0a6}
+.c.none{color:#6b7280}.dot.none{background:#d5d8dc;box-shadow:inset 0 0 0 2px #9aa0a6}.c.info{color:#4a6fa5}.dot.info{background:#4a6fa5}
 .detail{background:#f6f7f9;border-radius:8px;padding:10px 12px;font-size:13px;margin:6px 0 12px}
 .vg{position:relative;height:6px;border-radius:3px;margin:4px 0 3px;min-width:90px;background:linear-gradient(90deg,#2e8b57 0%,#9acd32 30%,#f0c000 50%,#f08c00 70%,#b3261e 100%)}.vg i{position:absolute;top:-3px;width:3px;height:12px;margin-left:-1px;border-radius:2px;border:1px solid #fff}
 small.warn{color:#b3261e}.warnc{color:#b3261e}
 .pill.warnp{border-color:#b3261e;color:#b3261e;background:#fff5f4}
 .secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.sec{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:4px solid var(--line)}
-.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}.sec.rownone{border-left-color:#9aa0a6;border-left-style:dashed}.sec.flagged{border-left-color:#b3261e}
+.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}.sec.rownone{border-left-color:#9aa0a6;border-left-style:dashed}.sec.rowinfo{border-left-color:#4a6fa5}.sec.flagged{border-left-color:#b3261e}
 .sec-head{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sec-flags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.sec-body{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:13px}.sec-body>span:first-child{min-width:150px}
 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#c9ccd1}.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}
 .sec-sentence{font-size:13px;margin:6px 0 0}.mems{margin:6px 0 0;font-size:12px}.mem{display:inline-block;padding:0 5px;border-radius:4px;border:1px solid var(--line);margin:1px 0}.mem.red{border-color:var(--red)}.mem.green{border-color:var(--green)}
@@ -179,7 +179,7 @@ def build() -> None:
 <h2>Lecture du jour</h2><div class="grid">{''.join(cards)}</div>
 <p class="legend"><i style="background:{d.HEX['green']}"></i>vert <i style="background:{d.HEX['orange']}"></i>orange <i style="background:{d.HEX['red']}"></i>rouge — frise mensuelle depuis 1990 (Bitcoin : 2014)</p>
 <h2>Zones, secteurs et thèmes</h2>
-<p class="sub"><b>Feu indicatif, non testé sur le passé</b>, mêmes seuils que les indices : <b>vert</b> = moins cher que 60 % de son propre passé ; <b>orange</b> sinon (« cher » au-delà de 80 %) ; pas de rouge. Mesure : pour un secteur ou un thème comptant au moins 5 sociétés du Top 100, la médiane de leurs valorisations, chacune contre ses dix dernières années ; sinon, et pour les zones, le prix de l'ETF (coté en dollars) rapporté à ses dividendes réels moyens des dix dernières années, contre son propre passé. Cette mesure par les dividendes est plus fruste que le CAPE : une hausse du taux de distribution fait paraître une zone moins chère qu'elle ne l'est, des dividendes de matières premières sont cycliques, et l'historique de comparaison va de 10 à 20 ans selon l'ETF. <b>Pas de feu</b> (gris) quand les données ne permettent pas de juger : la raison est écrite. Les drapeaux de prix (bulle selon Greenwood, Shleifer et You, tension, tendance) complètent. Ni le levier ni les montants n'en dépendent.</p>
+<p class="sub"><b>Une information, pas un feu.</b> Chaque zone, secteur ou thème est situé contre <b>son propre passé</b> : très bon marché, bon marché, dans sa moyenne, cher, très cher. Comment : pour un secteur ou un thème comptant au moins 5 sociétés du Top 100, la médiane de leurs valorisations, chacune contre ses dix dernières années ; sinon, et pour les zones, le prix de l'ETF rapporté aux <b>dividendes</b> que ses sociétés ont versés en moyenne sur dix ans, inflation déduite (le même principe que le CAPE, avec les dividendes à la place des bénéfices, faute de bénéfices historiques gratuits par pays). <b>Pourquoi pas de feu :</b> testée sur 16 pays de 1870 à 2020, cette mesure a un peu distingué les marchés chers des marchés bon marché (années « bon marché » suivies de +1,9 point par an sur cinq ans, dans 13 pays sur 16), mais moins que le seuil de 2 points fixé avant le test ; la médiane des sociétés, elle, n'a pas d'historique pour être testée. Limites : une hausse du taux de distribution fait paraître une zone moins chère qu'elle ne l'est ; les dividendes des matières premières sont cycliques ; la comparaison porte sur 10 à 20 ans seulement. <b>Non mesurable</b> (gris) quand les données manquent : la raison est écrite. Les drapeaux de prix (bulle selon Greenwood, Shleifer et You, tension, tendance) complètent. Ni le levier ni les montants n'en dépendent.</p>
 <div id="sectors"></div>
 <div id="breadth" class="breadth"></div>
 <div class="warn" style="margin-top:18px">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais.</div>
@@ -348,27 +348,28 @@ function detail(key){const s=S.find(x=>x.key===key);if(!s)return;const body=s.V=
 // ---- Secteurs et thèmes ----
 function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerHTML='<p class="note">Non calculé.</p>';return;}
  const flag=(on,txt)=>on?`<span class="pill warnp">${txt}</span>`:'';
- const ORD={green:0,orange:1,red:1,none:2};
+ const ORD={info:0,green:0,orange:1,red:1,none:2};
  const row=t=>{const L=t.light||{color_confirmed:'none'};const c=L.color_confirmed||'none';const v=t.valuation||{};
   const members=(v.members||[]).map(m=>`<span class="mem c ${m.color||'none'}" title="${esc(m.name)}">${esc(m.ticker)}${m.V==null?'':' '+Math.round(m.V)}</span>`).join(' ');
-  const val=c==='none'?`<span class="note"><b>Pas de feu</b> : ${esc(L.reason||'données insuffisantes')}.</span>`
-   :`<span><b>${Math.round(L.V)}</b> <small>${VLAB(L.V)}${L.cher?' · <b>cher</b>':''} · feu depuis le ${fmtDate(L.since)}</small>${vgauge(L.V)}</span><span class="note detail-only">${esc(L.measure||'')}</span>`;
+  const val=c==='none'?`<span class="note"><b>Valorisation non mesurable</b> : ${esc(L.reason||'données insuffisantes')}.</span>`
+   :`<span><b>${Math.round(L.V)}</b> <small>${VLAB(L.V)} contre son passé · depuis le ${fmtDate(L.since)}</small>${vgauge(L.V)}</span><span class="note detail-only">${esc(L.measure||'')}</span>`;
+  const tag=c==='info'?VLAB(L.V).toUpperCase():c==='none'?'NON MESURABLE':LABEL[c];
   return `<div class="sec row${c}"><div class="sec-head"><span class="dot ${c}"></span><b>${esc(t.name)}</b> <small class="note">${esc(t.ticker)} · ${fmtDate(t.date)}</small>
-  <span class="c ${c}" style="font-weight:700;margin-left:6px">${LABEL[c]}</span>
+  <span class="c ${c}" style="font-weight:700;margin-left:6px">${tag}</span>
   <span class="sec-flags">${flag(t.gsy,'bulle GSY')}${flag(t.extended,'tendu')}${flag(t.trend_broken,'tendance cassée')}${flag(t.drawdown>=0.25,`−${Math.round(100*t.drawdown)} % vs plus haut`)}</span></div>
   <div class="sec-body">${val}<span class="note">hausse 2 ans ${pct(t.runup_24m,0,true)} · écart MM200 ${pct(t.gap_ma200,0,true)}${t.avg_yield_10y==null?'':' · dividendes moyens 10 ans '+pct(t.avg_yield_10y,1)}</span></div>
   <p class="sec-sentence">${t.sentence}</p>${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
  const sort=(a,b)=>(ORD[(a.light||{}).color_confirmed||'none']-ORD[(b.light||{}).color_confirmed||'none'])||(((a.light||{}).V??999)-((b.light||{}).V??999));
  const group=(kind,title)=>{const G=T.filter(t=>t.kind===kind).sort(sort);if(!G.length)return '';
-  const n=k=>G.filter(t=>((t.light||{}).color_confirmed||'none')===k).length;
-  return `<h3 style="margin:14px 0 6px">${title} <small class="note">${n('green')} vert${n('green')>1?'s':''} · ${n('orange')} orange · ${n('none')} sans feu</small></h3><div class="secs">${G.map(row).join('')}</div>`;};
+  const cnt=f=>G.filter(t=>{const L=t.light||{};return L.color_confirmed==='info'&&L.V!=null&&f(L.V);}).length;const nn=G.filter(t=>((t.light||{}).color_confirmed||'none')==='none').length;
+  return `<h3 style="margin:14px 0 6px">${title} <small class="note">${cnt(v=>v<=40)} bon marché · ${cnt(v=>v>40&&v<80)} dans la moyenne ou un peu chers · ${cnt(v=>v>=80)} cher${cnt(v=>v>=80)>1?'s':''} · ${nn} non mesurable${nn>1?'s':''}</small></h3><div class="secs">${G.map(row).join('')}</div>`;};
  $('#sectors').innerHTML=group('zone','Zones et pays')+group('sector','Les onze secteurs')+group('theme','Thèmes');}
 renderSectors();
 (function(){const P=D.prereg||[];const el=$('#prereg');if(!el)return;
  if(!P.length){el.innerHTML='';return;}
- const by={};P.forEach(r=>{(by[r.date]=by[r.date]||[]).push(r);});
+ const by={};P.forEach(r=>{const k=r.date+(r.amendement?' '+r.amendement:'');(by[k]=by[k]||[]).push(r);});
  el.innerHTML=`<h3>5. Le vrai test : l'avenir (pré-inscriptions)</h3><p class="note">Chaque mois, l'état de chaque actif et ce que l'histoire « promet » pour sa couleur sont inscrits, hachés (SHA-256) et commités ; ils seront confrontés au réalisé à un an et à trois ans. Rien d'inscrit n'est modifié ensuite.</p>`+
- Object.keys(by).sort().reverse().map(d=>`<table><tr><th>Inscrit le ${fmtDate(d)} <small>(empreinte ${by[d][0].empreinte}… ${by[d][0].empreinte_ok?'✓ recalculée identique':'<b class="warnc">✗ ne correspond plus au fichier</b>'})</small></th><th>Couleur</th><th>Promesse historique à 1 an (médiane)</th><th>Réalisé 1 an</th><th>Promesse à 3 ans (médiane/an)</th><th>Réalisé 3 ans</th></tr>`+
+ Object.keys(by).sort().reverse().map(d=>`<table><tr><th>Inscrit le ${fmtDate(by[d][0].date)}${by[d][0].amendement?` — amendement ${esc(by[d][0].amendement)} (règles v${esc(by[d][0].règles||'')})`:(by[d][0].règles?` — règles v${esc(by[d][0].règles)}`:'')} <small>(empreinte ${by[d][0].empreinte}… ${by[d][0].empreinte_ok?'✓ recalculée identique':'<b class="warnc">✗ ne correspond plus au fichier</b>'})</small></th><th>Couleur</th><th>Promesse historique à 1 an (médiane)</th><th>Réalisé 1 an</th><th>Promesse à 3 ans (médiane/an)</th><th>Réalisé 3 ans</th></tr>`+
  by[d].map(r=>{const a=r.attentes||{};const m1=a['1 an']?a['1 an'].médiane:null,m3=a['3 ans']?a['3 ans'].médiane:null;
   return `<tr><td>${({sp500:'S&P 500',ndx:'Nasdaq-100',world:'MSCI World',btc:'Bitcoin'})[r.actif]||r.actif}</td><td class="c ${r.couleur}">${LABEL[r.couleur]||r.couleur}${r.cher?' · cher':''}</td><td>${m1==null?'—':pct(m1,1,true)}</td><td>${r['1 an']==null?'<span class="note">à venir</span>':pct(r['1 an'],1,true)}</td><td>${m3==null?'—':pct(m3,1,true)}</td><td>${r['3 ans']==null?'<span class="note">à venir</span>':pct(r['3 ans'],1,true)}</td></tr>`;}).join('')+'</table>').join('')
  +((D.prereg_stocks||[]).length?`<p class="note" style="margin-top:10px"><b>Actions (feu indicatif)</b> : rendement médian réalisé, en devise de cotation, depuis le prix inscrit.</p><table><tr><th>Inscrit le</th><th>Groupe (effectif)</th><th>1 an</th><th>3 ans</th></tr>`+
@@ -442,11 +443,12 @@ function renderPF(){const t=PF.targets;['equity','stock','btc','safe','monthly']
  const colorB={equity:worst,stock:null,btc:(stateOf('btc')||{}).color,safe:null};
  Object.keys(tg).forEach(b=>{const w=total?100*byB[b]/total:0;const gap=w-tg[b];const c=colorB[b];html+=`<tr><td>${names[b]}</td><td>${w.toFixed(0)} %</td><td>${tg[b]} %</td><td>${gap>=0?'+':''}${gap.toFixed(0)} pt${Math.abs(gap)>band?' <b style="color:#b3261e">hors bande</b>':''}</td><td>${c?`<span class="c ${c}" style="font-weight:700">${LABEL[c]}</span>`:'—'}</td><td><div class="bar"><i style="width:${Math.min(100,w)}%;background:${c==='red'?'#b3261e':c==='green'?'#1a7f37':'#c7641a'}"></i></div></td></tr>`;});
  html+='</table>';
- // prochain versement : poches sous la cible, hors rouge (le rouge n'arrête que les montants exceptionnels ; le versement régulier va d'abord aux poches sous-pondérées non rouges)
+ // prochain versement : poches sous la cible. Bitcoin rouge : le versement va d'abord aux autres poches sous-pondérées.
+ // Indices en rouge extrême (v1.1) : versement maintenu vers les mêmes supports (seuls les montants exceptionnels sont étalés).
  const under=Object.keys(tg).map(b=>({b,gap:tg[b]-(total?100*byB[b]/total:0),c:colorB[b]})).filter(x=>x.gap>0);
- const elig=under.filter(x=>x.c!=='red');const pool=elig.length?elig:under;const sum=pool.reduce((a,x)=>a+x.gap,0);
- html+=`<h3>Où va le versement de ${eur(t.monthly)} ce mois-ci</h3><ul class="plain" style="padding-left:18px">`+(pool.length?pool.map(x=>`<li>${names[x.b]} : <b>${eur(t.monthly*x.gap/sum)}</b> (sous la cible de ${x.gap.toFixed(0)} pt${x.c==='red'?' — feu rouge : versement régulier seulement, aucun montant exceptionnel':''})</li>`).join(''):'<li>Toutes les poches sont à la cible : répartir selon les cibles.</li>')+'</ul>';
- if(elig.length&&under.length>elig.length)html+=`<p class="note">Les poches en feu rouge sous leur cible (${under.filter(x=>x.c==='red').map(x=>names[x.b]).join(', ')}) ne reçoivent pas le versement ce mois-ci tant qu'une autre poche est sous sa cible : on rééquilibre par les flux, sans vendre.</p>`;
+ const elig=under.filter(x=>!(x.b==='btc'&&x.c==='red'));const pool=elig.length?elig:under;const sum=pool.reduce((a,x)=>a+x.gap,0);
+ html+=`<h3>Où va le versement de ${eur(t.monthly)} ce mois-ci</h3><ul class="plain" style="padding-left:18px">`+(pool.length?pool.map(x=>`<li>${names[x.b]} : <b>${eur(t.monthly*x.gap/sum)}</b> (sous la cible de ${x.gap.toFixed(0)} pt${x.c==='red'?(x.b==='btc'?' — feu rouge : versement régulier seulement, aucun montant exceptionnel':' — rouge extrême : versement maintenu, montants exceptionnels en six tranches mensuelles'):''})</li>`).join(''):'<li>Toutes les poches sont à la cible : répartir selon les cibles.</li>')+'</ul>';
+ if(elig.length&&under.length>elig.length)html+=`<p class="note">Les poches en feu rouge sous leur cible (${under.filter(x=>x.b==='btc'&&x.c==='red').map(x=>names[x.b]).join(', ')}) ne reçoivent pas le versement ce mois-ci tant qu'une autre poche est sous sa cible : on rééquilibre par les flux, sans vendre.</p>`;
  $('#pf-analysis').innerHTML=html;}
 try{renderPF();}catch(e){$('#pf-analysis').innerHTML='<div class="warn">Portefeuille illisible dans ce navigateur : importez une sauvegarde ou retirez les lignes.</div>';}
 

@@ -159,9 +159,14 @@ def cmd_archive(args) -> None:
 
 
 def cmd_prereg(args) -> None:
-    from .prereg import register, register_monthly
+    from .prereg import AMENDMENT_V1_1, register, register_amendment, register_monthly
 
-    register_monthly() if args.monthly else register()
+    if getattr(args, "amendment", None) == "v1.1":
+        register_amendment("v1.1", "research/v1_1_amendment.md", AMENDMENT_V1_1)
+    elif getattr(args, "amendment", None):
+        raise SystemExit(f"Amendement inconnu : {args.amendment}")
+    else:
+        register_monthly() if args.monthly else register()
 
 
 def main(argv=None) -> None:
@@ -206,6 +211,7 @@ def main(argv=None) -> None:
     s.set_defaults(fn=cmd_archive)
     s = sub.add_parser("prereg", help="pré-inscription datée et hachée de ce que les règles affirment aujourd'hui")
     s.add_argument("--monthly", action="store_true", help="seulement si aucune pré-inscription n'existe pour le mois en cours")
+    s.add_argument("--amendment", help="inscrire un amendement de règles adopté aujourd'hui (ex. v1.1)")
     s.set_defaults(fn=cmd_prereg)
     s = sub.add_parser("longrun", help="protocole v1.0 : candidats sur 1920-1989 (Shiller) et 1990-aujourd'hui")
     s.set_defaults(fn=cmd_longrun)

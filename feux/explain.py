@@ -28,6 +28,10 @@ def explain_index(name: str, row: pd.Series) -> str:
     parts = [f"{name} : {LABEL[row.get('color_confirmed', row['color'])]}."]
     if row["reason"]:
         parts.append(f"Motif : {row['reason']}.")
+    if row.get("color_confirmed", row["color"]) == "red":
+        parts.append("Règle de jugement (v1.1), non validée : 4 épisodes achevés depuis 1911 (1929, 1965, 1995-2000, 2021) ; les mois à ce niveau "
+                     "ont été suivis d'une médiane de +1,9 %/an réels à 3 ans et −2,8 %/an à 5 ans, contre +7 à +11 % ailleurs, mais rien à 1 an "
+                     "et l'épisode 1995-1997 a été suivi de trois à cinq excellentes années. D'où une conduite légère : étaler, pas vendre.")
     proxy = " (mesurée sur le S&P 500 : proxy)" if bool(row.get("valuation_is_proxy", False)) else ""
     parts.append(
         f"Valorisation V = {_f(row['V'])}e percentile{proxy} : CAPE {_f(row['cape_live'], '{:.1f}')} comparé à tous les mois depuis 1881. "

@@ -1,10 +1,11 @@
 """Secteurs, thèmes et zones géographiques.
 
 Drapeaux de prix : le critère de Greenwood-Shleifer-You (« Bubbles for Fama », JFE 2019) a été établi sur des SECTEURS.
-Feu de valorisation (v1.0.2), INDICATIF ET NON TESTÉ, mêmes seuils que les indices (vert si moins cher que 60 % de son passé),
-pas de rouge : secteurs avec au moins 5 sociétés du Top 100 → médiane de leurs valorisations (chacune contre son propre passé) ;
-sinon → prix de l'ETF / moyenne de ses dividendes RÉELS sur 10 ans (un « CAPE » fait avec les dividendes), contre son propre
-passé. Pas assez d'historique ou dividendes trop faibles → PAS DE FEU, avec la raison."""
+Valorisation contre son passé : une INFORMATION, pas un feu (v1.1). Secteurs avec au moins 5 sociétés du Top 100 → médiane
+de leurs valorisations (chacune contre son propre passé) ; sinon → prix de l'ETF / moyenne de ses dividendes RÉELS sur 10 ans
+(un « CAPE » fait avec les dividendes), contre son propre passé. Testée sur 16 pays de 1870 à 2020 (research/zones_test_protocol.md),
+la mesure par les dividendes ne passe pas le seuil fixé d'avance pour mériter un feu (v1.0.2 : feu indicatif vert/orange).
+Pas assez d'historique ou dividendes trop faibles → valorisation non mesurable, avec la raison."""
 from __future__ import annotations
 
 import json
@@ -105,7 +106,8 @@ def _members_v(keys: list[str], min_n: int) -> pd.Series:
 
 
 def valuation_light(key: str, spec: dict, df: pd.DataFrame, members: list[tuple[str, dict]]) -> dict:
-    """Feu de valorisation indicatif d'un secteur, thème ou zone, avec la mesure employée ou la raison de son absence."""
+    """Valorisation d'un secteur, thème ou zone contre son passé (information depuis la v1.1), avec la mesure employée ou la
+    raison de son absence."""
     from .signals import confirmed_color
 
     vz = rules()["themes"].get("valuation", {})
@@ -149,12 +151,21 @@ def valuation_light(key: str, spec: dict, df: pd.DataFrame, members: list[tuple[
         out["measure"] = measure
         return out
     v = series
-    color = pd.Series("none", index=df.index, dtype=object)
+    last_v = float(v.iloc[-1])
+    if vz.get("status") == "information":
+        # v1.1 : un palier de lecture (très bon marché … très cher), sans couleur de feu ; « depuis » = depuis quand ce palier dure
+        band = v.map(lambda x: v_label(x) if x == x else None)
+        conf = confirmed_color(band.fillna("n.d."), days)
+        changes = conf[conf != conf.iloc[-1]]
+        out.update({"color": "info", "color_confirmed": "info", "V": last_v, "band": conf.iloc[-1], "measure": measure,
+                    "cher": last_v >= float(vz.get("cher_min", 80)),
+                    "since": str((conf.index[0] if changes.empty else conf.index[conf.index.get_loc(changes.index[-1]) + 1]).date())})
+        return out
+    color = pd.Series("none", index=df.index, dtype=object)          # v1.0.2 (feu indicatif), conservé pour mémoire
     color[v.notna()] = "orange"
     color[v <= float(vz.get("green_max", 40))] = "green"
     conf = confirmed_color(color, days)
     conf[color == "none"] = "none"
-    last_v = float(v.iloc[-1])
     changes = conf[conf != conf.iloc[-1]]
     out.update({"color": color.iloc[-1], "color_confirmed": conf.iloc[-1], "V": last_v, "measure": measure,
                 "cher": last_v >= float(vz.get("cher_min", 80)),
@@ -239,7 +250,7 @@ def overlay(stocks_latest: dict) -> list[dict]:
             members = sorted([s for _, s in members_kv], key=lambda s: (s.get("rank") or 999))
             valuation = {"n": n, "v_median": med, "members": [{"ticker": s.get("ticker"), "name": s.get("name"), "V": s.get("V"),
                                                                   "color": s.get("color_confirmed")} for s in members]}
-        # v1.0.2 : feu de valorisation indicatif (non testé) ; « none » = pas de feu, raison affichée
+        # v1.1 : valorisation en information (« info ») ; « none » = non mesurable, raison affichée
         color = light["color_confirmed"]
         rows.append({"key": key, "name": spec["name"], "kind": spec.get("kind", "theme"), "ticker": spec["ticker"], "gics": spec.get("gics"),
                      "color": color, "light": light, "sentence": simple_sentence(key, row, valuation if light["measure"] is None else None),

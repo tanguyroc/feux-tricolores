@@ -2,7 +2,9 @@
 # research/v1_protocol.md (commit e92b515) ; résultats publiés tels quels dans research/v1_results.md.
 # Toute modification : commit séparé, justifiée dans CHANGELOG.md, testée selon un protocole écrit AVANT le calcul.
 # Règles v0.6 archivées dans archive/rules_v0.6.yaml.
-version: "1.0"
+# v1.1 (2026-11-09) : ajout du rouge extrême des indices (V ≥ 98), règle de jugement décidée AVANT tout test en avant,
+# avec ses chiffres historiques publiés tels quels (research/v1_1_amendment.md).
+version: "1.1"
 frozen_at: "2026-11-09"
 
 windows:
@@ -34,6 +36,10 @@ indices:
     min_months: 360
     green_max: 40       # V ≤ 40 → vert
     cher_min: 80        # V ≥ 80 → étiquette « cher » : INFORMATION, pas de règle de report (protocole v1.0 §8.4)
+    red_min: 98         # v1.1 (2026-11-09) : V ≥ 98 → ROUGE EXTRÊME (plus cher que 98 % des mois connus depuis 1881).
+                        # Règle de JUGEMENT, non validée : 4 épisodes achevés (1929, 1965, 1995-2000, 2021), dont un
+                        # (1995-1997) suivi de trois à cinq très bonnes années. Conduite volontairement légère (étalement,
+                        # levier minimal, aucune vente) ; suivie en avant (research/v1_1_amendment.md).
   fear:                 # P — confirmation du vert de capitulation
     indicators: [vix_pct, credit_spread_pct]   # spread = Baa Moody's − Treasury 10 ans (BAA10Y)
     green_min: 80
@@ -73,9 +79,11 @@ bitcoin:                # règle B1 (protocole v1.0 §9), en niveaux
 # par an sans modifier les rendements par couleur (docs/robustness.html).
 confirmation_days: 5
 
-# Préséance (indices) : 1) vert de capitulation (baisse + peur), 2) vert de valorisation, 3) orange.
+# Préséance (indices, v1.1) : 1) rouge extrême (V ≥ 98 : une baisse de 25 % qui laisse le marché parmi les 2 % des mois
+# les plus chers n'est pas traitée comme une capitulation — choix fait en connaissant 2000-2001 sur le Nasdaq-100, 108 jours
+# concernés), 2) vert de capitulation (baisse + peur), 3) vert de valorisation, 4) orange.
 # Bitcoin : vert, puis rouge, puis orange (vert et rouge sont incompatibles par construction).
-precedence: [green_capitulation, green_valuation, orange]
+precedence: [red_extreme, green_capitulation, green_valuation, orange]
 
 acceptance:   # critères de validation, évalués par backtest.py, non négociables
   red_time_share_max_indices: 0.25
@@ -96,9 +104,9 @@ conduct:
     reserve: "montants exceptionnels déployés en trois tranches mensuelles ; aucune attente d'un meilleur moment (attendre a coûté cher depuis 1990)"
     leverage_cap_share_equities: 0.10
     rebalance_band_pts: 5
-  red:                  # Bitcoin seulement depuis la v1.0
-    regular_contribution: "maintenu"
-    reserve: "aucun achat exceptionnel ; aucune société « proxy » à levier"
+  red:                  # indices : rouge extrême (V ≥ 98), v1.1 — le Bitcoin a sa propre conduite (bloc « bitcoin »)
+    regular_contribution: "maintenu, vers les mêmes supports"
+    reserve: "montants exceptionnels étalés en six tranches mensuelles au lieu de trois ; aucune vente motivée par le feu ; aucune société « proxy » à levier"
     leverage_cap_share_equities: 0.05
     rebalance_band_pts: 5
   trend_broken:
@@ -141,7 +149,7 @@ stocks:   # module actions — Top 100 mondial + stocks.yaml. INDICATIF, NON BAC
     # hors grille : foncières (REIT) — jamais vertes, valorisation P/E et P/B seulement
   leverage_flag: {sma_days: 200}
 
-themes:   # secteurs, thèmes et zones : drapeaux de prix des ETF (bulle GSY, tension, tendance) + feu de valorisation indicatif (v1.0.2)
+themes:   # secteurs, thèmes et zones : drapeaux de prix des ETF (bulle GSY, tension, tendance) + valorisation contre son passé (information, v1.1)
   assets:
     it:        {ticker: "XLK", name: "Technologie de l'information", kind: sector, gics: "Information Technology"}
     financials: {ticker: "XLF", name: "Finance", kind: sector, gics: "Financials"}
@@ -177,13 +185,17 @@ themes:   # secteurs, thèmes et zones : drapeaux de prix des ETF (bulle GSY, te
     brazil:    {ticker: "EWZ", name: "Brésil", kind: zone}
     emerging:  {ticker: "EEM", name: "Marchés émergents", kind: zone}
   sector_min_members: 3        # valorisation médiane affichée avec au moins 3 sociétés du Top 100 (contexte)
-  valuation:   # feu indicatif, NON TESTÉ (v1.0.2) : mêmes seuils que les indices ; pas de rouge (cf. protocole v1.0)
+  valuation:   # v1.1 : INFORMATION, PAS DE FEU. Test du 2026-11-09 (research/zones_test_protocol.md, écrit avant calcul) sur
+               # 16 pays 1870-2020 : P/D10 contre ses 20 dernières années → +1,9 pt/an à 5 ans pour les années « bon marché »,
+               # sous le seuil de 2 points fixé d'avance (corrélation de rang −0,13, IC 90 % [−0,20 ; −0,07], 13 pays sur 16).
+               # La médiane des sociétés (secteurs) n'est pas testable faute d'historique : information aussi.
+    status: information
     members_min: 5             # secteur (ou thème défini par ses industries) : médiane des V des sociétés du Top 100 si au moins 5
     pd10_years: 10             # sinon (zones, thèmes, petits secteurs) : prix / moyenne des dividendes RÉELS sur 10 ans (P/D10)
     pd10_min_history_months: 60   # puis au moins 5 ans de P/D10 avant de comparer à son passé
-    min_avg_yield: 0.01        # dividendes moyens < 1 %/an du prix : trop faibles pour mesurer une valorisation → pas de feu
-    green_max: 40              # vert : moins cher que 60 % de son propre passé
-    cher_min: 80               # « cher » (information)
+    min_avg_yield: 0.01        # dividendes moyens < 1 %/an du prix : trop faibles pour mesurer une valorisation → non mesurable
+    green_max: 40              # palier « bon marché » (≤ 40) — plus une couleur depuis la v1.1
+    cher_min: 80               # palier « cher » (≥ 80)
   gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You, mesuré sur des SECTEURS
   extension_red_min: 90        # écart à la MM200 j en percentile 25 ans (min 10 ans) → « tendu »
   runup_alert_min: 1.50        # hausse ≥ 150 % sur 2 ans : probabilité de krach ≈ 80 % dans GSY

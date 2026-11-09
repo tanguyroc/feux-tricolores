@@ -68,8 +68,18 @@ def witnesses() -> list[dict]:
         w.append({"témoin": desc, "attendu": expected, "observé": observed, "ok": bool(ok), "critique": critical})
 
     idx = [lat.get(k, {}) for k in ("sp500", "ndx", "world")]
-    add("Indices : plus de rouge depuis la v1.0 (protocole §8.4)", "vert ou orange", ", ".join(str(d.get("color")) for d in idx),
-        all(d.get("color") in ("green", "orange") for d in idx), critical=True)
+    red_min = r["indices"]["valuation"].get("red_min", 101)
+
+    def _idx_ok(d):
+        V, c = d.get("V"), d.get("color")
+        if V is None:
+            return c in ("none", "green")          # sans valorisation : pas de feu (sauf capitulation)
+        if V >= red_min:
+            return c == "red"
+        return c in ("green", "orange")
+    add(f"Indices : rouge si et seulement si V ≥ {red_min:g} (rouge extrême, v1.1)", f"rouge ⇔ V ≥ {red_min:g}",
+        ", ".join(f"{d.get('color')} (V {d['V']:.1f})" if d.get("V") is not None else str(d.get("color")) for d in idx),
+        all(_idx_ok(d) for d in idx), critical=True)
     sp = lat.get("sp500", {})
     if sp.get("cape_live") and sp.get("V") is not None:
         add("S&P 500 : un CAPE au-dessus de 30 est « cher » (V ≥ 80) contre l'histoire depuis 1881", "cher si CAPE > 30",
@@ -124,9 +134,13 @@ def witnesses() -> list[dict]:
         rows = overlay(st)
         bad = [r["name"] for r in rows if r["light"]["color_confirmed"] == "none" and not r["light"]["reason"]]
         col = [r["name"] for r in rows if r["light"]["color_confirmed"] != "none" and r["light"]["V"] is None]
-        add("Zones, secteurs et thèmes : un feu seulement avec une mesure, sinon une raison écrite", "toujours",
-            f"{len(rows)} lignes ; sans raison : {', '.join(bad) or 'aucune'} ; colorées sans mesure : {', '.join(col) or 'aucune'}",
+        add("Zones, secteurs et thèmes : une valorisation seulement avec une mesure, sinon une raison écrite", "toujours",
+            f"{len(rows)} lignes ; sans raison : {', '.join(bad) or 'aucune'} ; affichées sans mesure : {', '.join(col) or 'aucune'}",
             bool(rows) and not bad and not col, critical=True)
+        if r["themes"].get("valuation", {}).get("status") == "information":
+            lit = [x["name"] for x in rows if x["light"]["color_confirmed"] not in ("info", "none")]
+            add("Zones, secteurs et thèmes : aucun feu de couleur (information seulement, test du 9 novembre 2026)", "aucun",
+                ", ".join(lit) or "aucun", not lit, critical=True)
         old_z = [r["name"] for r in rows if r.get("date") and (dt.date.today() - dt.date.fromisoformat(r["date"])).days > 7]
         add("Zones, secteurs et thèmes : cours de moins de 7 jours", "tous", ", ".join(old_z) or f"{len(rows)} à jour", not old_z)
     except Exception as exc:

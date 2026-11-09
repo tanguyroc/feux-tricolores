@@ -60,7 +60,7 @@ def _frame(**kw):
 
 
 def test_colors_and_precedence():
-    """v1.0 (protocole §8.4) : plus de rouge sur les indices ; « cher » et « cher et tendu » sont des informations."""
+    """v1.0 (protocole §8.4) : pas de rouge sous V = 98 ; « cher » et « cher et tendu » sont des informations."""
     assert _colorize_index(_frame())["color"].iloc[0] == "orange"
     f = _colorize_index(_frame(V=85, X=95, x_hist_pct=95, E=85, gsy=True))
     assert f["color"].iloc[0] == "orange" and bool(f["cher"].iloc[0]) and bool(f["cher_tendu"].iloc[0])
@@ -71,7 +71,19 @@ def test_colors_and_precedence():
     assert _colorize_index(_frame(V=95, drawdown=0.3, P=90))["color"].iloc[0] == "green"   # capitulation même si cher
     assert _colorize_index(_frame(V=60, drawdown=0.3, P=70))["color"].iloc[0] == "orange"  # baisse sans peur : pas de vert
     f = _colorize_index(_frame(V=np.nan, X=95))
-    assert f["color"].iloc[0] == "orange" and not bool(f["cher"].iloc[0])                   # V inconnu : ni vert ni « cher »
+    assert f["color"].iloc[0] == "none" and not bool(f["cher"].iloc[0])                     # V inconnu : pas de feu (v1.1)
+    f = _colorize_index(_frame(V=np.nan, drawdown=0.3, P=90))
+    assert f["color"].iloc[0] == "green"                                                    # capitulation mesurée sans V
+
+
+def test_extreme_red_v1_1():
+    """v1.1 : rouge extrême si V ≥ 98, prioritaire sur la capitulation ; 97,9 reste orange « cher »."""
+    f = _colorize_index(_frame(V=98.0))
+    assert f["color"].iloc[0] == "red" and bool(f["red_extreme"].iloc[0]) and "rouge extrême" in f["reason"].iloc[0]
+    f = _colorize_index(_frame(V=97.9))
+    assert f["color"].iloc[0] == "orange" and bool(f["cher"].iloc[0])
+    assert _colorize_index(_frame(V=99, drawdown=0.3, P=90))["color"].iloc[0] == "red"      # Nasdaq-100 2000-2001
+    assert not bool(_colorize_index(_frame(V=99))["falling_knife"].iloc[0])
 
 
 def test_check_numbers_flags_invented_values():
