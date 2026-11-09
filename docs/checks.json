@@ -110,7 +110,7 @@
   {
    "témoin": "Bitcoin : la couleur brute suit la règle B1 (niveaux) ; sans MVRV ou sans moyenne 200 semaines, pas de feu",
    "attendu": "orange",
-   "observé": "orange (MVRV 1.39, prix/MM200s 1.10)",
+   "observé": "orange (MVRV 1.41, prix/MM200s 1.10)",
    "ok": true,
    "critique": true
   },
@@ -180,7 +180,7 @@
   {
    "témoin": "Zones, secteurs et thèmes : une valorisation seulement avec une mesure, sinon une raison écrite",
    "attendu": "toujours",
-   "observé": "31 lignes ; sans raison : aucune ; affichées sans mesure : aucune",
+   "observé": "36 lignes ; sans raison : aucune ; affichées sans mesure : aucune",
    "ok": true,
    "critique": true
   },
@@ -194,7 +194,7 @@
   {
    "témoin": "Zones, secteurs et thèmes : cours de moins de 7 jours",
    "attendu": "tous",
-   "observé": "31 à jour",
+   "observé": "36 à jour",
    "ok": true,
    "critique": false
   },
@@ -284,8 +284,8 @@
   },
   {
    "source": "Bitcoin : MVRV (Coin Metrics)",
-   "date": "2026-11-08",
-   "âge": 1,
+   "date": "2026-11-06",
+   "âge": 3,
    "rythme": "quotidien, 1 à 2 jours de décalage"
   },
   {
@@ -301,7 +301,7 @@
    "rythme": "trimestriel (10-Q) ou annuel (20-F, 40-F)"
   },
   {
-   "source": "Zones, secteurs et thèmes : cours des 31 ETF (le plus ancien)",
+   "source": "Zones, secteurs et thèmes : cours des 36 ETF (le plus ancien)",
    "date": "2026-11-06",
    "âge": 3,
    "rythme": "chaque séance"

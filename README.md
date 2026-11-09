@@ -79,10 +79,12 @@ Secteurs et thèmes : drapeaux de prix et valorisation médiane, **sans couleur*
 
 ## Zones, secteurs et thèmes (information, pas de feu)
 
-Treize zones (ETF cotés en dollars : Euro Stoxx 50, Europe, Royaume-Uni, Allemagne, France, Japon, Chine, Inde, Corée, Taïwan,
-Amérique latine, Brésil, émergents), onze secteurs, sept thèmes, situés contre **leur propre passé** (très bon marché … très cher)
+Dix-huit zones (ETF cotés en dollars : États-Unis, Canada, Euro Stoxx 50, Europe, Royaume-Uni, Allemagne, France, Suisse,
+développés hors Amérique du Nord, Japon, Australie, Chine, Inde, Corée, Taïwan, Amérique latine, Brésil, émergents), onze secteurs,
+sept thèmes, situés contre **leur propre passé** (très bon marché … très cher)
 et accompagnés des drapeaux de prix (bulle GSY, tension, tendance). Mesure : médiane des valorisations des sociétés du Top 100 quand
-il y en a au moins 5 ; sinon prix de l'ETF / dividendes réels moyens sur 10 ans, contre son propre passé (10 à 20 ans).
+il y en a au moins 5 ; sinon prix de l'ETF / dividendes réels moyens sur 10 ans, contre son propre passé (10 à 20 ans) ;
+États-Unis : le CAPE depuis 1881 (dividendes trop faibles à cause des rachats d'actions).
 
 **Pourquoi pas de feu** : testée sur 16 pays de 1870 à 2020 (base Jordà-Schularick-Taylor, protocole écrit avant calcul :
 `research/zones_test_protocol.md`, résultats : `research/zones_test_results.md`), la mesure par les dividendes, avec 20 ans de

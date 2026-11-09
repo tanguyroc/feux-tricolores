@@ -133,11 +133,10 @@ stocks:   # module actions — Top 100 mondial + stocks.yaml. INDICATIF, NON BAC
   extension:
     red_min: 90                                 # écart à la MM200 jours, percentile 10 ans
     gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
-  reverse_dcf:
-    wacc: 0.09
+  reverse_dcf:          # INFORMATION affichée (« le cours suppose x %/an de croissance du cash pendant 10 ans »), hors feu.
+    wacc: 0.09          # v1.1 : retrait du seuil « red_if_implied_over_realized: 1.5 », écrit ici mais jamais appliqué par le code.
     terminal_growth: 0.025
     years: 10
-    red_if_implied_over_realized: 1.5           # croissance implicite > 1,5 × croissance réalisée 5 ans → drapeau
   quality:   # « solidité », éliminatoire : une valeur qui échoue ne peut jamais être verte (v0.5 : moyennes pluriannuelles)
     roic_min: 0.10               # rentabilité du capital investi (moyenne 5 ans) ; banques : rentabilité des fonds propres
     fcf_to_net_income_min: 0.70  # part du résultat net transformée en cash libre (moyenne 5 ans)
@@ -171,6 +170,12 @@ themes:   # secteurs, thèmes et zones : drapeaux de prix des ETF (bulle GSY, te
     homebuilders: {ticker: "XHB", name: "Constructeurs de maisons (États-Unis)", kind: theme, since: 2006}
     defense:   {ticker: "ITA",  name: "Défense et aéronautique", kind: theme, since: 2006, industries: ["Aerospace & Defense"]}
     # zones géographiques (v1.0.2) : ETF cotés en dollars, historique de 14 à 30 ans
+    usa:       {ticker: "SPY", name: "États-Unis (S&P 500)", kind: zone, measure: cape_sp500,
+                note: "Mesure différente des autres zones : le CAPE contre 145 ans d'histoire (les autres zones : leurs dividendes contre 10 à 20 ans). Les dividendes américains sont trop faibles pour la mesure des autres zones, parce que les rachats d'actions en remplacent une partie depuis les années 1980."}
+    canada:    {ticker: "EWC", name: "Canada", kind: zone}
+    australia: {ticker: "EWA", name: "Australie", kind: zone}
+    switzerland: {ticker: "EWL", name: "Suisse", kind: zone}
+    eafe:      {ticker: "EFA", name: "Pays développés hors Amérique du Nord (MSCI EAFE)", kind: zone}
     eurostoxx50: {ticker: "FEZ", name: "Zone euro (Euro Stoxx 50)", kind: zone}
     europe:    {ticker: "VGK", name: "Europe développée", kind: zone}
     uk:        {ticker: "EWU", name: "Royaume-Uni", kind: zone}

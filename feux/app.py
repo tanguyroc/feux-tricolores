@@ -358,11 +358,12 @@ function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerH
   <span class="c ${c}" style="font-weight:700;margin-left:6px">${tag}</span>
   <span class="sec-flags">${flag(t.gsy,'bulle GSY')}${flag(t.extended,'tendu')}${flag(t.trend_broken,'tendance cassée')}${flag(t.drawdown>=0.25,`−${Math.round(100*t.drawdown)} % vs plus haut`)}</span></div>
   <div class="sec-body">${val}<span class="note">hausse 2 ans ${pct(t.runup_24m,0,true)} · écart MM200 ${pct(t.gap_ma200,0,true)}${t.avg_yield_10y==null?'':' · dividendes moyens 10 ans '+pct(t.avg_yield_10y,1)}</span></div>
-  <p class="sec-sentence">${t.sentence}</p>${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
+  <p class="sec-sentence">${t.sentence}</p>${t.note?`<p class="note">${esc(t.note)}</p>`:''}${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
+ const pl=(n,w)=>`${n} ${w}${n>1?'s':''}`;
  const sort=(a,b)=>(ORD[(a.light||{}).color_confirmed||'none']-ORD[(b.light||{}).color_confirmed||'none'])||(((a.light||{}).V??999)-((b.light||{}).V??999));
  const group=(kind,title)=>{const G=T.filter(t=>t.kind===kind).sort(sort);if(!G.length)return '';
   const cnt=f=>G.filter(t=>{const L=t.light||{};return L.color_confirmed==='info'&&L.V!=null&&f(L.V);}).length;const nn=G.filter(t=>((t.light||{}).color_confirmed||'none')==='none').length;
-  return `<h3 style="margin:14px 0 6px">${title} <small class="note">${cnt(v=>v<=40)} bon marché · ${cnt(v=>v>40&&v<80)} dans la moyenne ou un peu chers · ${cnt(v=>v>=80)} cher${cnt(v=>v>=80)>1?'s':''} · ${nn} non mesurable${nn>1?'s':''}</small></h3><div class="secs">${G.map(row).join('')}</div>`;};
+  return `<h3 style="margin:14px 0 6px">${title} <small class="note">${cnt(v=>v<=40)} bon marché · ${cnt(v=>v>40&&v<=60)} dans leur moyenne · ${pl(cnt(v=>v>60&&v<=80),'cher')} · ${pl(cnt(v=>v>80),'très cher')} · ${pl(nn,'non mesurable')}</small></h3><div class="secs">${G.map(row).join('')}</div>`;};
  $('#sectors').innerHTML=group('zone','Zones et pays')+group('sector','Les onze secteurs')+group('theme','Thèmes');}
 renderSectors();
 (function(){const P=D.prereg||[];const el=$('#prereg');if(!el)return;

@@ -1,5 +1,13 @@
 # Journal des modifications des règles
 
+## 2026-11-09 — v1.1 (suite) : États-Unis et quatre zones ajoutés ; nettoyage du DCF inversé
+
+- Zones : **États-Unis** (mesure : le CAPE du S&P 500 depuis 1881, celle du feu des indices ; la mesure par les dividendes, trop
+  faibles depuis que les rachats d'actions en remplacent une partie, est rappelée à titre indicatif), **Canada**, **Australie**,
+  **Suisse**, **pays développés hors Amérique du Nord** (MSCI EAFE). Information, pas de feu, comme les autres zones.
+- `stocks.reverse_dcf.red_if_implied_over_realized` retiré : ce seuil figurait dans `rules.yaml` mais n'était appliqué nulle part.
+  Le DCF inversé reste une information affichée (croissance que le cours suppose contre croissance réalisée sur 5 ans).
+
 ## 2026-11-09 — v1.1 (rouge extrême des indices ; zones, secteurs et thèmes en information)
 
 **Rouge extrême des indices** (`rules.yaml`, `indices.valuation.red_min: 98` ; `research/v1_1_amendment.md`).

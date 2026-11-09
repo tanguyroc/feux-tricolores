@@ -115,7 +115,17 @@ def valuation_light(key: str, spec: dict, df: pd.DataFrame, members: list[tuple[
     out = {"color": "none", "color_confirmed": "none", "V": None, "measure": None, "reason": None, "cher": False, "since": None}
     series, measure = None, None
     valued = [(k, m) for k, m in members if m.get("kind") == "operating" and m.get("V") is not None]
-    if len(valued) >= int(vz.get("members_min", 5)):
+    if spec.get("measure") == "cape_sp500":
+        # États-Unis : la mesure de référence (CAPE de Shiller depuis 1881, celle du feu S&P 500) ; P/D10 rappelé à titre indicatif
+        from .signals import load_signals
+        series = load_signals("sp500")["V"]
+        measure = "CAPE de Shiller du S&P 500 contre tous les mois depuis 1881 (la mesure du feu S&P 500, plus fiable que les dividendes)"
+        if "V_pd10" in df and df["V_pd10"].notna().any():
+            ref0 = df["pd10"].first_valid_index()
+            yld = f"{100 * df['avg_yield_10y'].iloc[-1]:.1f}".replace(".", ",")
+            measure += (f" ; par les dividendes comme les autres zones : {df['V_pd10'].dropna().iloc[-1]:.0f}e percentile depuis {ref0.year}, "
+                        f"à titre indicatif (dividendes de {yld} %/an, réduits par les rachats d'actions)")
+    elif len(valued) >= int(vz.get("members_min", 5)):
         series = _members_v([k for k, _ in valued], int(vz.get("members_min", 5)))
         measure = (f"médiane des {len(valued)} sociétés du Top 100 du {'secteur' if spec.get('kind') == 'sector' else 'thème'}, "
                    "chacune contre ses dix dernières années (EV/EBIT et flux libre, ou P/E et P/B)")
@@ -254,6 +264,7 @@ def overlay(stocks_latest: dict) -> list[dict]:
         color = light["color_confirmed"]
         rows.append({"key": key, "name": spec["name"], "kind": spec.get("kind", "theme"), "ticker": spec["ticker"], "gics": spec.get("gics"),
                      "color": color, "light": light, "sentence": simple_sentence(key, row, valuation if light["measure"] is None else None),
+                     "note": spec.get("note"),
                      "pd10": None if pd.isna(row.get("pd10", np.nan)) else float(row["pd10"]),
                      "avg_yield_10y": None if pd.isna(row.get("avg_yield_10y", np.nan)) else float(row["avg_yield_10y"]),
                      "runup_24m": float(row["runup_24m"]), "gsy": bool(row["gsy"]), "extended": bool(row["extended"]),
