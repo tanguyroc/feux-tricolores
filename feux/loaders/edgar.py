@@ -119,6 +119,130 @@ def fetch_companyfacts(cik: int, use_cache: bool = True) -> dict:
     return r.json()
 
 
+# --- Dépôts récents absents de l'API « companyfacts » ------------------------------------------------------------------------
+# Constat de novembre 2026 : l'API n'avait pas intégré les 10-Q 2026 de Citigroup et de NextEra ni les 20-F 2026 de TSMC, Toyota,
+# Sony et BHP (les dépôts existent sur EDGAR). Ces dépôts sont lus directement dans leur instance XBRL (faits sans dimension),
+# datés de leur date de dépôt, et ajoutés aux faits de l'API au même format.
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+ARCHIVE_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{acc}/{name}"
+FILING_FORMS = {"10-K", "10-Q", "10-K/A", "10-Q/A", "20-F", "20-F/A", "40-F"}
+XBRLI = "{http://www.xbrl.org/2003/instance}"
+
+
+def _sec_json(url: str, path, max_age_days: float | None) -> dict:
+    if path.exists() and (max_age_days is None or
+                          (pd.Timestamp.now() - pd.Timestamp(path.stat().st_mtime, unit="s")).total_seconds() < max_age_days * 86400):
+        return json.loads(path.read_text())
+    r = http_get(url, headers={"User-Agent": user_agent(), "Accept-Encoding": "gzip, deflate"})
+    path.write_bytes(r.content)
+    return r.json()
+
+
+def parse_instance(xml: bytes, accn: str, form: str, filed: str) -> dict:
+    """Faits numériques sans dimension d'une instance XBRL, au format de l'API companyfacts : {taxonomie: {concept: {"units":
+    {unité: [ {start?, end, val, accn, form, filed} ]}}}}."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(xml)
+    contexts = {}
+    for c in root.iter(f"{XBRLI}context"):
+        if c.find(f".//{XBRLI}segment") is not None or c.find(f".//{XBRLI}scenario") is not None:
+            continue
+        per = c.find(f"{XBRLI}period")
+        if per is None:
+            continue
+        inst, st, en = per.find(f"{XBRLI}instant"), per.find(f"{XBRLI}startDate"), per.find(f"{XBRLI}endDate")
+        if inst is not None:
+            contexts[c.get("id")] = (None, inst.text.strip()[:10])
+        elif st is not None and en is not None:
+            contexts[c.get("id")] = (st.text.strip()[:10], en.text.strip()[:10])
+    units = {}
+    for u in root.iter(f"{XBRLI}unit"):
+        meas = [m.text.strip().split(":")[-1] for m in u.iter(f"{XBRLI}measure") if m.text]
+        units[u.get("id")] = meas[0] if len(meas) == 1 else "/".join(meas)
+    facts, seen = {}, set()
+    for el in root:
+        if not isinstance(el.tag, str) or not el.tag.startswith("{"):
+            continue
+        ns, local = el.tag[1:].split("}", 1)
+        tax = ("us-gaap" if "fasb.org/us-gaap" in ns else "ifrs-full" if "xbrl.ifrs.org" in ns
+               else "dei" if "xbrl.sec.gov/dei" in ns else None)
+        ctx, unit = el.get("contextRef"), el.get("unitRef")
+        if tax is None or ctx not in contexts or unit is None or el.text is None:
+            continue
+        try:
+            val = float(el.text.strip())
+        except ValueError:
+            continue
+        start, end = contexts[ctx]
+        key = (tax, local, unit, start, end)
+        if key in seen:
+            continue
+        seen.add(key)
+        rec = {"end": end, "val": int(val) if val.is_integer() else val, "accn": accn, "form": form, "filed": filed}
+        if start:
+            rec["start"] = start
+        facts.setdefault(tax, {}).setdefault(local, {"units": {}})["units"].setdefault(units.get(unit, unit), []).append(rec)
+    return facts
+
+
+def _filing_facts(cik: int, accn: str, form: str, filed: str) -> dict:
+    """Faits d'un dépôt (mis en cache sans limite : un dépôt ne change pas)."""
+    path = RAW_DIR / f"xbrl_{accn}.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    acc = accn.replace("-", "")
+    idx = http_get(ARCHIVE_URL.format(cik=cik, acc=acc, name="index.json"), headers={"User-Agent": user_agent()}).json()
+    names = [i["name"] for i in idx.get("directory", {}).get("item", [])]
+    inst = next((n for n in names if n.endswith("_htm.xml")), None) or next(
+        (n for n in names if n.endswith(".xml") and not re.search(r"(_cal|_def|_lab|_pre)\.xml$|FilingSummary", n)), None)
+    if inst is None:
+        facts = {}
+    else:
+        xml = http_get(ARCHIVE_URL.format(cik=cik, acc=acc, name=inst), headers={"User-Agent": user_agent()}).content
+        facts = parse_instance(xml, accn, form, filed)
+    path.write_text(json.dumps(facts))
+    return facts
+
+
+def supplement_recent_filings(cf: dict, cik: int, since_days: int = 800, max_filings: int = 6) -> dict:
+    """Ajoute aux faits de l'API ceux des dépôts récents (10-K, 10-Q, 20-F, 40-F) qu'elle n'a pas encore intégrés."""
+    try:
+        sub = _sec_json(SUBMISSIONS_URL.format(cik=cik), RAW_DIR / f"submissions_{cik:010d}.json", max_age_days=0.5)
+    except Exception as exc:          # sans la liste des dépôts, on garde l'API telle quelle
+        log.warning("Liste des dépôts SEC indisponible pour %s : %s", cik, exc)
+        return cf
+    facts = cf.setdefault("facts", {})
+    known = {a.get("accn") for tax in ("us-gaap", "ifrs-full") for c in facts.get(tax, {}).values()
+             for lst in c.get("units", {}).values() for a in lst}
+    rec = sub.get("filings", {}).get("recent", {})
+    limit = pd.Timestamp.now() - pd.Timedelta(days=since_days)
+    added = []
+    for i, form in enumerate(rec.get("form", [])):
+        accn, filed = rec["accessionNumber"][i], rec["filingDate"][i]
+        if form not in FILING_FORMS or accn in known or pd.Timestamp(filed) < limit:
+            continue
+        if rec.get("isXBRL") and not rec["isXBRL"][i]:
+            continue
+        try:
+            extra = _filing_facts(cik, accn, form, filed)
+        except Exception as exc:
+            log.warning("Dépôt %s (%s, %s) illisible : %s", accn, form, filed, exc)
+            continue
+        for tax, concepts in extra.items():
+            for concept, v in concepts.items():
+                dst = facts.setdefault(tax, {}).setdefault(concept, {"units": {}})["units"]
+                for unit, lst in v["units"].items():
+                    dst.setdefault(unit, []).extend(lst)
+        added.append(f"{form} du {filed}")
+        if len(added) >= max_filings:
+            break
+    if added:
+        log.info("CIK %s : %d dépôt(s) absent(s) de l'API lu(s) directement : %s", cik, len(added), ", ".join(added))
+    cf["_supplement"] = added
+    return cf
+
+
 def _facts(cf: dict, taxonomy: str, concept: str) -> pd.DataFrame:
     units = cf.get("facts", {}).get(taxonomy, {}).get(concept, {}).get("units", {})
     rows = []
@@ -488,9 +612,9 @@ def public_float(cf: dict) -> pd.DataFrame:
 
 def fundamentals(cik: int, extra_ciks: tuple[int, ...] = ()) -> dict[str, pd.DataFrame]:
     """Toutes les séries (TTM pour les flux, dernière valeur pour les stocks), chacune avec end/filed/val."""
-    cf = fetch_companyfacts(cik)
+    cf = supplement_recent_filings(fetch_companyfacts(cik), cik)
     if extra_ciks:
-        cf = merge_companyfacts([cf] + [fetch_companyfacts(int(c)) for c in extra_ciks])
+        cf = merge_companyfacts([cf] + [supplement_recent_filings(fetch_companyfacts(int(c)), int(c)) for c in extra_ciks])
     out = {}
     for key, (concepts, kind) in CONCEPTS.items():
         if kind == "flow":
@@ -528,5 +652,5 @@ def fundamentals(cik: int, extra_ciks: tuple[int, ...] = ()) -> dict[str, pd.Dat
     if len(units) > 1:
         log.warning("CIK %d : plusieurs devises dans les comptes (%s) ; vérifier la cohérence avec la devise du cours", cik, units)
     log.info("EDGAR CIK %d : %s%s", cik, ", ".join(f"{k}={len(v)}" for k, v in out.items() if hasattr(v, "attrs")),
-             " (annuel seulement : déposant 20-F)" if any(hasattr(v, "attrs") and v.attrs.get("annual_only") for v in out.values()) else "")
+             " (annuel seulement : déposant 20-F)" if getattr(out.get("net_income"), "attrs", {}).get("annual_only") else "")
     return out

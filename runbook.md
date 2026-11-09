@@ -55,9 +55,11 @@ complétude avant toute publication. Diagnostic :
 | FINRA : 404 | nom de fichier modifié | la page `margin-statistics` est relue à chaque exécution ; corriger la regex si besoin |
 | `check` : « actions : au moins 60 valorisées » | `SEC_USER_AGENT` absent ou SEC indisponible | vérifier le secret ; relancer |
 | `check` : témoin « nombre d'actions » en échec | division d'actions mal datée ou donnée SEC à la mauvaise échelle | lire la société citée ; corriger `stocks.py` (`split_adjust_shares`, `clean_share_counts`) |
+| `check` : « zones, secteurs et thèmes : cours de moins de 7 jours » | ETF retiré ou symbole changé chez Yahoo | corriger le symbole dans `rules.yaml → themes.assets` |
 
-Les rapports annuels IFRS récents de TSMC, Toyota, Sony et BHP sont déposés à la SEC mais leurs chiffres n'apparaissent pas dans
-l'API `companyfacts` : ces sociétés restent en « comptes anciens » (orange) jusqu'à ce que l'API les intègre.
+Quand l'API `companyfacts` de la SEC n'a pas encore intégré un dépôt récent (constaté en 2026 pour Citi, NextEra, TSMC, Toyota,
+Sony, BHP), `edgar.supplement_recent_filings` le lit directement dans l'instance XBRL du dépôt (`*_htm.xml`), mise en cache dans
+`data/raw/xbrl_<numéro>.json`. Une société dont les données ne permettent pas de juger affiche « pas de feu » avec la raison.
 
 ## 5. Modifier une règle
 

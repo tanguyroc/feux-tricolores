@@ -1,5 +1,47 @@
 # Journal des modifications des règles
 
+## 2026-11-09 — v1.0.2 (données à jour, « pas de feu », zones géographiques ; règles des indices et du Bitcoin inchangées)
+
+**Données à jour.**
+- L'API « companyfacts » de la SEC n'avait pas intégré plusieurs dépôts récents : 10-Q 2026 de Citigroup (trois) et de NextEra
+  (deux), 20-F 2026 de TSMC, Toyota, Sony et BHP. Ces dépôts sont désormais lus directement dans leur instance XBRL, datés de leur
+  dépôt. Plus aucune des 91 sociétés suivies à la SEC n'est en « comptes anciens » (TSMC passe de comptes 2024 à 2025, Citi de
+  2025 au 3e trimestre 2026).
+- VIX : les clôtures Yahoo complètent FRED, qui publie le lendemain. Prix du Bitcoin : Yahoo complète Coin Metrics pour les jours
+  pas encore publiés (le MVRV reste celui de Coin Metrics, sa date est affichée à part). Un cours en séance n'est jamais pris pour
+  une clôture.
+- Onglet Validation : tableau de fraîcheur de chaque source (dernière valeur, âge, rythme de publication).
+
+**« Pas de feu » (gris) quand les données ne permettent pas de juger**, au lieu d'un orange par défaut, toujours avec la raison
+écrite :
+- actions sans comptes à la SEC (11) ;
+- valorisation contre son passé non mesurable (moins de 5 ans de multiples positifs : Palantir, CrowdStrike, GE Vernova, Shopify) ;
+- comparaison aux autres impossible (Gilead, Deere : dette non publiée sous une forme exploitable ; Welltower : seule foncière) ;
+- comptes de plus de 15 mois ;
+- société bon marché dont la solidité n'est pas mesurable ;
+- Bitcoin sans MVRV ou sans moyenne 200 semaines (2010-2014, exclus des statistiques comme dans le protocole) ;
+- zones, secteurs et thèmes sans mesure.
+
+Témoins : chaque « pas de feu » a une raison, aucune couleur sans mesure.
+
+**Feux des zones, secteurs et thèmes (indicatifs, non testés), mêmes seuils que les indices, pas de rouge.**
+- 13 zones ajoutées (ETF cotés en dollars) : Euro Stoxx 50, Europe développée, Royaume-Uni, Allemagne, France, Japon, Chine, Inde,
+  Corée du Sud, Taïwan, Amérique latine, Brésil, marchés émergents.
+- Mesure :
+  - pour un secteur ou un thème d'au moins 5 sociétés du Top 100 : la médiane de leurs valorisations, chacune contre ses dix
+    dernières années ;
+  - sinon : le prix de l'ETF rapporté à ses dividendes réels moyens sur 10 ans (un « CAPE » fait avec les dividendes), contre son
+    propre passé (10 à 20 ans) ;
+  - pas de feu si l'historique est insuffisant, si les dividendes sont trop faibles (moins de 1 %/an) ou s'ils ne sont plus publiés
+    depuis plus de 13 mois (Inde).
+- Limites écrites dans l'application : une hausse du taux de distribution fait paraître une zone moins chère qu'elle ne l'est ; les
+  dividendes des matières premières sont cycliques.
+- Aujourd'hui :
+  - zones vertes : Japon, Chine, Taïwan, Amérique latine, Brésil ; « chères » : Euro Stoxx 50, Europe, Royaume-Uni ;
+  - secteurs verts : Communication, Immobilier coté ; « chers » : Matériaux, Services aux collectivités ;
+  - thèmes : Énergies propres vert, semi-conducteurs et logiciels orange, quatre sans feu (dividendes trop faibles).
+- Le thème semi-conducteurs suit l'ETF SOXX (dividendes) au lieu de l'indice ^SOX.
+
 ## 2026-11-09 — v1.0.1 (relecture indépendante : corrections de données et de textes ; règles inchangées)
 Une relecture indépendante du code et des données (agent n'ayant pas participé à la conception, sans accès réseau, sur une copie)
 a reproduit les défauts suivants. Tous sont corrigés ; aucun seuil de `rules.yaml` n'a changé.

@@ -37,13 +37,14 @@ button.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-r
 button.btn[disabled]{opacity:.45;cursor:not-allowed}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:20px}.kpi span{font-size:12px;color:var(--muted)}
 .bar{height:8px;background:#eee;border-radius:4px;overflow:hidden}.bar i{display:block;height:100%}.note{font-size:13px;color:var(--muted)}
-.rowred td:first-child{border-left:3px solid var(--red)}.rowgreen td:first-child{border-left:3px solid var(--green)}
+.rowred td:first-child{border-left:3px solid var(--red)}.rowgreen td:first-child{border-left:3px solid var(--green)}.rownone td:first-child{border-left:3px dashed #9aa0a6}
+.c.none{color:#6b7280}.dot.none{background:#d5d8dc;box-shadow:inset 0 0 0 2px #9aa0a6}
 .detail{background:#f6f7f9;border-radius:8px;padding:10px 12px;font-size:13px;margin:6px 0 12px}
 .vg{position:relative;height:6px;border-radius:3px;margin:4px 0 3px;min-width:90px;background:linear-gradient(90deg,#2e8b57 0%,#9acd32 30%,#f0c000 50%,#f08c00 70%,#b3261e 100%)}.vg i{position:absolute;top:-3px;width:3px;height:12px;margin-left:-1px;border-radius:2px;border:1px solid #fff}
 small.warn{color:#b3261e}.warnc{color:#b3261e}
 .pill.warnp{border-color:#b3261e;color:#b3261e;background:#fff5f4}
 .secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.sec{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:4px solid var(--line)}
-.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}.sec.flagged{border-left-color:#b3261e}
+.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}.sec.rownone{border-left-color:#9aa0a6;border-left-style:dashed}.sec.flagged{border-left-color:#b3261e}
 .sec-head{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sec-flags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.sec-body{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:13px}.sec-body>span:first-child{min-width:150px}
 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#c9ccd1}.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}
 .sec-sentence{font-size:13px;margin:6px 0 0}.mems{margin:6px 0 0;font-size:12px}.mem{display:inline-block;padding:0 5px;border-radius:4px;border:1px solid var(--line);margin:1px 0}.mem.red{border-color:var(--red)}.mem.green{border-color:var(--green)}
@@ -75,7 +76,7 @@ def _payload() -> dict:
     for k, v in stocks.items():
         rows.append({kk: v.get(kk) for kk in ("name", "ticker", "country", "sector", "industry", "weight", "rank", "pea", "kind", "color_confirmed", "color",
                                             "V", "ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda", "quality_ok", "implied_growth",
-                                            "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "da_known", "accounts_as_of", "shares_source",
+                                            "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "no_light_reason", "da_known", "accounts_as_of", "shares_source",
                                             "V_cross", "vs_sector", "sector_peers", "tendu", "stale_accounts", "fcf", "fcf_gross", "sbc", "sbc_known", "sbc_to_revenue",
                                             "shareholder_yield", "dividend_yield", "net_buyback_yield", "dilution_3y", "accruals", "gross_margin", "gross_profitability", "splits", "shares_cleaning",
                                             "fcf_cagr_5y", "gap_ma200", "gap_ma200_pct", "runup_24m", "gsy", "trend_broken", "drawdown", "mom_12m", "date", "since", "price",
@@ -87,7 +88,7 @@ def _payload() -> dict:
     priced = [s for s in rows if s.get("gap_ma200") is not None]
     breadth = {"n": len(priced), "above_ma200": sum(1 for s in priced if s["gap_ma200"] > 0),
                "trend_broken": sum(1 for s in priced if s.get("trend_broken")),
-               "colors": {c: sum(1 for s in rows if s.get("color_confirmed") == c) for c in ("green", "orange", "red")}}
+               "colors": {c: sum(1 for s in rows if s.get("color_confirmed") == c) for c in ("green", "orange", "red", "none")}}
     try:
         from .universe import load as load_universe
         u = load_universe().sort_values("weight", ascending=False)
@@ -177,8 +178,8 @@ def build() -> None:
 <div class="actions"><b>Ce mois-ci, concrètement</b><ul style="margin:6px 0 0;padding-left:18px">{acts}</ul></div>
 <h2>Lecture du jour</h2><div class="grid">{''.join(cards)}</div>
 <p class="legend"><i style="background:{d.HEX['green']}"></i>vert <i style="background:{d.HEX['orange']}"></i>orange <i style="background:{d.HEX['red']}"></i>rouge — frise mensuelle depuis 1990 (Bitcoin : 2014)</p>
-<h2>Secteurs et thèmes</h2>
-<p class="sub">Pas de couleur ici : des drapeaux. Pour chaque thème, là où les bulles se sont historiquement formées (semi-conducteurs, logiciels, biotechnologies…), le critère de Greenwood, Shleifer et You (hausse de 100 % en deux ans qui s'accélère : chute d'au moins 40 % dans environ un cas sur deux ensuite, sur des industries américaines 1926-2014), la tension des cours et la tendance. Pour les onze secteurs, en plus, la valorisation médiane de leurs sociétés du Top 100 contre leur propre passé. Contexte : ni le levier ni les montants n'en dépendent.</p>
+<h2>Zones, secteurs et thèmes</h2>
+<p class="sub"><b>Feu indicatif, non testé sur le passé</b>, mêmes seuils que les indices : <b>vert</b> = moins cher que 60 % de son propre passé ; <b>orange</b> sinon (« cher » au-delà de 80 %) ; pas de rouge. Mesure : pour un secteur ou un thème comptant au moins 5 sociétés du Top 100, la médiane de leurs valorisations, chacune contre ses dix dernières années ; sinon, et pour les zones, le prix de l'ETF (coté en dollars) rapporté à ses dividendes réels moyens des dix dernières années, contre son propre passé. Cette mesure par les dividendes est plus fruste que le CAPE : une hausse du taux de distribution fait paraître une zone moins chère qu'elle ne l'est, des dividendes de matières premières sont cycliques, et l'historique de comparaison va de 10 à 20 ans selon l'ETF. <b>Pas de feu</b> (gris) quand les données ne permettent pas de juger : la raison est écrite. Les drapeaux de prix (bulle selon Greenwood, Shleifer et You, tension, tendance) complètent. Ni le levier ni les montants n'en dépendent.</p>
 <div id="sectors"></div>
 <div id="breadth" class="breadth"></div>
 <div class="warn" style="margin-top:18px">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais.</div>
@@ -192,7 +193,7 @@ Chaque société est jugée sous <b>deux lentilles</b> : son prix contre <b>son 
 <div id="stocks-notice"></div>
 <div class="filters">
 <input id="f-search" placeholder="Rechercher une société…">
-<select id="f-color"><option value="">Toutes couleurs</option><option value="green">Vert</option><option value="orange">Orange</option><option value="red">Rouge</option></select>
+<select id="f-color"><option value="">Toutes couleurs</option><option value="green">Vert</option><option value="orange">Orange</option><option value="red">Rouge</option><option value="none">Pas de feu (données insuffisantes)</option></select>
 <select id="f-country"><option value="">Tous pays</option></select>
 <select id="f-sector"><option value="">Tous secteurs</option></select>
 <label class="pill"><input type="checkbox" id="f-pea"> éligible PEA (approx.)</label>
@@ -276,7 +277,7 @@ APP_JS = r"""
 (function(){
 const D=window.FEUX;const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
 const D_DATE=D.generated_iso||new Date().toISOString();const fmtDate=d=>{if(!d)return '';const x=new Date(d);return isNaN(x)?String(d):x.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});};
-const LABEL={green:'VERT',orange:'ORANGE',red:'ROUGE'};const FR={green:'vert',orange:'orange',red:'rouge'};
+const LABEL={green:'VERT',orange:'ORANGE',red:'ROUGE',none:'PAS DE FEU'};const FR={green:'vert',orange:'orange',red:'rouge',none:'sans feu'};
 const pct=(x,d=0,sign=false)=>x==null||isNaN(x)?'n.d.':((sign&&x>=0?'+':'')+(100*x).toFixed(d)+' %');
 const num=(x,d=1)=>x==null||isNaN(x)?'n.d.':Number(x).toLocaleString('fr-FR',{maximumFractionDigits:d});
 const eur=x=>Number(x||0).toLocaleString('fr-FR',{maximumFractionDigits:0})+' €';
@@ -307,7 +308,7 @@ function solidity(s){if(s.V==null)return '—';if(s.mode==='reit')return '<span 
 const ageMonths=d=>d?Math.round((new Date(D_DATE)-new Date(d))/2629800000):null;
 const accountsNote=s=>{if(!s.accounts_as_of)return '';const m=ageMonths(s.accounts_as_of);const old=m!=null&&m>15;return `<br><small class="${old?'warn':'note'}">comptes au ${fmtDate(s.accounts_as_of)}${old?' — anciens ('+m+' mois) : lecture prudente':''}</small>`;};
 function fmtCell(k,s){switch(k){
- case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker} · ${s.country||'—'} · ${s.sector||'—'}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>${s.stale_accounts&&s.kind==='operating'?'<br><small class="warn">comptes anciens</small>':''}`;
+ case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker} · ${s.country||'—'} · ${s.sector||'—'}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>${s.color_confirmed==='none'&&s.no_light_reason?`<br><small class="note">${s.no_light_reason.split(' (')[0].split(' :')[0]}</small>`:''}`;
  case 'V_cross':if(s.V_cross==null)return '—';return `<b>${Math.round(s.V_cross)}</b>${vgauge(s.V_cross)}<small>${s.mode!=='industrial'?'P/E':'EV/EBIT'}${s.vs_sector!=null?` · secteur ${s.vs_sector>2?'> +200 %':pct(s.vs_sector,0,true)}`:''}</small>`;
  case 'shareholder_yield':return s.shareholder_yield==null?'—':`${pct(s.shareholder_yield,1)}<br><small>dividende ${pct(s.dividend_yield,1)} · actions ${s.dilution_3y==null?'n.d.':pct(s.dilution_3y,0,true)} en 3 ans</small>`;
  case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `<b>${Math.round(s.V)}</b> <small>${VLAB(s.V)}</small>${vgauge(s.V)}<small>${s.mode!=='industrial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>${accountsNote(s)}`;
@@ -321,7 +322,7 @@ function filtered(){const q=($('#f-search').value||'').toLowerCase();const c=$('
  return S.filter(s=>(!q||(s.name+' '+s.ticker).toLowerCase().includes(q))&&(!c||s.color_confirmed===c)&&(!co||s.country===co)&&(!se||s.sector===se)&&(!$('#f-pea').checked||s.pea)&&(!$('#f-gsy').checked||s.gsy)&&(!$('#f-broken').checked||s.trend_broken)&&(!$('#f-quality').checked||s.quality_ok===true)&&inBand(s));}
 function summary(){const v=S.filter(s=>s.V!=null);const bands=[['≤ 20','très bon marché',s=>s.V<=20],['20-40','bon marché',s=>s.V>20&&s.V<=40],['40-60','dans sa moyenne',s=>s.V>40&&s.V<=60],['60-80','cher',s=>s.V>60&&s.V<=80],['> 80','très cher',s=>s.V>80]];
  const solid=v.filter(s=>s.quality_ok===true).length,reds=S.filter(s=>s.color_confirmed==='red').length,greens=S.filter(s=>s.color_confirmed==='green').length;
- $('#stocks-summary').innerHTML=bands.map(([r,l,f])=>{const n=v.filter(f).length;return `<div class="kpi" style="border-top:3px solid ${VHUE(r==='≤ 20'?10:r==='20-40'?30:r==='40-60'?50:r==='60-80'?70:90)}"><b>${n}</b><span>${l} (${r})</span></div>`;}).join('')+`<div class="kpi"><b>${solid}/${v.length}</b><span>solides (3 tests réussis)</span></div><div class="kpi"><b>${reds} · ${greens}</b><span>feux rouges · feux verts</span></div>`;}
+ $('#stocks-summary').innerHTML=bands.map(([r,l,f])=>{const n=v.filter(f).length;return `<div class="kpi" style="border-top:3px solid ${VHUE(r==='≤ 20'?10:r==='20-40'?30:r==='40-60'?50:r==='60-80'?70:90)}"><b>${n}</b><span>${l} (${r})</span></div>`;}).join('')+`<div class="kpi"><b>${solid}/${v.length}</b><span>solides (3 tests réussis)</span></div><div class="kpi"><b>${reds} · ${greens}</b><span>feux rouges · feux verts</span></div><div class="kpi" style="border-top:3px dashed #9aa0a6"><b>${S.filter(s=>s.color_confirmed==='none').length}</b><span>sans feu (données insuffisantes)</span></div>`;}
 summary();
 function renderStocks(){const rows=filtered().sort((a,b)=>{let x=a[sortKey],y=b[sortKey];if(x==null)return 1;if(y==null)return -1;if(typeof x==='string')return sortAsc?x.localeCompare(y):y.localeCompare(x);return sortAsc?x-y:y-x;});
  $('#f-count').textContent=rows.length+' sociétés';
@@ -341,21 +342,27 @@ function detail(key){const s=S.find(x=>x.key===key);if(!s)return;const body=s.V=
  <small class="note">Dernier exercice glissant : rentabilité ${pct(s.roic,0)}, cash ${num(s.fcf_ni,2)}×, dette ${num(s.nd_ebitda,1)}×.</small><br>
  <b>DCF inversé</b> : le cours suppose ${pct(s.implied_growth,0,true)}/an de croissance du cash pendant dix ans ; réalisé sur cinq ans : ${pct(s.fcf_cagr_5y,0,true)}/an.<br>`)+`
  <b>Prix</b> : écart MM200 ${pct(s.gap_ma200,0,true)}, hausse 2 ans ${pct(s.runup_24m,0,true)}, bulle GSY ${s.gsy?'active':'non'}, tendance ${s.trend_broken?'cassée':'OK'}, ${pct(s.drawdown,0)} sous le plus haut. Comptes en ${s.accounts_currency||'?'}, cours en ${s.price_currency||'?'}.</p>`;
- $('#stock-detail').innerHTML=`<div class="detail"><b>${s.name}</b> (${s.ticker}, ${s.country||'—'}, ${s.sector||'—'}) — feu <span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]}</span> depuis le ${s.since||'—'} · données au ${s.date}${body}</div>`;$('#stock-detail').scrollIntoView({behavior:'smooth',block:'nearest'});}
+ $('#stock-detail').innerHTML=`<div class="detail"><b>${s.name}</b> (${s.ticker}, ${s.country||'—'}, ${s.sector||'—'}) — feu <span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]}</span> depuis le ${s.since||'—'} · cours au ${fmtDate(s.date)}${s.accounts_as_of?` · comptes au ${fmtDate(s.accounts_as_of)}`:''}${s.color_confirmed==='none'?`<div class="warn" style="margin-top:6px"><b>Pas de feu</b> : ${s.no_light_reason||'données insuffisantes'}. Aucune couleur n'est affichée plutôt qu'un orange par défaut.</div>`:''}${body}</div>`;$('#stock-detail').scrollIntoView({behavior:'smooth',block:'nearest'});}
 ['#f-search','#f-color','#f-country','#f-sector','#f-pea','#f-gsy','#f-broken','#f-quality','#f-vband'].forEach(id=>$(id).addEventListener('input',renderStocks));renderStocks();
 
 // ---- Secteurs et thèmes ----
 function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerHTML='<p class="note">Non calculé.</p>';return;}
  const flag=(on,txt)=>on?`<span class="pill warnp">${txt}</span>`:'';
- const row=t=>{const v=t.valuation||{};const med=v.v_median;const members=(v.members||[]).map(m=>`<span class="mem c ${m.color||'orange'}" title="${m.name}">${m.ticker}${m.V==null?'':' '+Math.round(m.V)}</span>`).join(' ');
-  const flagged=t.gsy||t.extended;
-  return `<div class="sec ${flagged?'flagged':''}"><div class="sec-head"><span class="dot ${flagged?'red':''}"></span><b>${t.name}</b> <small class="note">${t.ticker}${t.kind==='theme'?' · thème (drapeaux seulement)':''}</small>
+ const ORD={green:0,orange:1,red:1,none:2};
+ const row=t=>{const L=t.light||{color_confirmed:'none'};const c=L.color_confirmed||'none';const v=t.valuation||{};
+  const members=(v.members||[]).map(m=>`<span class="mem c ${m.color||'none'}" title="${esc(m.name)}">${esc(m.ticker)}${m.V==null?'':' '+Math.round(m.V)}</span>`).join(' ');
+  const val=c==='none'?`<span class="note"><b>Pas de feu</b> : ${esc(L.reason||'données insuffisantes')}.</span>`
+   :`<span><b>${Math.round(L.V)}</b> <small>${VLAB(L.V)}${L.cher?' · <b>cher</b>':''} · feu depuis le ${fmtDate(L.since)}</small>${vgauge(L.V)}</span><span class="note detail-only">${esc(L.measure||'')}</span>`;
+  return `<div class="sec row${c}"><div class="sec-head"><span class="dot ${c}"></span><b>${esc(t.name)}</b> <small class="note">${esc(t.ticker)} · ${fmtDate(t.date)}</small>
+  <span class="c ${c}" style="font-weight:700;margin-left:6px">${LABEL[c]}</span>
   <span class="sec-flags">${flag(t.gsy,'bulle GSY')}${flag(t.extended,'tendu')}${flag(t.trend_broken,'tendance cassée')}${flag(t.drawdown>=0.25,`−${Math.round(100*t.drawdown)} % vs plus haut`)}</span></div>
-  <div class="sec-body">${t.kind==='sector'?(med==null?`<span class="note">valorisation sectorielle n.d. (${v.n||0} société${(v.n||0)>1?'s':''} valorisée${(v.n||0)>1?'s':''}, minimum 3)</span>`:`<span><b>${Math.round(med)}</b> <small>${VLAB(med)} · médiane de ${v.n} sociétés</small>${vgauge(med)}</span>`):''}
-  <span class="note">hausse 2 ans ${pct(t.runup_24m,0,true)} · écart MM200 ${pct(t.gap_ma200,0,true)}${t.gap_pct==null?'':' (p'+Math.round(t.gap_pct)+')'}</span></div>
+  <div class="sec-body">${val}<span class="note">hausse 2 ans ${pct(t.runup_24m,0,true)} · écart MM200 ${pct(t.gap_ma200,0,true)}${t.avg_yield_10y==null?'':' · dividendes moyens 10 ans '+pct(t.avg_yield_10y,1)}</span></div>
   <p class="sec-sentence">${t.sentence}</p>${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
- const byFlag=(a,b)=>((b.gsy||b.extended)?1:0)-((a.gsy||a.extended)?1:0);
- $('#sectors').innerHTML=`<h3 style="margin:6px 0">Thèmes</h3><div class="secs">${T.filter(t=>t.kind!=='sector').sort(byFlag).map(row).join('')}</div><h3 style="margin:14px 0 6px">Les onze secteurs</h3><div class="secs">${T.filter(t=>t.kind==='sector').sort(byFlag).map(row).join('')}</div>`;}
+ const sort=(a,b)=>(ORD[(a.light||{}).color_confirmed||'none']-ORD[(b.light||{}).color_confirmed||'none'])||(((a.light||{}).V??999)-((b.light||{}).V??999));
+ const group=(kind,title)=>{const G=T.filter(t=>t.kind===kind).sort(sort);if(!G.length)return '';
+  const n=k=>G.filter(t=>((t.light||{}).color_confirmed||'none')===k).length;
+  return `<h3 style="margin:14px 0 6px">${title} <small class="note">${n('green')} vert${n('green')>1?'s':''} · ${n('orange')} orange · ${n('none')} sans feu</small></h3><div class="secs">${G.map(row).join('')}</div>`;};
+ $('#sectors').innerHTML=group('zone','Zones et pays')+group('sector','Les onze secteurs')+group('theme','Thèmes');}
 renderSectors();
 (function(){const P=D.prereg||[];const el=$('#prereg');if(!el)return;
  if(!P.length){el.innerHTML='';return;}
@@ -379,6 +386,8 @@ renderSectors();
  const pub=(C.publication||[]).map(c=>`<tr><td>${c['contrôle']}${c.bloquant===false?' <small class="note">(non bloquant)</small>':''}</td><td>${c['observé']??'—'}</td><td class="${c.ok?'ok':'ko'}">${c.ok?'OK':'ÉCHEC'}</td></tr>`).join('');
  el.innerHTML=`<h3>4. Témoins : ce que le code doit faire, vérifié avant chaque publication</h3><p class="note">Avant de publier, des contrôles vérifient que les données sont fraîches et complètes, et des « témoins » que les règles se comportent comme annoncé sur les données du jour (repris de Kairys). Un contrôle bloquant en échec arrête la mise à jour : le site garde la version précédente plutôt que d'afficher un feu faux, et une alerte est envoyée. Contrôles du ${fmtDate(C.date)} : ${nko?'<b class="warnc">'+nko+' en échec</b>':'tous réussis'}.</p>
  <table><tr><th>Témoin</th><th>Attendu</th><th>Observé</th><th></th></tr>${wit}</table>
+ <h3 style="margin-top:16px">Fraîcheur de chaque donnée</h3><p class="note">Date de la dernière valeur utilisée, son âge et le rythme auquel la source publie. Une donnée plus ancienne que son rythme normal est signalée.</p>
+ <table><tr><th>Source</th><th>Dernière valeur</th><th>Âge</th><th>Rythme de publication</th></tr>${(C['fraîcheur']||[]).map(f=>`<tr><td>${f.source}</td><td>${f.date?fmtDate(f.date):'—'}</td><td>${f['âge']==null?'—':f['âge']+' j'}</td><td>${f.rythme}</td></tr>`).join('')}</table>
  <details><summary>Contrôles de fraîcheur et de complétude</summary><table><tr><th>Contrôle</th><th>Observé</th><th></th></tr>${pub}</table></details>`;})();
 
 // ---- Mon portefeuille ----

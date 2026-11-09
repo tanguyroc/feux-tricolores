@@ -7,7 +7,7 @@ import pandas as pd
 from .config import rules
 from .explain import fr_num
 
-COLOR_FR = {"green": "vert", "orange": "orange", "red": "rouge"}
+COLOR_FR = {"green": "vert", "orange": "orange", "red": "rouge", "none": "sans feu (données insuffisantes)"}
 
 # ----------------------------------------------------------------------------------------------
 # 1. Phrase du jour par actif

@@ -102,7 +102,7 @@ def episode_counts(col: pd.Series, min_len: int = 20) -> dict[str, int]:
 def evaluate(asset: str, df: pd.DataFrame, start: str, per_year: int) -> AssetResult:
     r = rules()["acceptance"]
     d = df[df.index >= start].copy()
-    d = d[d["color"].notna()]
+    d = d[d["color"].notna() & (d["color"] != "none")]      # jours sans feu (données incomplètes) : exclus, comme dans le protocole
     res = AssetResult(asset=asset, start=str(d.index[0].date()), end=str(d.index[-1].date()))
     res.share = d["color"].value_counts(normalize=True).reindex(COLORS).fillna(0).round(4).to_dict()
     res.fwd, res.dd24 = forward_stats(d, per_year)

@@ -256,7 +256,8 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     # déposants de 20-F / 40-F (comptes annuels publiés 3 à 4 mois après la clôture) : tolérance plus longue avant d'oublier
     # une valeur, pour les flux ET pour le bilan (sinon, chaque année, la dette et la trésorerie expiraient avant les flux :
     # EV = capitalisation pendant des semaines, v1.0.1)
-    annual_filer = any(bool(getattr(f.get(k), "attrs", {}).get("annual_only")) for k in ("net_income", "revenue", "cfo"))
+    # déposant annuel = son résultat net n'existe qu'en valeurs annuelles (un concept secondaire annuel ne suffit pas : NextEra)
+    annual_filer = bool(getattr(f.get("net_income"), "attrs", {}).get("annual_only"))
     for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt", "equity", "shares",
               "assets", "pretax", "interest", "sbc", "dividends", "buybacks", "issuance", "gross_profit", "cost_of_revenue"):
         annual = annual_filer or (f.get(k) is not None and bool(getattr(f[k], "attrs", {}).get("annual_only")))
@@ -358,6 +359,13 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
         fails["cash"] = ~(df["fcf_ni_avg"] >= q["fcf_to_net_income_min"])
         fails["dette"] = ~(df["nd_ebitda_avg"] <= q["net_debt_to_ebitda_max"])
         df["quality_ok"] = ~fails.any(axis=1) & df["roic_avg"].notna() & df["fcf_ni_avg"].notna() & df["nd_ebitda_avg"].notna()
+    metrics = ({"rentabilité": df["roe_avg"]} if mode == "financial" else {} if mode == "reit"
+               else {"rentabilité": df["roic_avg"], "cash": df["fcf_ni_avg"], "dette": df["nd_ebitda_avg"]})
+    known_fail, unknown = pd.Series(False, index=df.index), pd.Series(False, index=df.index)
+    for k_, m_ in metrics.items():
+        known_fail |= (fails[k_].fillna(False).astype(bool) & m_.notna())
+        unknown |= m_.isna()
+    df["quality_unmeasured"] = unknown & ~known_fail      # rien n'échoue, mais au moins un critère n'est pas mesurable
     financial = mode == "financial"
     d = r["reverse_dcf"]
     fcf_5y = df["fcf"].shift(5 * TD)
@@ -392,9 +400,10 @@ def analyse_price_only(key: str, spec: dict) -> pd.DataFrame:
     px = yahoo.fetch_close(spec["ticker"])
     df = price_block(px)
     df["V"] = np.nan
-    df["color"] = "orange"
-    df["color_confirmed"] = "orange"
+    df["color"] = "none"              # v1.0.2 : sans comptes, pas de valorisation, donc PAS DE FEU (et non un orange par défaut)
+    df["color_confirmed"] = "none"
     df["kind"] = "price_only"
+    df.attrs["no_light_reason"] = "pas de comptes déposés à la SEC : valorisation non mesurable, cours seul"
     return df
 
 
@@ -518,11 +527,33 @@ def apply_cross_section(res: dict[str, pd.DataFrame]) -> None:
         color = pd.Series("orange", index=df.index, dtype=object)
         color[green.fillna(False)] = "green"
         color[red.fillna(False)] = "red"
-        color[df["V"].isna() | df["V_cross"].isna() | df["stale_accounts"]] = "orange"
+        # v1.0.2 : quand il manque de quoi juger, PAS DE FEU (gris), jamais un orange par défaut
+        stale = df["stale_accounts"].astype(bool)
+        no_v, no_x = df["V"].isna(), df["V_cross"].isna()
+        cheap_unmeasured = ((df["V"] <= vr["green_max"]) & (df["V_cross"] <= vr["green_max"])
+                            & df.get("quality_unmeasured", pd.Series(False, index=df.index)).fillna(False).astype(bool))
+        no_light = stale | no_v | no_x | cheap_unmeasured
+        color[no_light] = "none"
         df["color"] = color
         df["color_confirmed"] = confirmed_color(df["color"], days)
-        # des comptes trop anciens neutralisent aussi la couleur AFFICHÉE, sans attendre la confirmation de 5 jours (v1.0.1)
-        df.loc[df["stale_accounts"].astype(bool), "color_confirmed"] = "orange"
+        df.loc[no_light, "color_confirmed"] = "none"          # immédiat, sans attendre la confirmation de 5 jours
+        last = df.iloc[-1]
+        reason = None
+        if bool(stale.iloc[-1]):
+            reason = f"comptes de plus de 15 mois (dernier exercice publié : {df.attrs.get('accounts_as_of') or 'inconnu'})"
+        elif bool(no_v.iloc[-1]):
+            reason = "valorisation contre son passé non mesurable (moins de 5 ans de multiples positifs, ou bénéfice et flux libre négatifs)"
+        elif bool(no_x.iloc[-1]):
+            mode_ = df.attrs.get("mode", "industrial")
+            if vc is None:
+                reason = f"trop peu de sociétés comparables dans le Top 100 ({'foncières' if mode_ == 'reit' else mode_}) pour la seconde lentille"
+            elif mode_ == "industrial" and pd.isna(df["debt"].iloc[-1]) if "debt" in df else False:
+                reason = "dette non publiée sous une forme exploitable : ni valeur d'entreprise, ni comparaison aux autres"
+            else:
+                reason = "comparaison aux autres grandes sociétés impossible (multiple négatif ou inconnu à la dernière date)"
+        elif bool(cheap_unmeasured.iloc[-1]):
+            reason = "bon marché, mais solidité non mesurable (" + ", ".join(df.attrs.get("quality_unknown") or []) + ") : on ne peut pas dire vert"
+        df.attrs["no_light_reason"] = reason
     # écart au secteur (dernière date) : multiple / médiane des sociétés du même secteur et du même mode (≥ 3)
     last = {k: df.iloc[-1] for k, df in res.items() if df["kind"].iloc[-1] == "operating"}
     groups: dict[tuple, list[float]] = {}

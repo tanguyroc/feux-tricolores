@@ -15,6 +15,7 @@ Un feu mesure un **état**, pas une prévision :
 | 🟠 Orange | tout le reste, y compris **« cher »** (CAPE ≥ 80e percentile), affiché comme information | versements ; montants exceptionnels en trois tranches mensuelles ; levier ≤ 10 % |
 | 🔴 Rouge | **Bitcoin seulement** : MVRV ≥ 3 | aucun montant exceptionnel ; levier ≤ 5 % |
 | ⚑ Tendance cassée | clôture mensuelle sous la moyenne 10 mois (Bitcoin : sous la MM200 jours) | levier ramené à 5 % |
+| ⚪ Pas de feu | les données ne permettent pas de juger (raison écrite à côté) | aucune décision exceptionnelle fondée sur cet actif |
 
 **Les versements réguliers ne s'arrêtent jamais.** Le feu ne dit pas « vendre » ; il dit comment acheter.
 
@@ -45,7 +46,7 @@ La v1.0 vient d'un protocole pré-enregistré (`research/v1_protocol.md`, pouss�
 | S&P 500 | 8 % | +12,3 %/an | +9,7 %/an | 29 % / 34 % |
 | Nasdaq-100 | 13 % | +16,8 %/an | +15,7 %/an | 61 % / 35 % |
 | MSCI World | 9 % | +10,8 %/an | +7,7 %/an | 30 % / 37 % |
-| Bitcoin (rouge 4 % du temps) | 17 % | +126 %/an | +50 %/an (rouge : +9 %/an) | 25 % / 69 % (rouge : 79 %) |
+| Bitcoin (rouge 4 % du temps) | 17 % | +126 %/an | +54 %/an (rouge : +9 %/an) | 25 % / 69 % (rouge : 79 %) |
 
 Rendements de prix hors dividendes ; chaque jour est classé par sa couleur du jour. Sur le Nasdaq-100, les verts de 2000-2002
 (capitulations trop précoces) expliquent la baisse de 61 % : d'où le drapeau « couteau qui tombe » et les tranches.
@@ -68,6 +69,15 @@ sous les deux lentilles **et** tendue ; vert seulement si bon marché sous les d
 comptes de plus de 15 mois → orange. Les données SEC sont nettoyées (divisions d'actions selon la date de dépôt, nombres déclarés
 en milliers ou en millions, valeurs aberrantes) et un témoin vérifie chaque jour qu'aucun nombre d'actions ne saute de plus de 50 %.
 Secteurs et thèmes : drapeaux de prix et valorisation médiane, **sans couleur**.
+
+## Zones, secteurs et thèmes (feu indicatif, non testé)
+
+Treize zones (ETF cotés en dollars : Euro Stoxx 50, Europe, Royaume-Uni, Allemagne, France, Japon, Chine, Inde, Corée, Taïwan,
+Amérique latine, Brésil, émergents), onze secteurs, sept thèmes. Mêmes seuils que les indices (vert si moins cher que 60 % de son
+propre passé, « cher » au-delà de 80 %, pas de rouge). Mesure : médiane des valorisations des sociétés du Top 100 quand il y en a au
+moins 5 ; sinon prix de l'ETF / dividendes réels moyens sur 10 ans, contre son propre passé (10 à 20 ans). Plus fruste que le CAPE :
+une hausse du taux de distribution fait paraître une zone moins chère, les dividendes des matières premières sont cycliques.
+Pas de feu quand l'historique ou les dividendes ne suffisent pas.
 
 ## Garde-fous de publication et de comportement
 
@@ -125,8 +135,9 @@ python -m pytest -q tests
 | Comptes des sociétés | SEC EDGAR companyfacts (XBRL) | date de dépôt réelle, première publication |
 
 Limites connues : Yahoo est non officiel ; FRED renvoie le dernier millésime (révisions Z.1 approximées par le décalage) ; les
-sociétés qui ne déposent pas à la SEC sont suivies en prix seul ; pour plusieurs déposants IFRS (TSMC, Toyota, Sony, BHP), les
-chiffres des rapports 2026 n'apparaissent pas dans l'API de la SEC : comptes anciens, donc orange.
+sociétés qui ne déposent pas à la SEC sont suivies en prix seul (pas de feu) ; quand l'API de la SEC n'a pas encore intégré un
+dépôt (Citi, NextEra, TSMC, Toyota, Sony, BHP en 2026), il est lu directement dans son instance XBRL. Les déposants annuels
+(20-F, 40-F) n'ont qu'un exercice par an à la SEC.
 
 ## Structure
 

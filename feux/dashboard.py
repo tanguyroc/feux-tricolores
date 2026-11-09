@@ -27,7 +27,7 @@ main{max-width:1180px;margin:0 auto;padding:24px 20px 60px}h1{font-size:26px;mar
 .sub{color:var(--muted);margin:0 0 20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:8px}
 .head{display:flex;align-items:center;gap:12px}.dot{width:26px;height:26px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6)}
-.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}
+.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}.dot.none{background:#d5d8dc;box-shadow:inset 0 0 0 3px #9aa0a6}.c.none{color:#6b7280}
 .name{font-weight:650;font-size:17px}.state{font-weight:700;letter-spacing:.04em}.state.green{color:var(--green)}.state.orange{color:var(--orange)}.state.red{color:var(--red)}
 .since{color:var(--muted);font-size:13px}.reason{font-size:14px}.kv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px;margin-top:4px}
 .kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}.kv .lbl{color:var(--muted)}
@@ -49,8 +49,8 @@ body[data-mode=simple] .detail-only{display:none}body[data-mode=detail] .simple-
 .gloss .rule{display:block;color:var(--muted);font-size:13px;margin-top:2px}abbr{text-decoration:underline dotted;cursor:help}
 """
 
-LABEL = {"green": "VERT", "orange": "ORANGE", "red": "ROUGE"}
-HEX = {"green": "#1a7f37", "orange": "#c7641a", "red": "#b3261e"}
+LABEL = {"green": "VERT", "orange": "ORANGE", "red": "ROUGE", "none": "PAS DE FEU"}
+HEX = {"green": "#1a7f37", "orange": "#c7641a", "red": "#b3261e", "none": "#c9ccd1"}
 
 
 def _since(df: pd.DataFrame) -> str:
@@ -196,7 +196,7 @@ def _card_index(key: str, name: str, df: pd.DataFrame) -> str:
              + (f"<span class='flag on'>couteau qui tombe</span>" if row.get("falling_knife", False) else ""))
     tag = " · cher" if (c == "orange" and row.get("cher", False)) else ""
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>{html.escape(name)}</div>"
-            f"<div class='state {c}'>{LABEL[c]}{tag}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
+            f"<div class='state {c}'>{LABEL[c]}{tag}</div></div></div><div class='since'>depuis le {_since(df)} · clôture du {df.index[-1]:%d/%m/%Y}</div>"
             f"<div class='plain simple-only'>{html.escape(simple_index(key, row))}</div>"
             + (f"<div class='since-perf'>{html.escape(since_sentence(row))}</div>" if since_sentence(row) else "")
             + (f"<div class='note'>Valorisation mesurée sur le S&P 500 : proxy, faute d'historique long de valorisation pour cet indice.</div>" if proxy else "")
@@ -226,7 +226,8 @@ def _card_btc(df: pd.DataFrame) -> str:
     flags = (f"<span class='flag {'on' if row['trend_broken'] else ''}'>tendance {'CASSÉE' if row['trend_broken'] else 'OK'} (MM200 j)</span>"
              + (f"<span class='flag info'>hausse ≥ 100 % en 2 ans (contexte)</span>" if row.get("gsy", False) else ""))
     return (f"<section class='card'><div class='head'><div class='dot {c}'></div><div><div class='name'>Bitcoin</div>"
-            f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · données au {df.index[-1]:%d/%m/%Y}</div>"
+            f"<div class='state {c}'>{LABEL[c]}</div></div></div><div class='since'>depuis le {_since(df)} · prix au {df.index[-1]:%d/%m/%Y}"
+            f"{' · MVRV au ' + pd.Timestamp(df['mvrv_date'].dropna().iloc[-1]).strftime('%d/%m/%Y') if 'mvrv_date' in df and df['mvrv_date'].notna().any() else ''}</div>"
             f"<div class='plain simple-only'>{html.escape(simple_btc(row))}</div>"
             + (f"<div class='since-perf'>{html.escape(since_sentence(row, 'le Bitcoin'))}</div>" if since_sentence(row, 'le Bitcoin') else "")
             + f"<div class='reason detail-only'>{html.escape(row['reason']) if row['reason'] else 'ni zone de capitulation ni euphorie (règle B1)'}</div>{_raw_note(row)}"

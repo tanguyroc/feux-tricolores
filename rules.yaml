@@ -141,7 +141,7 @@ stocks:   # module actions — Top 100 mondial + stocks.yaml. INDICATIF, NON BAC
     # hors grille : foncières (REIT) — jamais vertes, valorisation P/E et P/B seulement
   leverage_flag: {sma_days: 200}
 
-themes:   # secteurs et thèmes : drapeaux de prix des ETF (bulle GSY, tension, tendance) ; pas de couleur depuis la v1.0
+themes:   # secteurs, thèmes et zones : drapeaux de prix des ETF (bulle GSY, tension, tendance) + feu de valorisation indicatif (v1.0.2)
   assets:
     it:        {ticker: "XLK", name: "Technologie de l'information", kind: sector, gics: "Information Technology"}
     financials: {ticker: "XLF", name: "Finance", kind: sector, gics: "Financials"}
@@ -155,14 +155,35 @@ themes:   # secteurs et thèmes : drapeaux de prix des ETF (bulle GSY, tension, 
     communication: {ticker: "VOX", name: "Communication", kind: sector, gics: "Communication Services"}
     realestate: {ticker: "VNQ", name: "Immobilier coté", kind: sector, gics: "Real Estate"}
     # thèmes : là où les bulles se sont historiquement formées (industries, périmètre de l'étude GSY), ETF/indice ≥ 15 ans d'historique
-    semis:     {ticker: "^SOX", name: "Semi-conducteurs", kind: theme, since: 1993}
-    software:  {ticker: "IGV",  name: "Éditeurs de logiciels", kind: theme, since: 2001}
-    biotech:   {ticker: "IBB",  name: "Biotechnologies", kind: theme, since: 2001}
+    semis:     {ticker: "SOXX", name: "Semi-conducteurs", kind: theme, since: 2001, industries: ["Semiconductors & Semiconductor Equipment"]}     # ETF (dividendes) plutôt que l'indice ^SOX
+    software:  {ticker: "IGV",  name: "Éditeurs de logiciels", kind: theme, since: 2001, industries: ["Software"]}
+    biotech:   {ticker: "IBB",  name: "Biotechnologies", kind: theme, since: 2001, industries: ["Biotechnology"]}
     cleanenergy: {ticker: "PBW", name: "Énergies propres", kind: theme, since: 2005}
     goldminers: {ticker: "GDX", name: "Mines d'or", kind: theme, since: 2006}
     homebuilders: {ticker: "XHB", name: "Constructeurs de maisons (États-Unis)", kind: theme, since: 2006}
-    defense:   {ticker: "ITA",  name: "Défense et aéronautique", kind: theme, since: 2006}
-  sector_min_members: 3        # valorisation médiane affichée seulement avec au moins 3 sociétés du Top 100 (contexte, pas de couleur depuis la v1.0)
+    defense:   {ticker: "ITA",  name: "Défense et aéronautique", kind: theme, since: 2006, industries: ["Aerospace & Defense"]}
+    # zones géographiques (v1.0.2) : ETF cotés en dollars, historique de 14 à 30 ans
+    eurostoxx50: {ticker: "FEZ", name: "Zone euro (Euro Stoxx 50)", kind: zone}
+    europe:    {ticker: "VGK", name: "Europe développée", kind: zone}
+    uk:        {ticker: "EWU", name: "Royaume-Uni", kind: zone}
+    germany:   {ticker: "EWG", name: "Allemagne", kind: zone}
+    france:    {ticker: "EWQ", name: "France", kind: zone}
+    japan:     {ticker: "EWJ", name: "Japon", kind: zone}
+    china:     {ticker: "FXI", name: "Chine (grandes sociétés cotées à Hong Kong)", kind: zone}
+    india:     {ticker: "EPI", name: "Inde", kind: zone}
+    korea:     {ticker: "EWY", name: "Corée du Sud", kind: zone}
+    taiwan:    {ticker: "EWT", name: "Taïwan", kind: zone}
+    latam:     {ticker: "ILF", name: "Amérique latine", kind: zone}
+    brazil:    {ticker: "EWZ", name: "Brésil", kind: zone}
+    emerging:  {ticker: "EEM", name: "Marchés émergents", kind: zone}
+  sector_min_members: 3        # valorisation médiane affichée avec au moins 3 sociétés du Top 100 (contexte)
+  valuation:   # feu indicatif, NON TESTÉ (v1.0.2) : mêmes seuils que les indices ; pas de rouge (cf. protocole v1.0)
+    members_min: 5             # secteur (ou thème défini par ses industries) : médiane des V des sociétés du Top 100 si au moins 5
+    pd10_years: 10             # sinon (zones, thèmes, petits secteurs) : prix / moyenne des dividendes RÉELS sur 10 ans (P/D10)
+    pd10_min_history_months: 60   # puis au moins 5 ans de P/D10 avant de comparer à son passé
+    min_avg_yield: 0.01        # dividendes moyens < 1 %/an du prix : trop faibles pour mesurer une valorisation → pas de feu
+    green_max: 40              # vert : moins cher que 60 % de son propre passé
+    cher_min: 80               # « cher » (information)
   gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You, mesuré sur des SECTEURS
   extension_red_min: 90        # écart à la MM200 j en percentile 25 ans (min 10 ans) → « tendu »
   runup_alert_min: 1.50        # hausse ≥ 150 % sur 2 ans : probabilité de krach ≈ 80 % dans GSY

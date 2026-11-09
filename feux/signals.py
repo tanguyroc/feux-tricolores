@@ -131,6 +131,9 @@ def common_fear(calendar: pd.DatetimeIndex) -> pd.DataFrame:
     cols = []
     for name in ["vix", "credit_spread"]:
         s = store.to_indexed(store.load(name))
+        if name == "vix":       # FRED publie le VIX le lendemain : clôtures Yahoo pour les jours manquants (v1.0.2)
+            s = _drop_open_session(_extend(s, "px_vix_yahoo"))
+            s = s[s.index.dayofweek < 5]
         pct = ind.rolling_pct(s, TD * w["pct_years"], TD * w["pct_min_years_fast"])
         # VIX : connu à la clôture du jour ; écart Baa − 10 ans (FRED BAA10Y) : publié le jour ouvré suivant (v1.0.1)
         av = s.index + (pd.offsets.BDay(1) if name == "credit_spread" else pd.Timedelta(0))
@@ -151,6 +154,7 @@ def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd
     px = store.to_indexed(store.load(f"px_{key}"))
     px = px[~px.index.duplicated()].sort_index()
     px = px[px.index.dayofweek < 5]     # barre fictive du dimanche (MSCI World, Yahoo) : écartée (v1.0.1)
+    px = _drop_open_session(px)         # pas de cours en séance (v1.0.2)
     cal = px.index
     df = pd.DataFrame({"price": px})
 
@@ -224,17 +228,37 @@ def _colorize_index(df: pd.DataFrame) -> pd.DataFrame:
 # ----------------------------------------------------------------------------------------------
 # Bitcoin
 # ----------------------------------------------------------------------------------------------
+def _drop_open_session(px: pd.Series, close_hour_utc: int = 21) -> pd.Series:
+    """Écarte la barre du jour tant que la séance de New York n'est pas close (21 h UTC) : un cours en séance n'est pas une
+    clôture (v1.0.2)."""
+    now = pd.Timestamp.now(tz="UTC")
+    if len(px) and px.index[-1].date() == now.date() and now.hour < close_hour_utc:
+        return px.iloc[:-1]
+    return px
+
+
+def _extend(base: pd.Series, name: str) -> pd.Series:
+    """Prolonge une série par une source plus rapide (Yahoo) pour les jours qu'elle n'a pas encore publiés."""
+    if not store.exists(name):
+        return base
+    y = store.to_indexed(store.load(name))
+    y = y[y.index > base.index.max()]
+    return pd.concat([base, y]) if len(y) else base
+
+
 def bitcoin_signals() -> pd.DataFrame:
     """v1.0, règle B1 : vert si MVRV < 1 ou prix < moyenne 200 semaines ; rouge si MVRV ≥ 3 ; orange sinon.
     z-scores, critère GSY, financement et Fear & Greed : contexte."""
     r = rules()
     b = r["bitcoin"]
     ctx = b["context"]
-    px = store.to_indexed(store.load("btc_price"))
+    # prix : Coin Metrics, prolongé par le cours Yahoo des jours que Coin Metrics n'a pas encore publiés (v1.0.2)
+    px = _extend(store.to_indexed(store.load("btc_price")), "px_btc_yahoo")
     mvrv = store.to_indexed(store.load("btc_mvrv"))
     cal = px.index
     df = pd.DataFrame({"price": px})
-    df["mvrv"] = mvrv.reindex(cal).ffill(limit=3)   # MVRV publié avec un jour de retard sur le prix
+    df["mvrv"] = mvrv.reindex(cal).ffill(limit=3)   # MVRV publié avec un à deux jours de retard sur le prix
+    df["mvrv_date"] = pd.Series(mvrv.index.strftime("%Y-%m-%d"), index=mvrv.index).reindex(cal).ffill(limit=3)
     df["ma200w"] = px.rolling(1400, min_periods=1400).mean()          # 200 semaines ≈ 1400 jours calendaires
     df["ratio_200w"] = px / df["ma200w"]
     zw, zmin = 365 * ctx["z"]["years"], 365 * ctx["z"]["min_years"]
@@ -271,7 +295,7 @@ def bitcoin_signals() -> pd.DataFrame:
     reason[gm] = np.where((df["mvrv"] < b["green"]["mvrv_max"])[gm], "MVRV < 1 : les détenteurs sont en perte en moyenne",
                           "prix sous sa moyenne des 200 semaines")
     missing = df["mvrv"].isna() | df["ratio_200w"].isna()
-    color[missing] = "orange"      # le protocole exclut ces jours ; affichés orange, sans motif trompeur (v1.0.1)
+    color[missing] = "none"        # le protocole exclut ces jours : PAS DE FEU (v1.0.2 ; v1.0.1 : orange sans motif)
     reason[missing] = "données incomplètes (MVRV ou moyenne 200 semaines indisponible) : pas de jugement"
     df["color"], df["reason"] = color, reason
     df["falling_knife"] = (df["color"] == "green") & df["trend_broken"]

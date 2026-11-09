@@ -11,7 +11,7 @@ import pandas as pd
 
 from .config import rules
 
-LABEL = {"green": "VERT", "orange": "ORANGE", "red": "ROUGE"}
+LABEL = {"green": "VERT", "orange": "ORANGE", "red": "ROUGE", "none": "PAS DE FEU"}
 
 
 def _f(x, fmt="{:.0f}", suffix=""):
@@ -85,6 +85,8 @@ def conduct_text(color: str) -> list[str]:
 
 
 def conduct_text_btc(color: str) -> list[str]:
+    if color not in rules()["conduct"]["bitcoin"]:      # « none » : données incomplètes
+        return ["Bitcoin (pas de feu : données incomplètes) : versements habituels seulement, aucune décision exceptionnelle."]
     return [f"Bitcoin ({LABEL[color].lower()}) : {rules()['conduct']['bitcoin'][color]}."]
 
 

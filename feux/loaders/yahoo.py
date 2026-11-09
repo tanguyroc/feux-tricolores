@@ -37,6 +37,16 @@ def fetch_close_meta(symbol: str) -> tuple[pd.Series, str | None]:
     return close, res.get("meta", {}).get("currency")
 
 
+def fetch_dividends(symbol: str) -> pd.Series:
+    """Dividendes versés (par part, ajustés des divisions), datés du détachement."""
+    url = URL.format(sym=urllib.parse.quote(symbol, safe="")).replace("events=split", "events=div")
+    r = http_get(url, headers={"User-Agent": "Mozilla/5.0 feux-tricolores/0.1"})
+    ev = (r.json()["chart"]["result"][0].get("events") or {}).get("dividends") or {}
+    s = pd.Series({pd.Timestamp(int(v["date"]), unit="s").normalize(): float(v["amount"]) for v in ev.values() if v.get("amount")},
+                  dtype="float64").sort_index()
+    return s[~s.index.duplicated(keep="last")]
+
+
 def fetch_close(symbol: str) -> pd.Series:
     return fetch_close_meta(symbol)[0]
 
@@ -63,7 +73,7 @@ def spliced(primary: str, splice_with: str | None) -> pd.Series:
     return pd.concat([s * ratio, p]).sort_index()
 
 
-def update(assets: dict, extra: dict | None = None) -> dict[str, pd.DataFrame]:
+def update(assets: dict, extra: dict | None = None, dividends: dict | None = None) -> dict[str, pd.DataFrame]:
     out = {}
     for key, spec in assets.items():
         close = spliced(spec["ticker"], spec.get("splice"))
@@ -72,6 +82,15 @@ def update(assets: dict, extra: dict | None = None) -> dict[str, pd.DataFrame]:
     for key, sym in (extra or {}).items():
         close = fetch_close(sym)
         out[f"px_{key}"] = make_series(close.index, close.values)
+        time.sleep(0.8)
+    for key, sym in (dividends or {}).items():
+        try:
+            d = fetch_dividends(sym)
+        except Exception as exc:          # dividendes indisponibles : la valorisation de cet ETF sera « n.d. »
+            log.warning("Dividendes %s indisponibles : %s", sym, exc)
+            continue
+        if len(d):
+            out[f"div_{key}"] = make_series(d.index, d.values)
         time.sleep(0.8)
     for k, v in out.items():
         save(k, v)

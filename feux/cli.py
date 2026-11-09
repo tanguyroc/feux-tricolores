@@ -16,7 +16,8 @@ def cmd_update(args) -> None:
     steps = {
         "shiller": shiller.update,
         "fred": fred.update,
-        "yahoo": lambda: yahoo.update(r["indices"]["assets"], extra={"vix_yahoo": "^VIX", **{f"theme_{k}": v["ticker"] for k, v in r["themes"]["assets"].items()}}),
+        "yahoo": lambda: yahoo.update(r["indices"]["assets"], extra={"vix_yahoo": "^VIX", "btc_yahoo": "BTC-USD", **{f"theme_{k}": v["ticker"] for k, v in r["themes"]["assets"].items()}},
+                                      dividends={f"theme_{k}": v["ticker"] for k, v in r["themes"]["assets"].items() if not v["ticker"].startswith("^")}),
         "coinmetrics": coinmetrics.update,
         "fng": alternative_me.update,
         "deribit": deribit.update,

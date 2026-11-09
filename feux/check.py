@@ -35,7 +35,7 @@ def publication_checks() -> list[dict]:
         out.append({"contrôle": f"{k} : données de moins de {max_age} jours", "observé": f"{date} ({age} j)" if date else "absent",
                     "ok": age is not None and age <= max_age, "bloquant": True})
         out.append({"contrôle": f"{k} : couleur calculée", "observé": d.get("color_confirmed"),
-                    "ok": d.get("color_confirmed") in ("green", "orange", "red"), "bloquant": True})
+                    "ok": d.get("color_confirmed") in ("green", "orange", "red", "none"), "bloquant": True})
     # entrées des indices : un flux mort ne doit pas être utilisé en silence (v1.0.1)
     from . import store
     for name, label, max_age, blocking in (("vix", "VIX (FRED)", 7, True), ("credit_spread", "écart de crédit Baa (FRED)", 7, True),
@@ -78,9 +78,15 @@ def witnesses() -> list[dict]:
         add("Rendement réel attendu à 10 ans dans une plage plausible", "entre −10 % et +15 %/an", f"{100 * sp['er10']:+.1f} %/an",
             -0.10 <= sp["er10"] <= 0.15)
     b = lat.get("btc", {})
-    if b.get("mvrv") is not None and b.get("ratio_200w") is not None:
-        expect = "green" if (b["mvrv"] < r["bitcoin"]["green"]["mvrv_max"] or b["ratio_200w"] < 1) else ("red" if b["mvrv"] >= r["bitcoin"]["red"]["mvrv_min"] else "orange")
-        add("Bitcoin : la couleur brute suit la règle B1 (niveaux)", expect, f"{b.get('color')} (MVRV {b['mvrv']:.2f}, prix/MM200s {b['ratio_200w']:.2f})",
+    if b:
+        have = b.get("mvrv") is not None and b.get("ratio_200w") is not None
+        if have:
+            expect = ("green" if (b["mvrv"] < r["bitcoin"]["green"]["mvrv_max"] or b["ratio_200w"] < 1)
+                      else "red" if b["mvrv"] >= r["bitcoin"]["red"]["mvrv_min"] else "orange")
+            obs = f"{b.get('color')} (MVRV {b['mvrv']:.2f}, prix/MM200s {b['ratio_200w']:.2f})"
+        else:
+            expect, obs = "none", f"{b.get('color')} (MVRV ou moyenne 200 semaines manquant)"
+        add("Bitcoin : la couleur brute suit la règle B1 (niveaux) ; sans MVRV ou sans moyenne 200 semaines, pas de feu", expect, obs,
             b.get("color") == expect, critical=True)
     # (v1.0.1) un témoin dont la liste est vide échoue : il ne doit pas réussir faute de cas à vérifier
     banks = [t for t in ("JPM", "BAC", "WFC", "HSBA.L", "RY.TO", "8306.T") if t in by_t and by_t[t].get("kind") == "operating"]
@@ -94,8 +100,8 @@ def witnesses() -> list[dict]:
         f"{len(reits)} foncière(s), vertes : {sum(1 for s in reits if s.get('color_confirmed') == 'green')}",
         len(reits) >= 1 and all(s.get("color_confirmed") != "green" for s in reits))
     stale = [s for s in st.values() if s.get("stale_accounts") and s.get("kind") == "operating"]
-    add("Comptes de plus de 15 mois : feu affiché orange", "orange", ", ".join(f"{s.get('ticker')}:{s.get('color_confirmed')}" for s in stale) or "aucune",
-        all(s.get("color_confirmed") == "orange" for s in stale), critical=True)
+    add("Comptes de plus de 15 mois : pas de feu (jamais un orange par défaut)", "pas de feu", ", ".join(f"{s.get('ticker')}:{s.get('color_confirmed')}" for s in stale) or "aucune",
+        all(s.get("color_confirmed") == "none" for s in stale), critical=True)
     ind = [s for s in st.values() if s.get("kind") == "operating" and s.get("mode") == "industrial" and not s.get("stale_accounts")]
     no_debt = [s.get("ticker") for s in ind if s.get("debt") is None]
     add("Dette connue (sociétés industrielles aux comptes récents) ; inconnue = pas d'EV ni de test de dette, jamais zéro",
@@ -103,11 +109,28 @@ def witnesses() -> list[dict]:
     ev_wo_debt = [s.get("ticker") for s in ind if s.get("debt") is None and s.get("ev") is not None]
     add("Aucune valeur d'entreprise calculée avec une dette inconnue", "aucune", ", ".join(ev_wo_debt) or "aucune", not ev_wo_debt, critical=True)
     no_fcf = [s.get("ticker") for s in ind if s.get("fcf") is None]
-    add("Flux libre connu (sociétés industrielles aux comptes récents) ; capex ancien jamais reporté", "au plus 5 inconnus",
-        ", ".join(no_fcf) or f"connu pour les {len(ind)}", len(no_fcf) <= 5)
+    add("Flux libre connu (sociétés industrielles aux comptes récents) ; capex ancien jamais reporté", "au plus 8 inconnus",
+        ", ".join(no_fcf) or f"connu pour les {len(ind)}", len(no_fcf) <= 8)
     po = [s for s in st.values() if s.get("kind") == "price_only"]
-    add("Sans comptes à la SEC : prix seul, orange", "orange", f"{len(po)} sociétés, colorées : {sum(1 for s in po if s.get('color') != 'orange')}",
-        all(s.get("color") == "orange" for s in po))
+    add("Sans comptes à la SEC : pas de feu", "pas de feu", f"{len(po)} sociétés, colorées : {sum(1 for s in po if s.get('color_confirmed') != 'none')}",
+        bool(po) and all(s.get("color_confirmed") == "none" for s in po), critical=True)
+    nl = [s for s in st.values() if s.get("color_confirmed") == "none" and s.get("kind") == "operating"]
+    add("Action sans feu : raison écrite", "raison pour chacune", f"{len(nl)} sans feu, sans raison : "
+        + (", ".join(s.get("ticker") for s in nl if not s.get("no_light_reason")) or "aucune"),
+        all(s.get("no_light_reason") for s in nl), critical=True)
+    th = _load("themes_latest.json")
+    try:
+        from .themes import overlay
+        rows = overlay(st)
+        bad = [r["name"] for r in rows if r["light"]["color_confirmed"] == "none" and not r["light"]["reason"]]
+        col = [r["name"] for r in rows if r["light"]["color_confirmed"] != "none" and r["light"]["V"] is None]
+        add("Zones, secteurs et thèmes : un feu seulement avec une mesure, sinon une raison écrite", "toujours",
+            f"{len(rows)} lignes ; sans raison : {', '.join(bad) or 'aucune'} ; colorées sans mesure : {', '.join(col) or 'aucune'}",
+            bool(rows) and not bad and not col, critical=True)
+        old_z = [r["name"] for r in rows if r.get("date") and (dt.date.today() - dt.date.fromisoformat(r["date"])).days > 7]
+        add("Zones, secteurs et thèmes : cours de moins de 7 jours", "tous", ", ".join(old_z) or f"{len(rows)} à jour", not old_z)
+    except Exception as exc:
+        add("Zones, secteurs et thèmes : calculables", "oui", str(exc)[:80], False, critical=True)
     neg = [s.get("ticker") for s in st.values() if s.get("fcf") is not None and s.get("fcf_gross") is not None and s["fcf"] > s["fcf_gross"] + 1]
     add("Flux libre net de la rémunération en actions ≤ flux libre brut", "toujours", "écarts : " + (", ".join(neg) or "aucun"), not neg, critical=True)
     try:
@@ -146,9 +169,54 @@ def share_count_jumps(years: int = 10, limit: float = 1.5) -> tuple[list[str], i
     return out, n
 
 
+def freshness() -> list[dict]:
+    """Chaque source : date de sa dernière valeur, âge, et rythme de publication attendu (onglet Validation)."""
+    from . import store
+
+    today = dt.date.today()
+    rows = []
+
+    def add(src, name_or_date, cadence):
+        try:
+            d = (pd.Timestamp(store.load(name_or_date)["ref_date"].max()).date() if isinstance(name_or_date, str) and not name_or_date[:4].isdigit()
+                 else dt.date.fromisoformat(str(name_or_date)[:10]))
+        except Exception:
+            d = None
+        now = dt.datetime.now(dt.timezone.utc)
+        if d == today and "séance" in cadence and now.hour < 21:       # cours en séance : pas encore une clôture
+            d = today - dt.timedelta(days={0: 3, 6: 2}.get(today.weekday(), 1))
+        rows.append({"source": src, "date": str(d) if d else None, "âge": (today - d).days if d else None, "rythme": cadence})
+
+    add("S&P 500, Nasdaq-100 (Yahoo Finance)", "px_sp500", "chaque séance, clôture")
+    add("MSCI World (Yahoo Finance)", "px_world", "chaque séance, clôture")
+    add("VIX (FRED, complété par Yahoo pour les derniers jours)", "px_vix_yahoo", "chaque séance")
+    add("Écart de crédit Baa − 10 ans (FRED)", "credit_spread", "chaque séance, publié le lendemain")
+    add("CAPE de Shiller : dernier mois de prix", "shiller_P", "mensuel")
+    add("CAPE de Shiller : derniers bénéfices", "shiller_E", "trimestriel, environ 3 mois de décalage")
+    add("Dette sur marge (FINRA)", "margin_debt", "mensuel, environ 3 semaines de décalage")
+    add("Allocation des ménages en actions (Fed Z.1)", "aiae", "trimestriel, environ 10 semaines de décalage")
+    add("Bitcoin : prix (Coin Metrics, complété par Yahoo)", "px_btc_yahoo", "quotidien")
+    add("Bitcoin : MVRV (Coin Metrics)", "btc_mvrv", "quotidien, 1 à 2 jours de décalage")
+    st = _load("stocks_latest.json")
+    if st:
+        px_dates = [s.get("date") for s in st.values() if s.get("date")]
+        rows.append({"source": "Actions du Top 100 : cours (Yahoo Finance)", "date": min(px_dates) if px_dates else None,
+                     "âge": (today - dt.date.fromisoformat(min(px_dates))).days if px_dates else None, "rythme": "chaque séance (la plus ancienne)"})
+        acc = sorted((s.get("accounts_as_of"), s.get("ticker")) for s in st.values() if s.get("accounts_as_of") and s.get("kind") == "operating")
+        if acc:
+            rows.append({"source": f"Actions : comptes SEC les plus anciens ({acc[0][1]})", "date": acc[0][0],
+                         "âge": (today - dt.date.fromisoformat(acc[0][0])).days, "rythme": "trimestriel (10-Q) ou annuel (20-F, 40-F)"})
+    th = _load("themes_latest.json")
+    if th:
+        dates = [v.get("date") for v in th.values() if v.get("date")]
+        rows.append({"source": f"Zones, secteurs et thèmes : cours des {len(dates)} ETF (le plus ancien)", "date": min(dates),
+                     "âge": (today - dt.date.fromisoformat(min(dates))).days, "rythme": "chaque séance"})
+    return rows
+
+
 def run() -> bool:
     pc, ws = publication_checks(), witnesses()
-    (DOCS_DIR / "checks.json").write_text(json.dumps({"publication": pc, "témoins": ws, "date": dt.date.today().isoformat()},
+    (DOCS_DIR / "checks.json").write_text(json.dumps({"publication": pc, "témoins": ws, "fraîcheur": freshness(), "date": dt.date.today().isoformat()},
                                                      ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     bad = [c for c in pc if not c["ok"] and c["bloquant"]] + [w for w in ws if not w["ok"] and w["critique"]]
     for c in pc:

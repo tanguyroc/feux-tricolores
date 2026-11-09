@@ -192,4 +192,11 @@ def test_cross_section_and_indicative_color():
     assert res["S2"]["color"].iloc[-1] == "orange"                                               # chère contre son passé, médiane contre les autres
     res["S4"]["stale_accounts"] = True
     apply_cross_section(res)
-    assert res["S4"]["color"].iloc[-1] == "orange"                                               # comptes trop anciens : jamais coloré
+    assert res["S4"]["color"].iloc[-1] == "none" and res["S4"]["color_confirmed"].iloc[-1] == "none"   # comptes trop anciens : pas de feu
+    assert "15 mois" in res["S4"].attrs["no_light_reason"]
+    # bon marché sous les deux lentilles, mais solidité non mesurable : pas de feu (et non un vert ou un orange par défaut)
+    res["S4"]["stale_accounts"] = False
+    res["S0"]["quality_ok"] = False
+    res["S0"]["quality_unmeasured"] = True
+    apply_cross_section(res)
+    assert res["S0"]["color"].iloc[-1] == "none" and "solidité non mesurable" in res["S0"].attrs["no_light_reason"]
