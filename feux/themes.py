@@ -108,7 +108,6 @@ def overlay(stocks_latest: dict) -> list[dict]:
             continue
         row = df.iloc[-1]
         valuation = None
-        color = "orange"
         if spec.get("kind") == "sector":
             vs = [s["V"] for s in stocks_latest.values()
                   if s.get("kind") == "operating" and s.get("V") is not None and s.get("sector") == spec.get("gics")]
@@ -117,12 +116,9 @@ def overlay(stocks_latest: dict) -> list[dict]:
             members = sorted([s for s in stocks_latest.values() if s.get("sector") == spec.get("gics")], key=lambda s: (s.get("rank") or 999))
             valuation = {"n": n, "v_median": med, "members": [{"ticker": s.get("ticker"), "name": s.get("name"), "V": s.get("V"),
                                                                   "color": s.get("color_confirmed")} for s in members]}
-            gap_pct = None if pd.isna(row["gap_ma200_pct"]) else float(row["gap_ma200_pct"])
-            if med is not None and med >= r["sector_red_min_v"] and (bool(row["extended"]) or bool(row["gsy"])):
-                color = "red"
-            elif (med is not None and med <= r["sector_green_max_v"]) or \
-                 (float(row["drawdown"]) >= r["sector_capitulation_drawdown"] and gap_pct is not None and gap_pct <= r["sector_capitulation_gap_pct"]):
-                color = "green"
+        # v1.0 : plus de couleur sectorielle (bruit : tous orange, trois secteurs jamais calculables, ETF américain contre membres
+        # mondiaux). Drapeaux de prix de l'ETF et valorisation médiane des membres restent affichés comme contexte.
+        color = "none"
         rows.append({"key": key, "name": spec["name"], "kind": spec.get("kind", "theme"), "ticker": spec["ticker"], "gics": spec.get("gics"),
                      "color": color, "sentence": simple_sentence(key, row, valuation),
                      "runup_24m": float(row["runup_24m"]), "gsy": bool(row["gsy"]), "extended": bool(row["extended"]),

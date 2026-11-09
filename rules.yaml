@@ -112,13 +112,16 @@ conduct:
   sell_cooling_days_in_stress: 7    # ventes en vert de capitulation ou couteau qui tombe : délai 7 jours (repris de Kairys Alpha)
   concentration_max_single_stock: 0.12   # alerte si une action dépasse 12 % du portefeuille risqué (repris de Kairys Alpha)
 
-stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeurs
+stocks:   # module actions — Top 100 mondial + stocks.yaml. INDICATIF, NON BACKTESTÉ (protocole v1.0 §10)
   valuation:
-    indicators: [ev_ebit_pct, p_fcf_pct]     # percentiles sur 10 ans de l'historique propre de la société
+    indicators: [ev_ebit_pct, p_fcf_pct]     # lentille 1 : percentiles sur 10 ans de l'historique propre de la société
     pct_years: 10
     pct_min_years: 5
-    red_min: 80
-    green_max: 30
+    red_min: 80          # rouge (v1.0) : lentille 1 ≥ 80 ET lentille 2 ≥ 80 ET tendu (écart MM200 ≥ p90 ou GSY)
+    green_max: 30        # vert (v1.0) : lentille 1 ≤ 30 ET lentille 2 ≤ 30 ET solide
+  cross_section_min_members: 5   # lentille 2 : rang du multiple parmi les sociétés du même mode (EV/EBIT ; P/E pour banques et assureurs)
+  stale_accounts_months: 15      # comptes plus anciens : couleur forcée à orange, jauge grisée
+  fcf_net_of_sbc: true           # FCF = flux d'exploitation − investissements − rémunération en actions (v1.0)
   extension:
     red_min: 90                                 # écart à la MM200 jours, percentile 10 ans
     gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}
@@ -138,8 +141,7 @@ stocks:   # module actions (v0.2) — liste dans stocks.yaml ; au plus 10 valeur
     # hors grille : foncières (REIT) — jamais vertes, valorisation P/E et P/B seulement
   leverage_flag: {sma_days: 200}
 
-themes:   # secteurs et thèmes (v0.5). Drapeaux de prix sur l'ETF ; pour les 11 secteurs GICS, valorisation = médiane des V
-          # des sociétés du Top 100 appartenant au secteur (au moins sector_min_members) → couleur avec les mêmes règles de conjonction
+themes:   # secteurs et thèmes : drapeaux de prix des ETF (bulle GSY, tension, tendance) ; pas de couleur depuis la v1.0
   assets:
     it:        {ticker: "XLK", name: "Technologie de l'information", kind: sector, gics: "Information Technology"}
     financials: {ticker: "XLF", name: "Finance", kind: sector, gics: "Financials"}
@@ -160,11 +162,7 @@ themes:   # secteurs et thèmes (v0.5). Drapeaux de prix sur l'ETF ; pour les 11
     goldminers: {ticker: "GDX", name: "Mines d'or", kind: theme, since: 2006}
     homebuilders: {ticker: "XHB", name: "Constructeurs de maisons (États-Unis)", kind: theme, since: 2006}
     defense:   {ticker: "ITA",  name: "Défense et aéronautique", kind: theme, since: 2006}
-  sector_min_members: 3        # en dessous, pas de valorisation sectorielle → orange (drapeaux seulement)
-  sector_red_min_v: 80         # médiane des V ≥ 80 ET (tendu OU bulle GSY) → rouge
-  sector_green_max_v: 40       # médiane des V ≤ 40 → vert ; ou capitulation : baisse ≥ 25 % ET écart MM200 ≤ 10e percentile
-  sector_capitulation_drawdown: 0.25
-  sector_capitulation_gap_pct: 10
+  sector_min_members: 3        # valorisation médiane affichée seulement avec au moins 3 sociétés du Top 100 (contexte, pas de couleur depuis la v1.0)
   gsy: {runup_months: 24, runup_min: 1.00, accel_short_months: 6}   # Greenwood-Shleifer-You, mesuré sur des SECTEURS
   extension_red_min: 90        # écart à la MM200 j en percentile 25 ans (min 10 ans) → « tendu »
   runup_alert_min: 1.50        # hausse ≥ 150 % sur 2 ans : probabilité de krach ≈ 80 % dans GSY

@@ -55,6 +55,17 @@ CONCEPTS = {
                             "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic"],
                 "ifrs-full": ["ProfitLossBeforeTax"]}, "flow"),
     "interest": ({"us-gaap": ["InterestExpense", "InterestExpenseNonoperating", "InterestExpenseDebt"], "ifrs-full": ["InterestExpense", "FinanceCosts"]}, "flow"),
+    # v1.0 : rémunération en actions (coût réel, déduite du FCF), retours aux actionnaires, marge brute
+    "sbc": ({"us-gaap": ["ShareBasedCompensation", "AllocatedShareBasedCompensationExpense"],
+             "ifrs-full": ["AdjustmentsForSharebasedPayments", "ExpenseFromSharebasedPaymentTransactionsWithEmployees"]}, "flow"),
+    "dividends": ({"us-gaap": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
+                   "ifrs-full": ["DividendsPaidClassifiedAsFinancingActivities", "DividendsPaidToEquityHoldersOfParentClassifiedAsFinancingActivities", "DividendsPaid"]}, "flow"),
+    "buybacks": ({"us-gaap": ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"],
+                  "ifrs-full": ["PaymentsToAcquireOrRedeemEntitysShares", "PurchaseOfTreasuryShares"]}, "flow"),
+    "issuance": ({"us-gaap": ["ProceedsFromIssuanceOfCommonStock", "ProceedsFromStockOptionsExercised", "ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions"],
+                  "ifrs-full": ["ProceedsFromIssuingShares", "ProceedsFromExerciseOfOptions"]}, "flow"),
+    "gross_profit": ({"us-gaap": ["GrossProfit"], "ifrs-full": ["GrossProfit"]}, "flow"),
+    "cost_of_revenue": ({"us-gaap": ["CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold"], "ifrs-full": ["CostOfSales"]}, "flow"),
 }
 # Amortissements publiés en deux morceaux (Abbott, Gilead, Merck...) : dépréciation des immobilisations corporelles
 # + amortissement des incorporels. Utilisés quand aucun concept « D&A » combiné n'existe ou n'est plus publié.

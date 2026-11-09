@@ -58,6 +58,28 @@ def _asof(df: pd.DataFrame, cal: pd.DatetimeIndex, max_age_days: int = MAX_AGE_D
     return v.where(age_days <= max_age_days)
 
 
+def split_adjust_shares(sh: pd.DataFrame, splits: list[tuple[pd.Timestamp, float]]) -> pd.DataFrame:
+    """Ramène chaque nombre d'actions publié (période `end`) à la base actuelle : × rapport de chaque division postérieure."""
+    out = sh.copy()
+    ends = pd.to_datetime(out["end"]).to_numpy()
+    factor = np.ones(len(out))
+    for d, ratio in splits:
+        factor = factor * np.where(ends < np.datetime64(pd.Timestamp(d)), ratio, 1.0)
+    out["val"] = out["val"].to_numpy() * factor
+    out.attrs.update(sh.attrs)
+    return out
+
+
+def _ref_age_days(df: pd.DataFrame, cal: pd.DatetimeIndex) -> pd.Series:
+    """Âge (jours) de la dernière période comptable publiée, à chaque date du calendrier."""
+    if df is None or df.empty:
+        return pd.Series(np.nan, index=cal)
+    s = store.make_series(df["end"], df["val"], available_dates=df["filed"])
+    s = s.sort_values(["available_date", "ref_date"]).drop_duplicates("available_date", keep="last")
+    ref = store.as_of(s.assign(value=pd.to_datetime(s["ref_date"]).astype("datetime64[ns]").astype("int64").astype("float64")), cal)
+    return (pd.Series(pd.DatetimeIndex(cal).astype("datetime64[ns]").astype("int64").astype("float64"), index=cal) - ref) / 86_400e9
+
+
 # Industries GICS pour lesquelles EV, EBIT et FCF n'ont pas de sens : P/E, P/B et rentabilité des fonds propres.
 # « Financial Services » (Visa, Mastercard, Berkshire) reste en mode industriel : réseaux de paiement = sociétés d'exploitation à FCF massif.
 FINANCIAL_INDUSTRIES = {"Banks", "Capital Markets", "Consumer Finance", "Insurance", "Diversified Financial Services",
@@ -140,6 +162,13 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     f = edgar.fundamentals(int(spec["cik"]), tuple(int(c) for c in (spec.get("extra_ciks") or [])))
     df = price_block(px)
     shares_source = f["shares"].attrs.get("concept") if len(f["shares"]) else None
+    # Les prix Yahoo sont ajustés des divisions d'actions, pas les nombres d'actions publiés à la SEC (première publication) :
+    # chaque observation antérieure à une division est ramenée à la base actuelle (sinon la capitalisation historique est
+    # 10 ou 20 fois trop petite avant la division, et la valorisation paraît artificiellement chère contre son passé).
+    splits = yahoo.splits(spec["ticker"])
+    if splits and len(f["shares"]):
+        f["shares"] = split_adjust_shares(f["shares"], splits)
+    split_list = [(str(d.date()), r) for d, r in splits]
     if f.get("shares_stale") and len(f.get("public_float", [])) >= 3:
         # actions multi-classes sans nombre d'actions exploitable (Visa, Berkshire) : actions ≈ flottant déclaré / cours du jour du flottant
         pf = f["public_float"].copy()
@@ -152,12 +181,13 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     unit = next((v.attrs.get("unit") for k, v in f.items() if hasattr(v, "attrs") and k != "public_float" and v.attrs.get("unit") and v.attrs.get("unit") != "shares"), px_ccy)
     df["price_in_accounts_ccy"] = px * fx_series(px_ccy, unit, cal) if unit and px_ccy and unit != px_ccy else px
     for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt_lt", "debt_st", "equity", "shares",
-              "assets", "pretax", "interest"):
+              "assets", "pretax", "interest", "sbc", "dividends", "buybacks", "issuance", "gross_profit", "cost_of_revenue"):
         # déposants de 20-F (valeurs annuelles publiées 3 à 4 mois après la clôture) : tolérance plus longue avant d'oublier une valeur
         annual = f.get(k) is not None and bool(getattr(f[k], "attrs", {}).get("annual_only"))
         age = MAX_AGE_DAYS_SHARES if k == "shares" else MAX_AGE_DAYS_ANNUAL if annual else MAX_AGE_DAYS
         df[k] = _asof(f.get(k), cal, max_age_days=age)
     accounts_as_of = None if f["net_income"].empty else str(pd.Timestamp(f["net_income"]["end"].max()).date())
+    df["accounts_age_days"] = _ref_age_days(f["net_income"], cal)
     # résultat d'exploitation absent ou plus publié (pétrole, pharma, banques, KLA depuis 2015) : résultat avant impôt + intérêts
     ebit_source = "résultat d'exploitation"
     if pd.isna(df["ebit"].iloc[-1]) and df["pretax"].notna().any():
@@ -165,7 +195,10 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
         df["ebit"] = df["ebit"].fillna(df["pretax"] + df["interest"].fillna(0.0))
         ebit_source = "résultat avant impôt + intérêts (approximation)"
     has_capex = f.get("capex") is not None and len(f["capex"]) > 0
-    df["fcf"] = df["cfo"] - (df["capex"].ffill() if has_capex else np.nan)   # sans capex connu : FCF inconnu (pas CFO)
+    df["fcf_gross"] = df["cfo"] - (df["capex"].ffill() if has_capex else np.nan)   # sans capex connu : FCF inconnu (pas CFO)
+    # v1.0 : la rémunération en actions est un coût réel (Buffett, Mauboussin) : FCF = CFO − capex − SBC
+    sbc_known = f.get("sbc") is not None and len(f["sbc"]) > 0
+    df["fcf"] = df["fcf_gross"] - (df["sbc"].fillna(0.0) if sbc_known else 0.0)
     df["debt"] = df["debt_lt"].fillna(0.0) + df["debt_st"].fillna(0.0)
     df["liquidity"] = df["cash"].fillna(0.0) + df["st_investments"].fillna(0.0)
     df["mcap"] = df["price_in_accounts_ccy"] * df["shares"]
@@ -175,6 +208,17 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     if not shares_ok:
         df["mcap"] = np.nan
     df["ev"] = df["mcap"] + df["debt"] - df["liquidity"]
+    # contexte v1.0 : retours aux actionnaires, dilution, qualité des résultats, marge brute
+    df["dividend_yield"] = (df["dividends"].abs() / df["mcap"]).where(df["mcap"] > 0)
+    df["net_buyback_yield"] = ((df["buybacks"].abs().fillna(0.0) - df["issuance"].abs().fillna(0.0)) / df["mcap"]).where((df["mcap"] > 0) & df["buybacks"].notna())
+    df["shareholder_yield"] = df["dividend_yield"].fillna(0.0) + df["net_buyback_yield"].fillna(0.0)
+    df.loc[df["dividends"].isna() & df["buybacks"].isna(), "shareholder_yield"] = np.nan
+    df["dilution_3y"] = df["shares"] / df["shares"].shift(3 * TD) - 1.0
+    df["accruals"] = ((df["net_income"] - df["cfo"]) / df["assets"]).where(df["assets"] > 0)
+    gp = df["gross_profit"].where(df["gross_profit"].notna(), df["revenue"] - df["cost_of_revenue"])
+    df["gross_margin"] = (gp / df["revenue"]).where(df["revenue"] > 0)
+    df["gross_profitability"] = (gp / df["assets"]).where(df["assets"] > 0)
+    df["sbc_to_revenue"] = (df["sbc"] / df["revenue"]).where(df["revenue"] > 0)
     w, mn = TD * r["valuation"]["pct_years"], TD * r["valuation"]["pct_min_years"]
     q = r["quality"]
     ay, amy = q.get("avg_years", 5), q.get("avg_min_years", 3)
@@ -229,14 +273,10 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     last = df.iloc[-1]
     df["implied_growth"] = np.nan
     df.loc[df.index[-1], "implied_growth"] = implied_growth(last["ev"], last["fcf"], d["wacc"], d["terminal_growth"], d["years"])
-    red = (df["V"] >= r["valuation"]["red_min"]) & ((df["gap_ma200_pct"] >= r["extension"]["red_min"]) | df["gsy"])
-    green = (df["V"] <= r["valuation"]["green_max"]) & (df["quality_ok"] == True)   # noqa: E712 — NaN (foncières) n'est jamais vert
-    color = pd.Series("orange", index=cal, dtype=object)
-    color[green] = "green"
-    color[red] = "red"
-    color[df["V"].isna()] = "orange"
-    df["color"] = color
-    df["color_confirmed"] = confirmed_color(df["color"], int(rules().get("confirmation_days", 5)))
+    df["tendu"] = ((df["gap_ma200_pct"] >= r["extension"]["red_min"]) | df["gsy"]).fillna(False)
+    df["stale_accounts"] = (df["accounts_age_days"] > 30.44 * r.get("stale_accounts_months", 15)).fillna(True)
+    df["color"] = "orange"            # couleur définitive : après la lentille transversale (apply_cross_section)
+    df["color_confirmed"] = "orange"
     df["kind"] = "operating"
     last_fails = fails.iloc[-1] if len(fails.columns) else pd.Series(dtype=bool)
     known = {"rentabilité": df["roe_avg" if mode == "financial" else "roic_avg"].iloc[-1], "cash": df["fcf_ni_avg"].iloc[-1], "dette": df["nd_ebitda_avg"].iloc[-1]}
@@ -247,6 +287,8 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
     df.attrs["shares_source"] = shares_source
     df.attrs["accounts_as_of"] = accounts_as_of
     df.attrs["shares_ok"] = bool(shares_ok)
+    df.attrs["sbc_known"] = bool(sbc_known)
+    df.attrs["splits"] = split_list[-4:]
     df.attrs["concepts"] = {k: v.attrs.get("concept") for k, v in f.items() if hasattr(v, "attrs")}
     df.attrs["accounts_currency"] = unit
     df.attrs["price_currency"] = px_ccy
@@ -338,7 +380,66 @@ def compute_all(limit: int | None = None) -> dict[str, pd.DataFrame]:
             n_fail += 1
         time.sleep(0.6)
     log.info("Actions : %d analysées, %d en échec ; %d avec comptes EDGAR", n_ok, n_fail, sum(1 for d in out.values() if d["kind"].iloc[-1] == "operating"))
+    apply_cross_section(out)
     return out
+
+
+CROSS_METRIC = {"industrial": "ev_ebit", "financial": "pe", "reit": "pe"}
+
+
+def apply_cross_section(res: dict[str, pd.DataFrame]) -> None:
+    """Deuxième lentille (v1.0) : rang du multiple de chaque société parmi les sociétés du même mode (industrielles : EV/EBIT ;
+    banques et assureurs : P/E), à chaque date (0 = la moins chère des 100, 100 = la plus chère), puis couleur indicative :
+    rouge = chère sous les deux lentilles (≥ 80) ET tendue ; vert = bon marché sous les deux (≤ 30) ET solide ; sinon orange.
+    Comptes de plus de 15 mois : orange. Biais de survie : la lentille utilise l'univers d'aujourd'hui (affichage seulement)."""
+    r = rules()["stocks"]
+    vr = r["valuation"]
+    min_n = int(r.get("cross_section_min_members", 5))
+    by_mode: dict[str, dict[str, pd.Series]] = {}
+    for key, df in res.items():
+        if df["kind"].iloc[-1] != "operating":
+            continue
+        mode = df.attrs.get("mode", "industrial")
+        m = df[CROSS_METRIC[mode]].where(df[CROSS_METRIC[mode]] > 0)
+        by_mode.setdefault(mode, {})[key] = m[~m.index.duplicated()]
+    cross: dict[str, pd.Series] = {}
+    for mode, series in by_mode.items():
+        if len(series) < min_n:
+            continue
+        panel = pd.concat(series, axis=1).sort_index().ffill(limit=5)
+        valid = panel.notna().sum(axis=1)
+        ranks = panel.rank(axis=1, pct=True) * 100.0
+        ranks.loc[valid < min_n] = np.nan
+        for key in series:
+            cross[key] = ranks[key]
+    days = int(rules().get("confirmation_days", 5))
+    for key, df in res.items():
+        if df["kind"].iloc[-1] != "operating":
+            continue
+        vc = cross.get(key)
+        df["V_cross"] = vc.reindex(df.index).ffill(limit=5) if vc is not None else np.nan
+        red = (df["V"] >= vr["red_min"]) & (df["V_cross"] >= vr["red_min"]) & df["tendu"]
+        green = (df["V"] <= vr["green_max"]) & (df["V_cross"] <= vr["green_max"]) & (df["quality_ok"] == True)   # noqa: E712
+        color = pd.Series("orange", index=df.index, dtype=object)
+        color[green.fillna(False)] = "green"
+        color[red.fillna(False)] = "red"
+        color[df["V"].isna() | df["V_cross"].isna() | df["stale_accounts"]] = "orange"
+        df["color"] = color
+        df["color_confirmed"] = confirmed_color(df["color"], days)
+    # écart au secteur (dernière date) : multiple / médiane des sociétés du même secteur et du même mode (≥ 3)
+    last = {k: df.iloc[-1] for k, df in res.items() if df["kind"].iloc[-1] == "operating"}
+    groups: dict[tuple, list[float]] = {}
+    for k, row in last.items():
+        mode = res[k].attrs.get("mode", "industrial")
+        v = row.get(CROSS_METRIC[mode])
+        if v is not None and v == v and v > 0:
+            groups.setdefault((res[k].attrs.get("sector"), mode), []).append(float(v))
+    for k, row in last.items():
+        mode = res[k].attrs.get("mode", "industrial")
+        peers = groups.get((res[k].attrs.get("sector"), mode), [])
+        v = row.get(CROSS_METRIC[mode])
+        res[k].attrs["sector_peers"] = len(peers)
+        res[k].attrs["vs_sector"] = (float(v) / float(np.median(peers)) - 1.0) if len(peers) >= 3 and v == v and v and v > 0 else None
 
 
 def save_all(res: dict[str, pd.DataFrame]) -> None:

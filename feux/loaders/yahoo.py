@@ -16,14 +16,20 @@ from ..store import make_series, save
 from . import http_get, log
 
 URL = ("https://query2.finance.yahoo.com/v8/finance/chart/{sym}"
-       "?period1=0&period2=9999999999&interval=1d")
+       "?period1=0&period2=9999999999&interval=1d&events=split")
+_SPLITS: dict[str, list[tuple[pd.Timestamp, float]]] = {}
 
 
 def fetch_close_meta(symbol: str) -> tuple[pd.Series, str | None]:
-    """Clôtures quotidiennes et devise de cotation (ex. « USD », « EUR », « GBp » = pence)."""
+    """Clôtures quotidiennes (AJUSTÉES des divisions d'actions) et devise de cotation (« USD », « EUR », « GBp » = pence).
+    Les divisions d'actions rencontrées sont mémorisées (voir `splits`)."""
     r = http_get(URL.format(sym=urllib.parse.quote(symbol, safe="")),
                  headers={"User-Agent": "Mozilla/5.0 feux-tricolores/0.1"})
     res = r.json()["chart"]["result"][0]
+    ev = (res.get("events") or {}).get("splits") or {}
+    _SPLITS[symbol] = sorted(
+        (pd.Timestamp(int(v["date"]), unit="s").normalize(), float(v["numerator"]) / float(v["denominator"]))
+        for v in ev.values() if v.get("numerator") and v.get("denominator"))
     ts = pd.to_datetime(res["timestamp"], unit="s", utc=True).tz_convert(None).normalize()
     close = pd.Series(res["indicators"]["quote"][0]["close"], index=ts, dtype="float64")
     close = close.dropna()
@@ -33,6 +39,13 @@ def fetch_close_meta(symbol: str) -> tuple[pd.Series, str | None]:
 
 def fetch_close(symbol: str) -> pd.Series:
     return fetch_close_meta(symbol)[0]
+
+
+def splits(symbol: str) -> list[tuple[pd.Timestamp, float]]:
+    """Divisions d'actions (date, rapport : 10.0 pour 10 pour 1, 0.1 pour un regroupement 1 pour 10)."""
+    if symbol not in _SPLITS:
+        fetch_close_meta(symbol)
+    return _SPLITS.get(symbol, [])
 
 
 def spliced(primary: str, splice_with: str | None) -> pd.Series:

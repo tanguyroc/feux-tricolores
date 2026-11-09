@@ -107,3 +107,34 @@ def test_asof_forgets_stale_values():
     assert s.loc["2015-09-01"] == 2.0                      # disponible après publication
     assert s.loc["2016-01-04"] == 2.0                      # 6 mois plus tard : encore valable
     assert np.isnan(s.iloc[-1])                            # dix ans plus tard : oubliée (KLA, résultat d'exploitation non publié depuis 2015)
+
+
+def test_split_adjustment_matches_adjusted_prices():
+    """Nvidia 10 pour 1 le 10/06/2024 : les nombres d'actions antérieurs sont multipliés par 10 (prix Yahoo ajustés)."""
+    from feux.stocks import split_adjust_shares
+
+    sh = pd.DataFrame({"end": pd.to_datetime(["2024-04-28", "2024-07-28"]), "filed": pd.to_datetime(["2024-05-29", "2024-08-28"]),
+                       "val": [2.46e9, 2.45e10]})
+    adj = split_adjust_shares(sh, [(pd.Timestamp("2021-07-20"), 4.0), (pd.Timestamp("2024-06-10"), 10.0)])
+    assert adj["val"].tolist() == [2.46e10, 2.45e10]
+
+
+def test_cross_section_and_indicative_color():
+    """Lentille 2 = rang du multiple parmi les sociétés du même mode ; rouge seulement si chère sous les deux lentilles ET tendue."""
+    from feux.stocks import apply_cross_section
+
+    idx = pd.date_range("2026-01-01", periods=3)
+    res = {}
+    for i, ev in enumerate([10, 15, 20, 25, 60]):
+        df = pd.DataFrame({"ev_ebit": [float(ev)] * 3, "V": [90.0] * 3, "tendu": [True] * 3, "quality_ok": [True] * 3,
+                           "stale_accounts": [False] * 3, "kind": ["operating"] * 3}, index=idx)
+        df.attrs.update({"mode": "industrial", "sector": "Tech"})
+        res[f"S{i}"] = df
+    res["S0"]["V"] = 10.0
+    apply_cross_section(res)
+    assert res["S4"]["V_cross"].iloc[-1] == 100.0 and res["S4"]["color"].iloc[-1] == "red"     # la plus chère, chère contre son passé, tendue
+    assert res["S0"]["V_cross"].iloc[-1] == 20.0 and res["S0"]["color"].iloc[-1] == "green"    # la moins chère, bon marché contre son passé, solide
+    assert res["S2"]["color"].iloc[-1] == "orange"                                               # chère contre son passé, médiane contre les autres
+    res["S4"]["stale_accounts"] = True
+    apply_cross_section(res)
+    assert res["S4"]["color"].iloc[-1] == "orange"                                               # comptes trop anciens : jamais coloré

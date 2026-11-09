@@ -37,12 +37,12 @@ button.btn[disabled]{opacity:.45;cursor:not-allowed}.kpis{display:grid;grid-temp
 .rowred td:first-child{border-left:3px solid var(--red)}.rowgreen td:first-child{border-left:3px solid var(--green)}
 .detail{background:#f6f7f9;border-radius:8px;padding:10px 12px;font-size:13px;margin:6px 0 12px}
 .vg{position:relative;height:6px;border-radius:3px;margin:4px 0 3px;min-width:90px;background:linear-gradient(90deg,#2e8b57 0%,#9acd32 30%,#f0c000 50%,#f08c00 70%,#b3261e 100%)}.vg i{position:absolute;top:-3px;width:3px;height:12px;margin-left:-1px;border-radius:2px;border:1px solid #fff}
-small.warn{color:#b3261e}
+small.warn{color:#b3261e}.warnc{color:#b3261e}
 .pill.warnp{border-color:#b3261e;color:#b3261e;background:#fff5f4}
 .secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.sec{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-left:4px solid var(--line)}
-.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}
+.sec.rowred{border-left-color:var(--red)}.sec.rowgreen{border-left-color:var(--green)}.sec.roworange{border-left-color:var(--orange)}.sec.flagged{border-left-color:#b3261e}
 .sec-head{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sec-flags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.sec-body{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:13px}.sec-body>span:first-child{min-width:150px}
-.dot{display:inline-block;width:12px;height:12px;border-radius:50%}.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#c9ccd1}.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}
 .sec-sentence{font-size:13px;margin:6px 0 0}.mems{margin:6px 0 0;font-size:12px}.mem{display:inline-block;padding:0 5px;border-radius:4px;border:1px solid var(--line);margin:1px 0}.mem.red{border-color:var(--red)}.mem.green{border-color:var(--green)}
 @media (max-width:700px){.kv{grid-template-columns:1fr auto}table{font-size:12px}td,th{padding:5px}}
 """
@@ -73,6 +73,8 @@ def _payload() -> dict:
         rows.append({kk: v.get(kk) for kk in ("name", "ticker", "country", "sector", "industry", "weight", "rank", "pea", "kind", "color_confirmed", "color",
                                             "V", "ev_ebit", "ev_ebit_pct", "p_fcf", "p_fcf_pct", "roic", "fcf_ni", "nd_ebitda", "quality_ok", "implied_growth",
                                             "roic_avg", "fcf_ni_avg", "nd_ebitda_avg", "roe_avg", "quality_fails", "quality_unknown", "da_known", "accounts_as_of", "shares_source",
+                                            "V_cross", "vs_sector", "sector_peers", "tendu", "stale_accounts", "fcf", "fcf_gross", "sbc", "sbc_known", "sbc_to_revenue",
+                                            "shareholder_yield", "dividend_yield", "net_buyback_yield", "dilution_3y", "accruals", "gross_margin", "gross_profitability", "splits",
                                             "fcf_cagr_5y", "gap_ma200", "gap_ma200_pct", "runup_24m", "gsy", "trend_broken", "drawdown", "mom_12m", "date", "since",
                                             "source", "accounts_currency", "price_currency", "mode", "ebit_source", "shares_ok", "pe", "pb", "roe", "note")} | {"key": k})
     themes = themes_overlay(stocks)
@@ -139,7 +141,7 @@ def build() -> None:
 <h2>Lecture du jour</h2><div class="grid">{''.join(cards)}</div>
 <p class="legend"><i style="background:{d.HEX['green']}"></i>vert <i style="background:{d.HEX['orange']}"></i>orange <i style="background:{d.HEX['red']}"></i>rouge — frise mensuelle depuis 1990 (Bitcoin : 2014)</p>
 <h2>Secteurs et thèmes</h2>
-<p class="sub">Les onze secteurs mondiaux et deux thèmes. Pour chaque secteur : les drapeaux de prix de son ETF (bulle, tension, tendance) et la valorisation médiane des sociétés du Top 100 qui le composent, combinées avec les mêmes règles que les indices (rouge = cher ET tendu ou en bulle ; vert = bon marché, ou capitulation). Lecture de contexte, non backtestée : elle ne gouverne ni le levier ni les montants.</p>
+<p class="sub">Pas de couleur ici : des drapeaux. Pour chaque thème, là où les bulles se sont historiquement formées (semi-conducteurs, logiciels, biotechnologies…), le critère de Greenwood, Shleifer et You (hausse de 100 % en deux ans qui s'accélère : chute d'au moins 40 % dans environ un cas sur deux ensuite, sur des industries américaines 1926-2014), la tension des cours et la tendance. Pour les onze secteurs, en plus, la valorisation médiane de leurs sociétés du Top 100 contre leur propre passé. Contexte : ni le levier ni les montants n'en dépendent.</p>
 <div id="sectors"></div>
 <div id="breadth" class="breadth"></div>
 <div class="warn" style="margin-top:18px">Un feu mesure un <b>état</b> (cher / tendu / euphorique, ou décoté / capitulation), pas une prévision. Il gouverne le levier, les montants exceptionnels et le rééquilibrage. Les versements réguliers ne s'arrêtent jamais.</div>
@@ -148,7 +150,7 @@ def build() -> None:
 <section class="tab" id="tab-stocks">
 <h2>Les 100 plus grandes capitalisations mondiales</h2>
 <p class="sub">Univers = 100 premières pondérations du MSCI ACWI (positions publiées par l'ETF SPDR MSCI ACWI, au {html.escape(str(pay['universe_as_of']))}), une ligne par société, plus vos compléments de <code>stocks.yaml</code>.
-Le <b>feu</b> reste à trois couleurs et ne change que sur une conjonction : rouge = valorisation ≥ 80e percentile de son propre historique 10 ans <b>et</b> (hausse ≥ 100 %/2 ans avec accélération <b>ou</b> écart MM200 ≥ 90e percentile) ; vert = valorisation ≤ 30e percentile <b>et</b> société solide. Entre les deux, la <b>jauge de valorisation</b> (0 = la moins chère de sa propre histoire, 100 = la plus chère) et la <b>solidité</b> (rentabilité, cash, dette, en moyennes pluriannuelles) donnent le dégradé. Sans comptes (hors SEC), une société reste orange : seuls les drapeaux de prix sont calculés.</p>
+Chaque société est jugée sous <b>deux lentilles</b> : son prix contre <b>son propre passé</b> (EV/EBIT et P/FCF, percentile sur dix ans) et contre <b>les autres grandes sociétés</b> (rang de son multiple parmi les 100). Le flux de trésorerie est compté <b>après la rémunération en actions</b> des salariés, un coût réel. Le <b>feu est indicatif et non backtesté</b> : rouge seulement si la société est chère sous les deux lentilles <b>et</b> tendue (écart à la moyenne 200 jours au 90e percentile, ou hausse de 100 % en deux ans qui s'accélère) ; vert seulement si elle est bon marché sous les deux <b>et</b> solide (rentabilité, cash, dette, en moyennes sur cinq ans). Des comptes de plus de 15 mois laissent la société en orange. Sans comptes à la SEC, seuls les drapeaux de prix sont calculés.</p>
 <div id="stocks-summary" class="kpis"></div>
 <div id="stocks-notice"></div>
 <div class="filters">
@@ -253,24 +255,26 @@ sel('#f-country',[...new Set(S.map(s=>s.country).filter(Boolean))]);sel('#f-sect
 const withAccounts=S.filter(s=>s.kind==='operating').length;
 $('#stocks-notice').innerHTML=withAccounts?`<p class="note">${withAccounts} sociétés avec comptes SEC (valorisation et qualité calculées), ${S.length-withAccounts} en prix seul.</p>`:
  `<div class="warn">Comptes SEC non configurés : toutes les sociétés sont pour l'instant en <b>prix seul</b> (extension, bulle, tendance, baisse). Valorisation, qualité et DCF inversé apparaîtront dès que la variable <code>SEC_USER_AGENT</code> sera définie.</div>`;
-const COLS=[['rank','#'],['name','Société'],['country','Pays'],['sector','Secteur'],['color_confirmed','Feu'],['V','Valorisation (0-100)'],['quality_ok','Solidité'],['implied_growth','Croissance implicite'],['gap_ma200','Écart MM200'],['runup_24m','Hausse 2 ans'],['gsy','Bulle GSY'],['trend_broken','Tendance'],['drawdown','Baisse vs plus haut'],['pea','PEA']];
+const COLS=[['rank','#'],['name','Société'],['color_confirmed','Feu (indicatif)'],['V','Valorisation vs son passé'],['V_cross','vs les 100'],['quality_ok','Solidité'],['shareholder_yield','Retour actionnaires'],['implied_growth','Croissance implicite'],['gap_ma200','Prix'],['pea','PEA']];
 const VLAB=v=>v==null?'n.d.':v<=20?'très bon marché':v<=40?'bon marché':v<=60?'dans sa moyenne':v<=80?'cher':'très cher';
 const VHUE=v=>`hsl(${Math.round(120-1.2*Math.max(0,Math.min(100,v)))},60%,42%)`;
 const vgauge=v=>v==null?'':`<div class="vg"><i style="left:${Math.max(0,Math.min(100,v))}%;background:${VHUE(v)}"></i></div>`;
-const QR=D.quality_rules||{};const TESTS={rentabilité:s=>s.mode==='financial'?`rentabilité des fonds propres ${pct(s.roe_avg,0)} (seuil ${pct(QR.roic_min,0)})`:`rentabilité du capital ${pct(s.roic_avg,0)} (seuil ${pct(QR.roic_min,0)})`,cash:s=>`cash libre = ${num(s.fcf_ni_avg,2)} × résultat net (seuil ${num(QR.fcf_ni_min,2)})`,dette:s=>`dette nette = ${num(s.nd_ebitda_avg,1)} × EBITDA (seuil ${num(QR.nd_ebitda_max,1)})`};
+const QR=D.quality_rules||{};const TESTS={rentabilité:s=>s.mode==='financial'?`rentabilité des fonds propres ${pct(s.roe_avg,0)} (seuil ${pct(QR.roic_min,0)})`:`rentabilité du capital ${pct(s.roic_avg,0)} (seuil ${pct(QR.roic_min,0)})`,cash:s=>`cash libre net de la rémunération en actions = ${num(s.fcf_ni_avg,2)} × résultat net (seuil ${num(QR.fcf_ni_min,2)})`,dette:s=>`dette nette = ${num(s.nd_ebitda_avg,1)} × EBITDA (seuil ${num(QR.nd_ebitda_max,1)})`};
 const SHORT={rentabilité:s=>`rentabilité ${pct(s.mode==='financial'?s.roe_avg:s.roic_avg,0)}`,cash:s=>`cash ${num(s.fcf_ni_avg,2)}×`,dette:s=>`dette ${num(s.nd_ebitda_avg,1)}×`};
 function solidity(s){if(s.V==null)return '—';if(s.mode==='reit')return '<span class="note">hors grille (foncière)</span>';const f=s.quality_fails||[],u=s.quality_unknown||[];
  if(s.quality_ok===true)return '<span class="pill on">solide</span>';
  if(!f.length&&u.length)return `<span class="note">n.d. (${u.join(', ')})</span>`;
  return f.map(k=>`<span class="pill warnp">⚠ ${SHORT[k](s)}</span>`).join(' ')+(u.length?`<br><small class="note">${u.join(', ')} : n.d.</small>`:'');}
 function fmtCell(k,s){switch(k){
- case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>`;
+ case 'rank':return s.rank??'—';case 'name':return `<b>${s.name}</b><br><small>${s.ticker} · ${s.country||'—'} · ${s.sector||'—'}</small>`;case 'color_confirmed':return `<span class="c ${s.color_confirmed}" style="font-weight:700">${LABEL[s.color_confirmed]||'—'}</span>${s.stale_accounts&&s.kind==='operating'?'<br><small class="warn">comptes anciens</small>':''}`;
+ case 'V_cross':if(s.V_cross==null)return '—';return `<b>${Math.round(s.V_cross)}</b>${vgauge(s.V_cross)}<small>${s.mode!=='industrial'?'P/E':'EV/EBIT'}${s.vs_sector!=null?` · secteur ${s.vs_sector>2?'> +200 %':pct(s.vs_sector,0,true)}`:''}</small>`;
+ case 'shareholder_yield':return s.shareholder_yield==null?'—':`${pct(s.shareholder_yield,1)}<br><small>dividende ${pct(s.dividend_yield,1)} · actions ${s.dilution_3y==null?'n.d.':pct(s.dilution_3y,0,true)} en 3 ans</small>`;
 const ageMonths=d=>d?Math.round((new Date(D_DATE)-new Date(d))/2629800000):null;
 const accountsNote=s=>{if(!s.accounts_as_of)return '';const m=ageMonths(s.accounts_as_of);const old=m!=null&&m>15;return `<br><small class="${old?'warn':'note'}">comptes au ${fmtDate(s.accounts_as_of)}${old?' — anciens ('+m+' mois) : lecture prudente':''}</small>`;};
  case 'V':if(s.V==null)return s.kind!=='operating'?'<span class="note">prix seul</span>':(s.shares_ok===false?'<span class="note">n.d. (actions)</span>':'<span class="note">n.d. (historique)</span>');return `<b>${Math.round(s.V)}</b> <small>${VLAB(s.V)}</small>${vgauge(s.V)}<small>${s.mode!=='industrial'?`P/E ${num(s.pe)} · P/B ${num(s.pb,2)}`:`EV/EBIT ${num(s.ev_ebit)} · P/FCF ${num(s.p_fcf)}`}</small>${accountsNote(s)}`;
  case 'quality_ok':return solidity(s);
  case 'implied_growth':return s.implied_growth==null?'—':`${pct(s.implied_growth,0,true)}/an<br><small>réalisée 5 ans ${pct(s.fcf_cagr_5y,0,true)}</small>`;
- case 'gap_ma200':return `${pct(s.gap_ma200,0,true)}<br><small>p${s.gap_ma200_pct==null?'n.d.':Math.round(s.gap_ma200_pct)}</small>`;case 'runup_24m':return pct(s.runup_24m,0,true);
+ case 'gap_ma200':return `${pct(s.gap_ma200,0,true)} vs MM200${s.tendu?' <b class="warnc">tendu</b>':''}<br><small>${s.trend_broken?'<b class="warnc">tendance cassée</b>':'tendance OK'} · ${pct(s.drawdown,0)} sous le plus haut${s.gsy?' · <b class="warnc">bulle GSY</b>':''}</small>`;case 'runup_24m':return pct(s.runup_24m,0,true);
  case 'gsy':return s.gsy?'<b style="color:#b3261e">OUI</b>':'non';case 'trend_broken':return s.trend_broken?'<b style="color:#b3261e">cassée</b>':'OK';case 'drawdown':return pct(s.drawdown,0);
  case 'pea':return s.pea?'oui':'';default:return s[k]??'';}}
 function filtered(){const q=($('#f-search').value||'').toLowerCase();const c=$('#f-color').value,co=$('#f-country').value,se=$('#f-sector').value,vb=$('#f-vband').value;
@@ -288,7 +292,11 @@ function renderStocks(){const rows=filtered().sort((a,b)=>{let x=a[sortKey],y=b[
 function detail(key){const s=S.find(x=>x.key===key);if(!s)return;const body=s.V==null?`<p>${s.kind!=='operating'?'Suivi en <b>prix seul</b> (pas de comptes dans EDGAR).':(s.shares_ok===false?'Comptes disponibles mais <b>nombre d\'actions incohérent</b> (actions multi-classes ou ADS) : valorisation non calculée plutôt que fausse.':'Comptes disponibles mais <b>historique trop court</b> (moins de cinq ans de ratios) : valorisation non calculée.')} Drapeaux : écart MM200 ${pct(s.gap_ma200,0,true)} (percentile ${s.gap_ma200_pct==null?'n.d.':Math.round(s.gap_ma200_pct)}), hausse 2 ans ${pct(s.runup_24m,0,true)}, bulle GSY ${s.gsy?'active':'non'}, tendance ${s.trend_broken?'cassée':'OK'}, ${pct(s.drawdown,0)} sous le plus haut.</p>`:
  (s.mode!=='industrial'?`<p><b>Valorisation (${s.mode==='reit'?'foncière':'banque / assureur'})</b> : P/E ${num(s.pe)} , P/B ${num(s.pb,2)} → V = ${Math.round(s.V)}, <b>${VLAB(s.V)}</b> par rapport à ses dix dernières années. EV/EBIT et FCF n'ont pas de sens ici.<br>
  <b>Solidité</b> : ${s.mode==='reit'?'la grille (rentabilité du capital, cash, dette/EBITDA) ne s\'applique pas à une foncière : pas de test, donc jamais verte.':`rentabilité des fonds propres ${pct(s.roe_avg,0)} en moyenne ${QR.avg_years} ans (dernier exercice ${pct(s.roe,0)}) → ${s.quality_ok===true?'solide':'<b>test échoué</b> (jamais vert)'}.`}<br>`:
- `<p><b>Valorisation</b> : EV/EBIT ${num(s.ev_ebit)} (percentile 10 ans ${s.ev_ebit_pct==null?'n.d.':Math.round(s.ev_ebit_pct)}), P/FCF ${num(s.p_fcf)} (p${s.p_fcf_pct==null?'n.d.':Math.round(s.p_fcf_pct)}) → V = ${Math.round(s.V)}, <b>${VLAB(s.V)}</b> par rapport à ses dix dernières années.${s.ebit_source&&s.ebit_source.indexOf('approximation')>=0?' <small>(résultat d\'exploitation non publié : approché par résultat avant impôt + intérêts)</small>':''}<br>
+ `<p><b>Valorisation, lentille 1 (son propre passé)</b> : EV/EBIT ${num(s.ev_ebit)} (percentile 10 ans ${s.ev_ebit_pct==null?'n.d.':Math.round(s.ev_ebit_pct)}), P/FCF ${num(s.p_fcf)} (p${s.p_fcf_pct==null?'n.d.':Math.round(s.p_fcf_pct)}) → V = ${Math.round(s.V)}, <b>${VLAB(s.V)}</b> par rapport à ses dix dernières années.${s.ebit_source&&s.ebit_source.indexOf('approximation')>=0?' <small>(résultat d\'exploitation non publié : approché par résultat avant impôt + intérêts)</small>':''}<br>
+ <b>Lentille 2 (les autres)</b> : ${s.V_cross==null?'n.d.':`plus cher que ${Math.round(s.V_cross)} % des grandes sociétés comparables`}${s.vs_sector!=null?` ; ${s.vs_sector>=0?'prime':'décote'} de ${Math.abs(Math.round(100*s.vs_sector))} % sur la médiane de son secteur (${s.sector_peers} sociétés)`:''}. Une société peut être bon marché contre son passé et chère contre les autres (multiple en baisse après une forte croissance), ou l'inverse : le feu exige l'accord des deux.<br>
+ <b>Cash</b> : flux libre ${s.fcf_gross==null?'n.d.':num(s.fcf_gross/1e9,1)+' Md'} avant rémunération en actions, <b>${s.fcf==null?'n.d.':num(s.fcf/1e9,1)+' Md'}</b> après${s.sbc_to_revenue!=null?` (rémunération en actions : ${pct(s.sbc_to_revenue,1)} du chiffre d'affaires)`:s.sbc_known===false?' (rémunération en actions non publiée : comptée à zéro)':''} ; c'est ce flux net qui sert au P/FCF, au test de cash et au DCF inversé.<br>
+ <b>Retour aux actionnaires (12 mois)</b> : ${pct(s.shareholder_yield,1)} de la capitalisation (dividendes ${pct(s.dividend_yield,1)}, rachats nets ${pct(s.net_buyback_yield,1)}) ; nombre d'actions ${s.dilution_3y==null?'n.d.':pct(s.dilution_3y,0,true)} en trois ans${s.splits&&s.splits.length?` (divisions d'actions prises en compte : ${s.splits.map(x=>x[0]+' ×'+x[1]).join(', ')})`:''}.<br>
+ <b>Qualité des résultats</b> : marge brute ${pct(s.gross_margin,0)} ; écart résultat − cash d'exploitation ${pct(s.accruals,1,true)} de l'actif (positif et élevé = bénéfices peu convertis en cash, Sloan 1996).<br>
  <b>Solidité</b> (moyennes ${QR.avg_years} ans) : ${['rentabilité','cash','dette'].map(k=>{const ok=!(s.quality_fails||[]).includes(k),unk=(s.quality_unknown||[]).includes(k);return `${TESTS[k](s)} ${unk?'→ n.d.':ok?'✓':'<b>✗</b>'}`;}).join(' · ')} → ${s.quality_ok===true?'<b>solide</b>':(s.quality_fails||[]).length?'<b>test(s) échoué(s)</b> : jamais vert tant que cela dure':'incomplet'}.${s.da_known===0?' <small>(amortissements non publiés : EBITDA approché par le résultat d\'exploitation)</small>':''}<br>
  <small class="note">Dernier exercice glissant : rentabilité ${pct(s.roic,0)}, cash ${num(s.fcf_ni,2)}×, dette ${num(s.nd_ebitda,1)}×.</small><br>
  <b>DCF inversé</b> : le cours suppose ${pct(s.implied_growth,0,true)}/an de croissance du cash pendant dix ans ; réalisé sur cinq ans : ${pct(s.fcf_cagr_5y,0,true)}/an.<br>`)+`
@@ -300,12 +308,14 @@ function detail(key){const s=S.find(x=>x.key===key);if(!s)return;const body=s.V=
 function renderSectors(){const T=D.themes||[];if(!T.length){$('#sectors').innerHTML='<p class="note">Non calculé.</p>';return;}
  const flag=(on,txt)=>on?`<span class="pill warnp">${txt}</span>`:'';
  const row=t=>{const v=t.valuation||{};const med=v.v_median;const members=(v.members||[]).map(m=>`<span class="mem c ${m.color||'orange'}" title="${m.name}">${m.ticker}${m.V==null?'':' '+Math.round(m.V)}</span>`).join(' ');
-  return `<div class="sec row${t.color}"><div class="sec-head"><span class="dot ${t.color}"></span><b>${t.name}</b> <small class="note">${t.ticker}${t.kind==='theme'?' · thème (drapeaux seulement)':''}</small>
+  const flagged=t.gsy||t.extended;
+  return `<div class="sec ${flagged?'flagged':''}"><div class="sec-head"><span class="dot ${flagged?'red':''}"></span><b>${t.name}</b> <small class="note">${t.ticker}${t.kind==='theme'?' · thème (drapeaux seulement)':''}</small>
   <span class="sec-flags">${flag(t.gsy,'bulle GSY')}${flag(t.extended,'tendu')}${flag(t.trend_broken,'tendance cassée')}${flag(t.drawdown>=0.25,`−${Math.round(100*t.drawdown)} % vs plus haut`)}</span></div>
   <div class="sec-body">${t.kind==='sector'?(med==null?`<span class="note">valorisation sectorielle n.d. (${v.n||0} société${(v.n||0)>1?'s':''} valorisée${(v.n||0)>1?'s':''}, minimum 3)</span>`:`<span><b>${Math.round(med)}</b> <small>${VLAB(med)} · médiane de ${v.n} sociétés</small>${vgauge(med)}</span>`):''}
   <span class="note">hausse 2 ans ${pct(t.runup_24m,0,true)} · écart MM200 ${pct(t.gap_ma200,0,true)}${t.gap_pct==null?'':' (p'+Math.round(t.gap_pct)+')'}</span></div>
   <p class="sec-sentence">${t.sentence}</p>${members?`<p class="detail-only mems">${members}</p>`:''}</div>`;};
- $('#sectors').innerHTML=`<div class="secs">${T.filter(t=>t.kind==='sector').map(row).join('')}</div><h3 style="margin:14px 0 6px">Thèmes</h3><div class="secs">${T.filter(t=>t.kind!=='sector').map(row).join('')}</div>`;}
+ const byFlag=(a,b)=>((b.gsy||b.extended)?1:0)-((a.gsy||a.extended)?1:0);
+ $('#sectors').innerHTML=`<h3 style="margin:6px 0">Thèmes</h3><div class="secs">${T.filter(t=>t.kind!=='sector').sort(byFlag).map(row).join('')}</div><h3 style="margin:14px 0 6px">Les onze secteurs</h3><div class="secs">${T.filter(t=>t.kind==='sector').sort(byFlag).map(row).join('')}</div>`;}
 renderSectors();
 (function(){const b=D.breadth;if(!b||!b.n)return;const pct=(x,n)=>Math.round(100*x/n);
  $('#breadth').innerHTML=`<h3 style="margin:14px 0 6px">Le Top 100 en un coup d'œil <small class="note">(faits de contexte, hors règles)</small></h3>
