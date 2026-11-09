@@ -36,7 +36,9 @@ def compute_all() -> dict[str, pd.DataFrame]:
         df["extended"] = df["gap_ma200_pct"] >= t["extension_red_min"]
         df["drawdown"] = ind.drawdown(px)
         broken_m = ind.sma_month_flag(px, t["leverage_flag"]["sma_months"])
-        df["trend_broken"] = store.as_of(store.make_series(broken_m.index, broken_m.astype(float).to_numpy()), px.index).fillna(0.0).astype(bool)
+        # même décalage d'un jour que les indices : la clôture mensuelle n'est connue qu'après la séance (v1.0.1)
+        df["trend_broken"] = store.as_of(store.make_series(broken_m.index, broken_m.astype(float).to_numpy(), lag=pd.Timedelta(days=1)),
+                                         px.index).fillna(0.0).astype(bool)
         df["asset"] = key
         out[key] = df
         last = df.iloc[-1]

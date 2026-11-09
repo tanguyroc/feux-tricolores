@@ -78,7 +78,8 @@ def conduct_text(color: str) -> list[str]:
         f"Versement régulier : {c['regular_contribution']}.",
         f"Montants exceptionnels / réserve : {c['reserve']}.",
         f"Levier : plafond {100 * c['leverage_cap_share_equities']:.0f} % de la poche actions"
-        + (" (et seulement si la tendance est OK)" if c.get("leverage_requires_trend_ok") else "") + ".",
+        + (f" si la tendance est OK ; {100 * rules()['conduct']['trend_broken']['leverage_cap_share_equities']:.0f} % si elle est cassée"
+           if c.get("leverage_requires_trend_ok") else "") + ".",
         f"Rééquilibrage : bandes ±{c['rebalance_band_pts']} points.",
     ]
 

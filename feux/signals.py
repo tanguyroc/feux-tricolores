@@ -40,12 +40,17 @@ def common_valuation(calendar: pd.DatetimeIndex, px_daily: pd.Series) -> pd.Data
     m = m.dropna(subset=["cape"])
 
     win_m, min_m = 12 * w["pct_years"], 12 * w["pct_min_years"]
-    # valeurs mensuelles disponibles en fin de mois -> dernière valeur connue à chaque jour
-    cape_m = store.make_series(m.index, m["cape"])
-    ecy_m = store.make_series(m.index, m["ecy"])
-    P_m = store.make_series(m.index, m["P"])
+    # le CAPE d'un mois exige l'indice des prix de ce mois, publié vers le 15 du mois suivant (v1.0.1 : jusqu'ici le CAPE
+    # était utilisé dès la fin du mois, deux semaines trop tôt) : disponibilité = fin de mois + 15 jours, pour le CAPE,
+    # le prix moyen du même mois (qui sert à l'actualiser) et le taux réel
+    cpi_lag = pd.Timedelta(days=15)
+    avail = m.index + cpi_lag
+    cape_m = store.make_series(m.index, m["cape"], available_dates=avail)
+    ecy_m = store.make_series(m.index, m["ecy"], available_dates=avail)
+    P_m = store.make_series(m.index, m["P"], available_dates=avail)
     infl = (m["CPI"] / m["CPI"].shift(120)) ** 0.1 - 1.0
-    real_rate_m = store.make_series(m.index, m["GS10"] / 100.0 - infl)
+    real_rate_m = store.make_series(m.index, m["GS10"] / 100.0 - infl, available_dates=avail)
+    m_av = m.set_axis(avail)     # historique de référence indexé par date de disponibilité
 
     out = pd.DataFrame(index=calendar)
     cape_last = store.as_of(cape_m, calendar)
@@ -54,8 +59,8 @@ def common_valuation(calendar: pd.DatetimeIndex, px_daily: pd.Series) -> pd.Data
     # CAPE « vivant » : CAPE du dernier mois connu, rescalé par prix du jour / prix moyen de ce mois
     out["cape_live"] = cape_last * (px_daily.reindex(calendar) / p_last)
     out["ecy_live"] = 1.0 / out["cape_live"] - rr_last
-    out["cape_pct"] = ind.pct_against_reference(out["cape_live"], m["cape"], win_m, min_m)
-    out["ecy_pct_inv"] = ind.pct_against_reference(-out["ecy_live"], -m["ecy"], win_m, min_m)
+    out["cape_pct"] = ind.pct_against_reference(out["cape_live"], m_av["cape"], win_m, min_m)
+    out["ecy_pct_inv"] = ind.pct_against_reference(-out["ecy_live"], -m_av["ecy"], win_m, min_m)
 
     # AIAE trimestriel (Z.1), percentile sur 25 ans = 100 trimestres, minimum 60
     aiae = store.load("aiae")
@@ -66,12 +71,12 @@ def common_valuation(calendar: pd.DatetimeIndex, px_daily: pd.Series) -> pd.Data
                                                     available_dates=aiae.available_date, dropna=False), calendar)
     # v1.0 : V = percentile du CAPE parmi TOUTES les valeurs mensuelles depuis 1881 (fenêtre croissante, minimum 30 ans)
     vr = r["indices"]["valuation"]
-    out["V"] = ind.pct_against_reference(out["cape_live"], m["cape"], 10 ** 7, int(vr["min_months"]))
+    out["V"] = ind.pct_against_reference(out["cape_live"], m_av["cape"], 10 ** 7, int(vr["min_months"]))
     out["V_25y"] = _nanmedian([out["cape_pct"], out["ecy_pct_inv"], out["aiae_pct"]])   # ancienne V (v0.x), contexte
     # rendement réel attendu à 10 ans (CAPE), modèle réestimé chaque mois avec les seules issues connues à la date
     model = expected_return_model(m)
     for col in ("er_a", "er_b", "er_q10", "er_q90", "er_n_decades"):
-        out[col] = store.as_of(store.make_series(model.index, model[col].to_numpy(), dropna=False), calendar)
+        out[col] = store.as_of(store.make_series(model.index, model[col].to_numpy(), available_dates=model.index + cpi_lag, dropna=False), calendar)
     out["er10"] = out["er_a"] + out["er_b"] * np.log(out["cape_live"])
     out["er10_lo"] = out["er10"] + out["er_q10"]
     out["er10_hi"] = out["er10"] + out["er_q90"]
@@ -127,9 +132,11 @@ def common_fear(calendar: pd.DatetimeIndex) -> pd.DataFrame:
     for name in ["vix", "credit_spread"]:
         s = store.to_indexed(store.load(name))
         pct = ind.rolling_pct(s, TD * w["pct_years"], TD * w["pct_min_years_fast"])
-        df = store.make_series(s.index, s.values)
+        # VIX : connu à la clôture du jour ; écart Baa − 10 ans (FRED BAA10Y) : publié le jour ouvré suivant (v1.0.1)
+        av = s.index + (pd.offsets.BDay(1) if name == "credit_spread" else pd.Timedelta(0))
+        df = store.make_series(s.index, s.values, available_dates=av)
         out[name] = store.as_of(df, calendar)
-        out[f"{name}_pct"] = store.as_of(store.make_series(s.index, pct.to_numpy(), dropna=False), calendar)
+        out[f"{name}_pct"] = store.as_of(store.make_series(s.index, pct.to_numpy(), available_dates=av, dropna=False), calendar)
         cols.append(out[f"{name}_pct"])
     out["P"] = _nanmedian(cols)
     return out
@@ -143,6 +150,7 @@ def index_signals(key: str, common: dict[str, pd.DataFrame] | None = None) -> pd
     w, xr = r["windows"], r["indices"]["context"]["extension"]
     px = store.to_indexed(store.load(f"px_{key}"))
     px = px[~px.index.duplicated()].sort_index()
+    px = px[px.index.dayofweek < 5]     # barre fictive du dimanche (MSCI World, Yahoo) : écartée (v1.0.1)
     cal = px.index
     df = pd.DataFrame({"price": px})
 
@@ -262,7 +270,9 @@ def bitcoin_signals() -> pd.DataFrame:
     color[gm] = "green"
     reason[gm] = np.where((df["mvrv"] < b["green"]["mvrv_max"])[gm], "MVRV < 1 : les détenteurs sont en perte en moyenne",
                           "prix sous sa moyenne des 200 semaines")
-    color[df["mvrv"].isna() | df["ratio_200w"].isna()] = "orange"
+    missing = df["mvrv"].isna() | df["ratio_200w"].isna()
+    color[missing] = "orange"      # le protocole exclut ces jours ; affichés orange, sans motif trompeur (v1.0.1)
+    reason[missing] = "données incomplètes (MVRV ou moyenne 200 semaines indisponible) : pas de jugement"
     df["color"], df["reason"] = color, reason
     df["falling_knife"] = (df["color"] == "green") & df["trend_broken"]
     df["asset"] = "btc"
@@ -338,7 +348,7 @@ def save_signals(res: dict[str, pd.DataFrame]) -> None:
         latest[key].update(_state_run(df))
         if key != "btc":
             latest[key].update(refs)
-            latest[key]["valuation_source"] = "S&P 500 (CAPE, excess CAPE yield, allocation des ménages américains)"
+            latest[key]["valuation_source"] = "S&P 500 (CAPE de Shiller, comparé à tous les mois depuis 1881)"
             latest[key]["valuation_is_proxy"] = key != "sp500"
     (DOCS_DIR / "latest.json").write_text(json.dumps(latest, indent=1, default=str, ensure_ascii=False), encoding="utf-8")
 

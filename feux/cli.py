@@ -160,7 +160,7 @@ def cmd_archive(args) -> None:
 def cmd_prereg(args) -> None:
     from .prereg import register, register_monthly
 
-    register_monthly() if args.monthly else register(args.day)
+    register_monthly() if args.monthly else register()
 
 
 def main(argv=None) -> None:
@@ -204,7 +204,6 @@ def main(argv=None) -> None:
     s = sub.add_parser("archive", help="ajouter l'état du jour à history/ (ajout seul)")
     s.set_defaults(fn=cmd_archive)
     s = sub.add_parser("prereg", help="pré-inscription datée et hachée de ce que les règles affirment aujourd'hui")
-    s.add_argument("--day", help="AAAA-MM-JJ (défaut : aujourd'hui)")
     s.add_argument("--monthly", action="store_true", help="seulement si aucune pré-inscription n'existe pour le mois en cours")
     s.set_defaults(fn=cmd_prereg)
     s = sub.add_parser("longrun", help="protocole v1.0 : candidats sur 1920-1989 (Shiller) et 1990-aujourd'hui")

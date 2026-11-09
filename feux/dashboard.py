@@ -292,7 +292,8 @@ def _stocks_section() -> str:
 
 def _conduct_table() -> str:
     rows = ""
-    for color, sub in (("green", ""), ("orange", "<br><small>(y compris « cher »)</small>"), ("red", "<br><small>(Bitcoin seulement)</small>")):
+    # indices : vert et orange seulement depuis la v1.0 ; le rouge (Bitcoin) a sa propre ligne, plus bas
+    for color, sub in (("green", ""), ("orange", "<br><small>(y compris « cher »)</small>")):
         items = "".join(f"<li>{html.escape(t)}</li>" for t in conduct_text(color))
         rows += f"<tr><td class='c {color}'>{LABEL[color]}{sub}</td><td><ul style='margin:0;padding-left:18px'>{items}</ul></td></tr>"
     cb = rules()["conduct"]["bitcoin"]
@@ -389,7 +390,7 @@ def _current_rules_section() -> str:
             "<th colspan='3'>Baisse médiane (et p90) dans les 24 mois</th></tr>"
             "<tr>" + "".join(f"<th class='c {c}'>{LABEL[c]}</th>" for c in ["green", "orange", "red"]) * 3 + "</tr>" + rows + "</table>"
             "<p class='note'>Indices : vert = valorisation basse ou capitulation ; plus de rouge depuis la v1.0. Le vert n'a été suivi que de rendements "
-            "modérément meilleurs que l'orange depuis 1990 (2 à 3 points par an) : sa vraie valeur est de dire quand une réserve peut être engagée sans attendre.</p>"
+            "modérément meilleurs que l'orange depuis 1990 (+1 à +3 points par an selon l'indice) ; sur le Nasdaq-100, les verts de 2000-2002 ont été suivis de nouvelles baisses (90e percentile de la baisse sur 24 mois : 61 %, contre 35 % après l'orange). Sa vraie valeur est de dire quand une réserve peut être engagée, en tranches.</p>"
             + plan_txt)
 
 

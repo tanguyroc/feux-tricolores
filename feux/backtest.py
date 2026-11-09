@@ -150,6 +150,8 @@ def plan_simulation(df: pd.DataFrame, start: str = "1990-01-01") -> dict:
     tb = store.to_indexed(store.load("tbill3m")).reindex(m.index, method="ffill").fillna(0) / 100.0
     units_a = units_b = units_c = 0.0
     reserve_b = reserve_c = 0.0
+    left_b = left_c = 0            # tranches restant à déployer (v1.0.1 : vraies tranches égales, pas des fractions du reste)
+    tranche_b = tranche_c = 0.0
     invested = 0.0
     hist = []
     for i, (date, px) in enumerate(m.items()):
@@ -162,19 +164,25 @@ def plan_simulation(df: pd.DataFrame, start: str = "1990-01-01") -> dict:
             reserve_b += yearly
             reserve_c += yearly
             invested += yearly
+            left_c = 3
+            tranche_c = reserve_c / 3
         growth = (1 + tb.loc[date]) ** (1 / 12)
         reserve_b *= growth
         reserve_c *= growth
         col = color_m.loc[date]
         if col == "green" and reserve_b > 0:
-            frac = 1 / 6 if knife_m.loc[date] else 1 / 3
-            amt = min(reserve_b, max(reserve_b * frac, yearly / 6))
+            if left_b == 0:                      # début d'un déploiement : tiers égaux (sixièmes si couteau qui tombe)
+                left_b = 6 if knife_m.loc[date] else 3
+                tranche_b = reserve_b / left_b
+            amt = reserve_b if left_b == 1 else min(reserve_b, tranche_b)
             units_b += amt / px
             reserve_b -= amt
-        if reserve_c > 0 and col != "red":   # variante C (règle v1.0) : trois tranches mensuelles, quelle que soit la couleur des indices
-            amt = min(reserve_c, max(reserve_c / 3, yearly / 6))
+            left_b -= 1
+        if left_c > 0 and reserve_c > 0:         # variante C (règle v1.0) : trois tranches mensuelles égales, toute couleur
+            amt = reserve_c if left_c == 1 else min(reserve_c, tranche_c)
             units_c += amt / px
             reserve_c -= amt
+            left_c -= 1
         hist.append((date, units_a * px, units_b * px + reserve_b, reserve_b, units_c * px + reserve_c, reserve_c, invested))
     h = pd.DataFrame(hist, columns=["date", "A", "B", "réserve_B", "C", "réserve_C", "investi"]).set_index("date")
     return {

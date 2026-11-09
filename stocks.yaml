@@ -9,3 +9,5 @@ stocks:
   # réorganisations en holding : l'historique des comptes reste sur l'ancien CIK, fusionné avec le nouveau
   XOM: {name: "ExxonMobil", cik: 2115436, extra_ciks: [34088], type: operating, ticker: "XOM"}
   BLK: {name: "BlackRock", cik: 2012383, extra_ciks: [1364742], type: operating, ticker: "BLK"}
+  # conglomérat dominé par l'assurance : EV/EBIT sans objet (le « résultat » comprend les plus-values du portefeuille) → P/E et P/B
+  BRK-B: {name: "Berkshire Hathaway", cik: 1067983, type: operating, ticker: "BRK-B", mode: financial}

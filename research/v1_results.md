@@ -108,3 +108,24 @@ prochain sommet** ; c'est écrit sur la carte.
 - Bitcoin : B1.
 - Ce qui sort des règles et reste affiché en contexte : dette sur marge, excess CAPE yield, allocation des ménages (AIAE),
   momentum 12 mois, critère GSY (indices et Bitcoin), taux de financement, Fear & Greed, z-scores Bitcoin.
+
+## Erratum (9 novembre 2026, après relecture indépendante)
+
+Les tableaux ci-dessus sont inchangés ; trois phrases de commentaire étaient inexactes.
+
+- §7 : « le seuil d'origine 3,7 n'a jamais été atteint depuis 2014 » est **faux**. Le MVRV a été ≥ 3,7 pendant 22 jours depuis 2014
+  (14 en décembre 2017, maximum 4,72 le 7 décembre ; 8 en février 2021, maximum 3,96). La ligne « Sensibilité MVRV ≥ 3,7 » affiche
+  « 0 % » et « 0 » épisode par arrondi (0,5 % du temps) et parce qu'aucune séquence n'atteint 20 jours. La conclusion (la sensibilité
+  3,7 échoue au critère du nombre d'épisodes) est inchangée.
+- §7 : la liste des rouges B1 omettait mai-juin 2017 (rouge brut du 19 mai au 23 juin, prix d'environ 2 000 à 2 650 $, suivi d'une
+  hausse d'environ ×8 jusqu'en décembre) et de courtes séquences en août, octobre et novembre 2017.
+- Le plan « trois tranches » du module de validation ne déployait pas des tranches égales (33 %, 22 %, 17 %, 17 %, 11 %). Corrigé :
+  trois tranches égales coûtent −0,01 % de capital final contre l'investissement immédiat sur le S&P 500 (−0,1 % sur le Nasdaq-100) ;
+  attendre le vert, −9,6 % et −28,8 %.
+
+Point-in-time : dans le moteur quotidien, le CAPE d'un mois était utilisé dès la fin du mois, avant la publication de l'indice des prix
+(vers le 15 du mois suivant). Corrigé ; le protocole recalculé donne des écarts identiques à 0,1 point près et les mêmes conclusions
+(aucun candidat retenu sur le S&P 500, B1 adopté). Le moteur mensuel 1920-2026 n'était pas concerné (mise en œuvre le mois suivant).
+Limite non corrigée : les bénéfices mensuels de Shiller sont interpolés (annuels avant 1926) ; le décalage de 3 mois peut laisser
+passer 1 à 2 mois d'information, davantage au début du hors-échantillon. Vu l'ampleur des écarts hors échantillon (+13 à +19 points),
+la conclusion n'en dépend pas, mais ce n'est pas démontré ici.

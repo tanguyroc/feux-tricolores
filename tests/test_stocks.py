@@ -74,16 +74,39 @@ def _instant_facts(vals_by_end, filed_lag=40):
     return out
 
 
-def test_instant_merges_concepts_most_recent_first():
+def test_instant_merges_concepts_point_in_time():
     # StockholdersEquity abandonné fin 2019, remplacé par la variante « y compris minoritaires » (Qualcomm, Visa, Broadcom…)
     old = _instant_facts({f"{y}-12-31": 100 + y - 2015 for y in range(2015, 2020)})
     new = _instant_facts({f"{y}-12-31": 200 + y - 2018 for y in range(2018, 2026)})
+    new += _instant_facts({"2016-12-31": 999}, filed_lag=800)            # comparatif publié bien plus tard
     cf = {"facts": {"us-gaap": {"StockholdersEquity": {"units": {"USD": old}},
                                 "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest": {"units": {"USD": new}}}}}
     s = edgar.instant(cf, edgar.CONCEPTS["equity"][0])
     assert str(s["end"].max().date()) == "2025-12-31"                    # la série ne s'arrête plus en 2019
-    assert s.loc[s["end"] == pd.Timestamp("2019-12-31"), "val"].item() == 201   # à date commune, le concept le plus récent l'emporte
+    assert s.loc[s["end"] == pd.Timestamp("2019-12-31"), "val"].item() == 104   # même dépôt : le concept préféré (listé en premier)
+    assert s.loc[s["end"] == pd.Timestamp("2016-12-31"), "val"].item() == 101   # la valeur publiée en premier, pas le comparatif tardif
     assert s.loc[s["end"] == pd.Timestamp("2015-12-31"), "val"].item() == 100   # l'ancien concept comble le passé
+
+
+def test_ttm_requires_consecutive_quarters_and_long_quarters_are_kept():
+    """Un trimestre manquant ne doit pas produire un TTM étalé sur plus d'un an ; un 4e trimestre de 16 semaines (PepsiCo)
+    est un trimestre."""
+    q = pd.DataFrame({"end": pd.to_datetime(["2024-03-23", "2024-06-15", "2024-09-07", "2024-12-28", "2025-06-14", "2025-09-06"]),
+                      "filed": pd.to_datetime(["2024-04-25", "2024-07-11", "2024-10-08", "2025-02-04", "2025-07-17", "2025-10-09"]),
+                      "val": [1.0, 1.0, 1.0, 1.5, 1.0, 1.0]})
+    t = edgar.ttm(q)
+    assert t["end"].dt.strftime("%Y-%m-%d").tolist() == ["2024-12-28"]   # 2025 : le 1er trimestre manque, pas de TTM
+    assert t["val"].tolist() == [4.5]
+
+
+def test_debt_unknown_is_not_zero_and_components_add_up():
+    """Oracle : dette non courante (LongTermNotesPayable) + dette courante (DebtCurrent) ; sans aucun concept de dette : inconnue."""
+    nc = _instant_facts({"2026-05-31": 110e9, "2026-08-31": 118e9})
+    cur = _instant_facts({"2026-05-31": 6e9, "2026-08-31": 7e9})
+    cf = {"facts": {"us-gaap": {"LongTermNotesPayable": {"units": {"USD": nc}}, "DebtCurrent": {"units": {"USD": cur}}}}}
+    d = edgar.debt_series(cf)
+    assert d["val"].tolist() == [116e9, 125e9]
+    assert edgar.debt_series({"facts": {"us-gaap": {}}}).empty
 
 
 def test_summed_flow_adds_depreciation_and_amortization():

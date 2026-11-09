@@ -35,7 +35,8 @@ La v1.0 vient d'un protocole pré-enregistré (`research/v1_protocol.md`, pouss�
   prix d'un rendement plus faible ; elle pilote donc le levier, pas les achats. Nasdaq-100 x2 quotidien : −98,5 % en 2000-2002 sans
   filtre, −89 % avec (l'indice : −81 %).
 - **Bitcoin, règle B1 en niveaux** : écart de rendement à 3 ans vert − rouge de +116 points (2014-2026, pas de hors-échantillon
-  possible). Le seuil d'origine (MVRV 3,7) n'a jamais été atteint depuis 2014 : **le rouge peut manquer le prochain sommet**.
+  possible). Le MVRV n'a dépassé 3,7 que 22 jours depuis 2014 (décembre 2017, février 2021) et n'a plus atteint 3 depuis avril
+  2021 : **le rouge peut manquer le prochain sommet**.
 
 ## Résultats, règles en vigueur (point-in-time, 1990-2026 ; Bitcoin 2014-2026)
 
@@ -43,13 +44,13 @@ La v1.0 vient d'un protocole pré-enregistré (`research/v1_protocol.md`, pouss�
 |---|---|---|---|---|
 | S&P 500 | 8 % | +12,3 %/an | +9,7 %/an | 29 % / 34 % |
 | Nasdaq-100 | 13 % | +16,8 %/an | +15,7 %/an | 61 % / 35 % |
-| MSCI World | 9 % | +10,9 %/an | +7,7 %/an | 30 % / 37 % |
+| MSCI World | 9 % | +10,8 %/an | +7,7 %/an | 30 % / 37 % |
 | Bitcoin (rouge 4 % du temps) | 17 % | +126 %/an | +50 %/an (rouge : +9 %/an) | 25 % / 69 % (rouge : 79 %) |
 
 Rendements de prix hors dividendes ; chaque jour est classé par sa couleur du jour. Sur le Nasdaq-100, les verts de 2000-2002
 (capitulations trop précoces) expliquent la baisse de 61 % : d'où le drapeau « couteau qui tombe » et les tranches.
-**Plan type** (1 000 €/mois + 10 000 €/an) : trois tranches mensuelles contre tout investir tout de suite, −0,3 % de capital final ;
-attendre le vert, −9,1 % (S&P 500) et −26,5 % (Nasdaq-100).
+**Plan type** (1 000 €/mois + 10 000 €/an) : trois tranches mensuelles égales contre tout investir tout de suite, pratiquement
+identique (−0,01 % de capital final sur le S&P 500, −0,1 % sur le Nasdaq-100) ; attendre le vert, −9,6 % (S&P 500) et −28,8 % (Nasdaq-100).
 
 Le gain attendu de l'outil n'est **pas** sur le rendement des flux (≈ 0) ; il est sur (1) le contrôle du levier, (2) le comportement
 (pas de levier ni de montant exceptionnel d'un coup ; achats effectifs dans la capitulation ; ventes ralenties), (3) le Bitcoin.

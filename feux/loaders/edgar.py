@@ -30,11 +30,6 @@ CONCEPTS = {
                 "ifrs-full": ["ProfitLossAttributableToOwnersOfParent", "ProfitLoss"]}, "flow"),
     "cfo": ({"us-gaap": ["NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
             "ifrs-full": ["CashFlowsFromUsedInOperatingActivities"]}, "flow"),
-    "capex": ({"us-gaap": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsToAcquireOtherPropertyPlantAndEquipment",
-                           "PaymentsForCapitalImprovements"],
-               "ifrs-full": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
-                             "PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets",
-                             "PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"]}, "flow"),
     "da": ({"us-gaap": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "DepreciationAmortizationAndAccretionNet",
                      "DepreciationAmortizationAndOther"],
             "ifrs-full": ["DepreciationAndAmortisationExpense", "AdjustmentsForDepreciationAndAmortisationExpense",
@@ -44,8 +39,6 @@ CONCEPTS = {
               "ifrs-full": ["CashAndCashEquivalents"]}, "instant"),
     "st_investments": ({"us-gaap": ["ShortTermInvestments", "MarketableSecuritiesCurrent", "AvailableForSaleSecuritiesDebtSecuritiesCurrent"],
                         "ifrs-full": ["OtherCurrentFinancialAssets"]}, "instant"),
-    "debt_lt": ({"us-gaap": ["LongTermDebtNoncurrent", "LongTermDebt"], "ifrs-full": ["LongtermBorrowings", "NoncurrentPortionOfNoncurrentBorrowings"]}, "instant"),
-    "debt_st": ({"us-gaap": ["LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings"], "ifrs-full": ["ShorttermBorrowings", "CurrentPortionOfLongtermBorrowings"]}, "instant"),
     "equity": ({"us-gaap": ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
                 "ifrs-full": ["EquityAttributableToOwnersOfParent", "Equity"]}, "instant"),
     "assets": ({"us-gaap": ["Assets"], "ifrs-full": ["Assets"]}, "instant"),
@@ -67,6 +60,31 @@ CONCEPTS = {
     "gross_profit": ({"us-gaap": ["GrossProfit"], "ifrs-full": ["GrossProfit"]}, "flow"),
     "cost_of_revenue": ({"us-gaap": ["CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold"], "ifrs-full": ["CostOfSales"]}, "flow"),
 }
+# Investissements (capex) : immobilisations corporelles + incorporelles (licences, logiciels : AstraZeneca, Novartis), sommées ;
+# un concept combiné, quand il existe pour la période, l'emporte (sinon double compte).
+CAPEX_COMBINED = {"us-gaap": ["PaymentsToAcquireProductiveAssets"],
+                  "ifrs-full": ["PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets"]}
+CAPEX_COMPONENTS = (
+    {"us-gaap": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireOtherPropertyPlantAndEquipment", "PaymentsForCapitalImprovements",
+                 "PaymentsToAcquireOtherProductiveAssets"],                                   # Verizon : investissements, logiciels compris
+     "ifrs-full": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+                   "PurchaseOfOtherLongtermAssetsClassifiedAsInvestingActivities"]},          # Shell : « capital expenditure »
+    {"us-gaap": ["PaymentsToAcquireIntangibleAssets"], "ifrs-full": ["PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"]},
+    {"us-gaap": ["PaymentsToDevelopSoftware"]},
+)
+# Dette financière totale, période par période (v1.0.1) : total publié s'il existe ; sinon dette à long terme TOTALE (part à moins
+# d'un an comprise) + emprunts à court terme ; sinon part non courante + part courante (+ court terme). Une dette inconnue reste
+# inconnue (jamais zéro) : pas d'EV, test de dette « n.d. ». Concepts relevés dans les comptes des 100 sociétés suivies.
+DEBT_TOTAL = {"us-gaap": ["DebtLongtermAndShorttermCombinedAmount", "DebtAndCapitalLeaseObligations"], "ifrs-full": ["Borrowings"]}
+DEBT_LT_TOTAL = {"us-gaap": ["LongTermDebt", "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities"]}
+DEBT_LT_NONCURRENT = {"us-gaap": ["LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations", "LongTermNotesAndLoans", "LongTermNotesPayable",
+                                  "SeniorLongTermNotes", "LongTermLoansPayable", "UnsecuredLongTermDebt", "ConvertibleDebtNoncurrent"],
+                      "ifrs-full": ["NoncurrentPortionOfNoncurrentBorrowings", "LongtermBorrowings"]}
+DEBT_LT_CURRENT = {"us-gaap": ["LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent"],
+                   "ifrs-full": ["CurrentPortionOfLongtermBorrowings"]}
+DEBT_CURRENT_ALL = {"us-gaap": ["DebtCurrent"], "ifrs-full": ["CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings"]}
+DEBT_SHORT = {"us-gaap": ["ShortTermBorrowings", "CommercialPaper", "ShortTermBankLoansAndNotesPayable", "OtherShortTermBorrowings", "NotesPayableCurrent"],
+              "ifrs-full": ["ShorttermBorrowings"]}
 # Amortissements publiés en deux morceaux (Abbott, Gilead, Merck...) : dépréciation des immobilisations corporelles
 # + amortissement des incorporels. Utilisés quand aucun concept « D&A » combiné n'existe ou n'est plus publié.
 DA_COMPONENTS = (
@@ -128,6 +146,16 @@ def _first_reported(df: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
     return df.sort_values("filed").drop_duplicates(keys, keep="first")
 
 
+def _merge_parts(parts: list[pd.DataFrame]) -> pd.DataFrame:
+    """Fusion de plusieurs concepts (dans l'ordre de préférence) : pour chaque fin de période, la valeur PUBLIÉE EN PREMIER
+    (point-in-time), à égalité le concept préféré. Tri stable : le résultat ne dépend pas de l'ordre interne de pandas
+    (avant la v1.0.1, un tri instable choisissait parfois un concept publié un an plus tard, figeant la série)."""
+    tagged = [p.assign(_prio=i) for i, p in enumerate(parts)]
+    m = pd.concat(tagged, ignore_index=True)
+    m = m.sort_values(["end", "filed", "_prio"], kind="mergesort").drop_duplicates("end", keep="first")
+    return m.drop(columns="_prio").reset_index(drop=True)
+
+
 def _iter_concepts(concepts) -> list[tuple[str, str]]:
     if isinstance(concepts, dict):
         return [(tax, c) for tax, lst in concepts.items() for c in lst]
@@ -141,65 +169,68 @@ def _quarterize(df: pd.DataFrame) -> pd.DataFrame:
     df["days"] = (df["end"] - df["start"]).dt.days
     df = _first_reported(df, ["start", "end"]).sort_values(["start", "end"])
     rows = []
-    # 1) trimestres explicites (≈ 90 jours)
-    expl = df[(df["days"] >= 80) & (df["days"] <= 100)]
+    # 1) trimestres explicites (12 à 17 semaines : 84 à 119 jours ; exercices de 52/53 semaines, PepsiCo, Costco)
+    expl = df[(df["days"] >= 80) & (df["days"] <= 120)]
+    cc = "concept" in df.columns
     for r in expl.itertuples():
-        rows.append({"end": r.end, "filed": r.filed, "val": float(r.val), "kind": "explicit"})
+        rows.append({"end": r.end, "filed": r.filed, "val": float(r.val), "kind": "explicit", "concept": r.concept if cc else None})
     # 2) cumuls depuis le même début de période : différences successives (6M−3M, 9M−6M, 12M−9M)
     for _, g in df.groupby("start"):
         g = g.sort_values("end")
         prev = None
         for r in g.itertuples():
-            if prev is not None and 80 <= (r.end - prev.end).days <= 100:
-                rows.append({"end": r.end, "filed": max(r.filed, prev.filed), "val": float(r.val - prev.val), "kind": "derived"})
+            if prev is not None and 80 <= (r.end - prev.end).days <= 120:
+                rows.append({"end": r.end, "filed": max(r.filed, prev.filed), "val": float(r.val - prev.val), "kind": "derived",
+                             "concept": r.concept if cc else None})
             prev = r
     # 3) annuel − trois trimestres explicites (sociétés sans cumuls)
     q_by_end = {r.end: (float(r.val), r.filed) for r in expl.itertuples()}
     for r in df[(df["days"] >= 350) & (df["days"] <= 380)].itertuples():
         inside = [e for e in q_by_end if r.start < e < r.end]
         if len(inside) == 3 and r.end not in q_by_end:
-            rows.append({"end": r.end, "filed": r.filed, "val": float(r.val) - sum(q_by_end[e][0] for e in inside), "kind": "derived"})
+            rows.append({"end": r.end, "filed": r.filed, "val": float(r.val) - sum(q_by_end[e][0] for e in inside), "kind": "derived",
+                         "concept": r.concept if cc else None})
     if not rows:
         a = df[(df["days"] >= 350) & (df["days"] <= 380)]
         if len(a) >= 4:
-            out = a[["end", "filed", "val"]].copy()
+            out = a[["end", "filed", "val"] + (["concept"] if cc else [])].copy()
             out["val"] = out["val"].astype(float)
             out.attrs["annual_only"] = True
             return out.sort_values("end").reset_index(drop=True)
         return pd.DataFrame(columns=["end", "filed", "val"])
     out = pd.DataFrame(rows)
     out["rank"] = (out["kind"] != "explicit").astype(int)
-    out = out.sort_values(["end", "rank", "filed"]).drop_duplicates("end", keep="first")[["end", "filed", "val"]]
-    return out.reset_index(drop=True)
+    out = out.sort_values(["end", "rank", "filed"], kind="mergesort").drop_duplicates("end", keep="first")
+    return out[["end", "filed", "val"] + (["concept"] if cc else [])].reset_index(drop=True)
 
 
-def quarterly_flow(cf: dict, concepts) -> pd.DataFrame:
-    """Valeurs trimestrielles datées du dépôt. Les sociétés changent de concept XBRL au fil du temps
-    (Revenues → RevenueFromContract...) : les séries des différents concepts sont FUSIONNÉES, le concept le plus
-    récent l'emportant pour une même date. Déposants de 20-F : valeurs annuelles (attribut annual_only)."""
-    parts = []
-    for taxonomy, concept in _iter_concepts(concepts):
+def quarterly_flow(cf: dict, concepts, keep_concept: bool = False) -> pd.DataFrame:
+    """Valeurs trimestrielles datées du dépôt. Les concepts listés sont des façons équivalentes de publier la même ligne : leurs
+    faits sont MIS EN COMMUN avant le calcul des trimestres (v1.0.1) — un 10-K et les 10-Q peuvent employer deux concepts
+    différents (Nvidia), et le 4e trimestre se déduit alors de l'exercice d'un concept et des neuf mois de l'autre. Pour une
+    même période (début, fin) : la première publication, à égalité le concept listé en premier. Déposants de 20-F : valeurs
+    annuelles (attribut annual_only)."""
+    frames = []
+    for i, (taxonomy, concept) in enumerate(_iter_concepts(concepts)):
         df = _facts(cf, taxonomy, concept)
         if df.empty or df["start"].isna().all():
             continue
-        q = _quarterize(df)
-        if q.empty:
-            continue
-        q = q.copy()
-        q["concept"] = f"{taxonomy}:{concept}"
-        q["unit"] = df["unit"].iloc[0]
-        q["annual"] = bool(q.attrs.get("annual_only"))
-        parts.append(q)
-    if not parts:
+        frames.append(df.assign(_prio=i, concept=f"{taxonomy}:{concept}"))
+    if not frames:
         return pd.DataFrame(columns=["end", "filed", "val"])
-    quarterly = [q for q in parts if not q["annual"].iloc[0]]
-    use = quarterly if quarterly else parts
-    use = sorted(use, key=lambda q: q["end"].max(), reverse=True)   # le plus récent d'abord
-    merged = pd.concat(use).sort_values("end").drop_duplicates("end", keep="first")
-    out = merged[["end", "filed", "val"]].reset_index(drop=True)
-    out.attrs["concept"] = " + ".join(dict.fromkeys(q["concept"].iloc[0] for q in use))
-    out.attrs["unit"] = use[0]["unit"].iloc[0]
-    if not quarterly:
+    pool = pd.concat(frames, ignore_index=True)
+    if pool["unit"].nunique() > 1:
+        pool = pool[pool["unit"] == pool["unit"].mode().iloc[0]]
+    pool = pool.dropna(subset=["start"]).sort_values(["start", "end", "filed", "_prio"], kind="mergesort")
+    pool = pool.drop_duplicates(["start", "end"], keep="first")
+    q = _quarterize(pool)
+    if q.empty:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    used = list(dict.fromkeys(c for c in q["concept"] if c))
+    out = q[["end", "filed", "val"] + (["concept"] if keep_concept else [])].sort_values("end").reset_index(drop=True)
+    out.attrs["concept"] = " + ".join(used)
+    out.attrs["unit"] = pool["unit"].iloc[0]
+    if q.attrs.get("annual_only"):
         out.attrs["annual_only"] = True
     return out
 
@@ -245,8 +276,7 @@ def instant(cf: dict, concepts, taxonomy: str | None = None) -> pd.DataFrame:
             parts.append(out)
     if not parts:
         return pd.DataFrame(columns=["end", "filed", "val"])
-    parts = sorted(parts, key=lambda d: d["end"].max(), reverse=True)   # le plus récent d'abord
-    merged = pd.concat(parts).sort_values("end").drop_duplicates("end", keep="first")
+    merged = _merge_parts(parts)
     res = merged[["end", "filed", "val"]].reset_index(drop=True)
     res.attrs["concept"] = " + ".join(dict.fromkeys(d["concept"].iloc[0] for d in parts))
     res.attrs["unit"] = parts[0]["unit"].iloc[0]
@@ -259,6 +289,9 @@ def ttm(q: pd.DataFrame) -> pd.DataFrame:
         return q
     q = q.sort_values("end").reset_index(drop=True)
     q["ttm"] = q["val"].rolling(4, min_periods=4).sum()
+    # un trimestre manquant ferait additionner quatre trimestres étalés sur plus d'un an : TTM inconnu
+    span = (pd.to_datetime(q["end"]) - pd.to_datetime(q["end"]).shift(3)).dt.days
+    q.loc[~span.between(250, 300), "ttm"] = float("nan")
     # un TTM n'est connu que lorsque ses 4 trimestres sont déposés
     filed_ns = pd.to_datetime(q["filed"]).astype("datetime64[ns]").astype("int64").astype("float64")
     q["filed_ttm"] = pd.to_datetime(filed_ns.rolling(4, min_periods=4).max())
@@ -304,8 +337,8 @@ def shares_series(cf: dict) -> pd.DataFrame:
         parts.append(ws.assign(src=ws.attrs.get("concept", "moyenne pondérée")))
     if not parts:
         return pd.DataFrame(columns=["end", "filed", "val"])
-    use = sorted(parts, key=lambda d: d["end"].max(), reverse=True)
-    merged = pd.concat(use).sort_values("end").drop_duplicates("end", keep="first")
+    use = parts
+    merged = _merge_parts(use)
     out = merged[["end", "filed", "val"]].reset_index(drop=True)
     out["val"] = out["val"].astype(float)
     out.attrs["concept"] = " + ".join(dict.fromkeys(d["src"].iloc[0] for d in use))
@@ -328,6 +361,77 @@ def implied_shares(net_income_ttm: pd.DataFrame, cf: dict) -> pd.DataFrame:
     out = out.sort_values("end").reset_index(drop=True)
     out.attrs["concept"] = "résultat net / BPA dilué (actions implicites)"
     out.attrs["unit"] = "shares"
+    return out
+
+
+def capex_series(cf: dict) -> pd.DataFrame:
+    """Investissements sur 12 mois glissants. Base : immobilisations corporelles (ou, selon les périodes, le concept combiné
+    corporels + incorporels). Les incorporels (licences, fréquences, logiciels) s'ajoutent aux trimestres dont la base ne
+    les comprend pas déjà (pas de double compte)."""
+    ppe, comb = CAPEX_COMPONENTS[0], CAPEX_COMBINED
+    base_concepts = {t: ppe.get(t, []) + comb.get(t, []) for t in ("us-gaap", "ifrs-full")}
+    base = quarterly_flow(cf, base_concepts, keep_concept=True)
+    if base.empty:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    combined = {f"{t}:{c}" for t, lst in comb.items() for c in lst}
+    out = base.copy()
+    used = [base.attrs.get("concept", "")]
+    for g in CAPEX_COMPONENTS[1:]:
+        p = quarterly_flow(cf, g)
+        if p.empty or bool(p.attrs.get("annual_only")) != bool(base.attrs.get("annual_only")):
+            continue
+        add = p[["end", "filed", "val"]].rename(columns={"filed": "filed_b", "val": "val_b"})
+        out = out.merge(add, on="end", how="left")
+        take = ~out["concept"].isin(combined) & out["val_b"].notna()
+        out.loc[take, "val"] = out.loc[take, "val"] + out.loc[take, "val_b"]
+        out.loc[take, "filed"] = out.loc[take, ["filed", "filed_b"]].max(axis=1)
+        out = out.drop(columns=["filed_b", "val_b"])
+        used.append(p.attrs.get("concept", ""))
+    q = out[["end", "filed", "val"]].reset_index(drop=True)
+    q.attrs.update(base.attrs)
+    q.attrs["concept"] = " + ".join(c for c in used if c)
+    t = ttm(q)
+    t.attrs.update(q.attrs)
+    return t
+
+
+def _instant_by_end(cf: dict, concepts) -> dict:
+    """{fin de période: (valeur, date de dépôt, concept)} : pour chaque date, le premier concept (dans l'ordre listé) publié."""
+    out = {}
+    for tax, concept in _iter_concepts(concepts):
+        df = _facts(cf, tax, concept)
+        if df.empty:
+            continue
+        for r in _first_reported(df, ["end"]).itertuples():
+            out.setdefault(r.end, (float(r.val), r.filed, f"{tax}:{concept}"))
+    return out
+
+
+def debt_series(cf: dict) -> pd.DataFrame:
+    """Dette financière totale par date de bilan, datée du dépôt le plus tardif des composantes utilisées."""
+    tot, ltt, nc, cur, call, sht = (_instant_by_end(cf, c) for c in (DEBT_TOTAL, DEBT_LT_TOTAL, DEBT_LT_NONCURRENT,
+                                                                       DEBT_LT_CURRENT, DEBT_CURRENT_ALL, DEBT_SHORT))
+    rows, used = [], {}
+    for end in sorted(set(tot) | set(ltt) | set(nc) | set(cur) | set(call)):
+        if end in tot:
+            comps = [tot[end]]
+        elif end in ltt:
+            comps = [ltt[end]] + ([sht[end]] if end in sht else [])
+        elif end in nc and end in call:
+            comps = [nc[end], call[end]]                       # part courante totale = part à moins d'un an + court terme
+        elif end in nc or end in cur:
+            comps = [x[end] for x in (nc, cur, sht) if end in x]
+        else:
+            continue
+        rows.append({"end": end, "filed": max(c[1] for c in comps), "val": sum(c[0] for c in comps)})
+        for c in comps:
+            used[c[2]] = True
+    if not rows:
+        return pd.DataFrame(columns=["end", "filed", "val"])
+    out = pd.DataFrame(rows).sort_values("end").reset_index(drop=True)
+    out.attrs["concept"] = " + ".join(used)
+    units = [_facts(cf, *c.split(":", 1))["unit"] for c in list(used)[:1]]
+    out.attrs["unit"] = units[0].iloc[0] if units and len(units[0]) else None
     return out
 
 
@@ -381,6 +485,8 @@ def fundamentals(cik: int, extra_ciks: tuple[int, ...] = ()) -> dict[str, pd.Dat
             out[key] = t
         else:
             out[key] = instant(cf, concepts)
+    out["capex"] = capex_series(cf)
+    out["debt"] = debt_series(cf)
     out["shares"] = shares_series(cf)
     stale = out["shares"].empty or out["shares"]["end"].max() < pd.Timestamp.now() - pd.DateOffset(years=2)
     if stale:

@@ -122,9 +122,13 @@ def _base_rates() -> dict:
 
 
 def register(day: str | None = None) -> dict:
-    """Écrit prereg/<jour>.json (une seule fois par jour) et son empreinte."""
+    """Écrit prereg/<jour>.json (une seule fois par jour) et son empreinte. Seulement à la date du jour : une inscription
+    antidatée ou postdatée n'aurait aucune valeur probante (v1.0.1)."""
     PREREG_DIR.mkdir(exist_ok=True)
-    day = day or dt.date.today().isoformat()
+    today = dt.date.today().isoformat()
+    if day and day != today:
+        raise ValueError(f"Pré-inscription refusée pour le {day} : seule la date du jour ({today}) est permise")
+    day = today
     path = PREREG_DIR / f"{day}.json"
     if path.exists():
         log.info("Pré-inscription du %s déjà écrite : inchangée", day)
@@ -143,7 +147,7 @@ def register(day: str | None = None) -> dict:
                    for k, v in lat.items()},
         "hypothèses": [
             "Indices : sur 3 ans, le rendement après un jour vert dépasse celui après un jour orange (1990-2026 : +1 à +3 points par an).",
-            "Nasdaq-100 : le drapeau « cher et tendu » (R1) est suivi d'un rendement à 3 ans inférieur à celui des autres jours (1990-2026 : −8,5 points ; non retenu comme règle).",
+            "Nasdaq-100 : le drapeau « cher et tendu » (R1) est suivi d'un rendement à 3 ans inférieur à celui des autres jours (1990-2026 : −7,8 points par an contre les autres jours ; non retenu comme règle).",
             "Bitcoin : le rendement à 3 ans après un jour vert dépasse celui après un jour rouge d'au moins 5 points par an.",
             "Actions (indicatif) : à 1 et 3 ans, les sociétés vertes font mieux que les rouges, et les solides mieux que les non solides.",
         ],
@@ -173,12 +177,7 @@ def register_monthly() -> dict | None:
 # ----------------------------------------------------------------------------------------------
 # Tableau de suivi
 # ----------------------------------------------------------------------------------------------
-def scoreboard() -> list[dict]:
-    """Une ligne par pré-inscription et par actif : ce qui était affirmé, et le réalisé si l'échéance est passée."""
-    from .signals import load_signals
-
-    if not PREREG_DIR.exists():
-        return []
+def _hashes() -> dict[str, str]:
     hashes = {}
     hp = PREREG_DIR / "HASHES.txt"
     if hp.exists():
@@ -186,6 +185,62 @@ def scoreboard() -> list[dict]:
             if " sha256=" in line:
                 k, v = line.split(" sha256=")
                 hashes[k.strip()] = v.strip()
+    return hashes
+
+
+def verify_hashes() -> list[dict]:
+    """Recalcule l'empreinte de chaque pré-inscription et la compare à celle inscrite le jour même."""
+    if not PREREG_DIR.exists():
+        return []
+    hashes = _hashes()
+    out = []
+    for path in sorted(PREREG_DIR.glob("20*.json")):
+        day = path.stem
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        out.append({"date": day, "inscrite": hashes.get(day), "recalculée": actual, "ok": hashes.get(day) == actual})
+    return out
+
+
+def stock_scores() -> list[dict]:
+    """Hypothèse « actions » : rendement médian réalisé (devise de cotation) des sociétés vertes, rouges, solides et autres,
+    depuis le prix inscrit jusqu'à l'échéance. Rien n'est calculé avant l'échéance."""
+    from .config import ROOT
+
+    sd = ROOT / "data" / "signals" / "stocks"
+    out = []
+    for path in sorted(PREREG_DIR.glob("20*.json")) if PREREG_DIR.exists() else []:
+        c = json.loads(path.read_text(encoding="utf-8"))
+        a = c.get("actions") or {}
+        p0s = {t: p for t, p in (a.get("prix") or {}).items() if p}
+        groups = {"vertes": set(a.get("vertes", [])), "rouges": set(a.get("rouges", [])), "solides": set(a.get("solides", []))}
+        groups["non solides"] = set(p0s) - groups["solides"]
+        rec = {"date": c["date"], "effectifs": {g: len(v & set(p0s)) for g, v in groups.items()}}
+        for h, due in c["échéances"].items():
+            years, rets = HORIZONS[h], {}
+            for t, p0 in p0s.items():
+                f = sd / f"{t}.parquet"
+                if not f.exists():
+                    continue
+                px = pd.read_parquet(f, columns=["price"])["price"].dropna()
+                if px.empty or pd.Timestamp(due) > px.index[-1]:
+                    continue
+                p1 = px.asof(pd.Timestamp(due))
+                if p1 and p1 == p1:
+                    rets[t] = (p1 / p0) ** (1 / years) - 1
+            rec[h] = None if not rets else {g: _clean(pd.Series([rets[t] for t in v if t in rets]).median()) if any(t in rets for t in v) else None
+                                             for g, v in groups.items()}
+        out.append(rec)
+    return out
+
+
+def scoreboard() -> list[dict]:
+    """Une ligne par pré-inscription et par actif : ce qui était affirmé, et le réalisé si l'échéance est passée."""
+    from .signals import load_signals
+
+    if not PREREG_DIR.exists():
+        return []
+    hashes = _hashes()
+    verified = {v["date"]: v["ok"] for v in verify_hashes()}
     out = []
     prices = {}
     for path in sorted(PREREG_DIR.glob("20*.json")):
@@ -197,7 +252,8 @@ def scoreboard() -> list[dict]:
                 except Exception:
                     prices[asset] = None
             px = prices[asset]
-            rec = {"date": c["date"], "empreinte": hashes.get(c["date"], "")[:12], "actif": asset, "couleur": a["couleur"],
+            rec = {"date": c["date"], "empreinte": hashes.get(c["date"], "")[:12], "empreinte_ok": verified.get(c["date"], False),
+                   "actif": asset, "couleur": a["couleur"],
                    "cher": a.get("cher"), "attentes": a.get("attentes_historiques_couleur", {})}
             for h, due in c["échéances"].items():
                 if px is None or pd.Timestamp(due) > px.index[-1]:

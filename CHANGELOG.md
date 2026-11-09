@@ -1,5 +1,57 @@
 # Journal des modifications des règles
 
+## 2026-11-09 — v1.0.1 (relecture indépendante : corrections de données et de textes ; règles inchangées)
+Une relecture indépendante du code et des données (agent n'ayant pas participé à la conception, sans accès réseau, sur une copie)
+a reproduit les défauts suivants. Tous sont corrigés ; aucun seuil de `rules.yaml` n'a changé.
+
+**Actions (comptes SEC) — ce qui changeait des chiffres affichés :**
+- **Dette manquante comptée zéro.** 25 des 76 sociétés industrielles n'avaient pas de dette à long terme à la dernière date (concepts
+  XBRL non reconnus) : Oracle affichait 7,2 Md de dette au lieu de 125 Md, Verizon 24 Md au lieu de 166 Md ; Verizon, Philip Morris et
+  Amphenol passaient à tort le test de dette. Nouveau modèle de dette (total publié, ou dette à long terme totale + court terme, ou
+  parts non courante + courante) ; une dette introuvable reste **inconnue** (ni valeur d'entreprise, ni test de dette), sauf pour les
+  sociétés sans aucun concept de dette depuis trois ans et sans charges d'intérêts (Arista, Intuitive Surgical, Palantir : dette nulle).
+- **Investissements (capex)** : les incorporels (licences, fréquences, logiciels) s'ajoutent aux corporels au lieu d'en être une
+  alternative (AstraZeneca 2,8 → 5,9 Md, Novartis 1,6 → 3,9 Md, Verizon fréquences comprises) ; un capex ancien n'est plus reporté
+  indéfiniment (Verizon utilisait celui de 2020, ConocoPhillips celui de 2023, Alibaba celui de 2022) : flux libre inconnu à la place.
+- **Fusion des concepts** : tri stable, et pour chaque période la valeur **publiée en premier** (un tri instable figeait parfois le
+  résultat d'Oracle à mai 2025) ; les concepts équivalents sont mis en commun avant le calcul des trimestres (Nvidia).
+- **Trimestres** : exercices de 52/53 semaines pris en compte (4e trimestre de 16 semaines : flux d'exploitation de PepsiCo 12,4 → 14,6 Md,
+  PepsiCo repasse le test de cash ; Costco à jour de son exercice d'août) ; une somme sur 12 mois exige quatre trimestres consécutifs.
+- **Déposants annuels (20-F)** : le bilan expire au même rythme que les flux (avant : chaque année, quelques semaines avec dette et
+  trésorerie nulles chez Shell, TSMC, SAP, AstraZeneca, HSBC, Alibaba, dans l'historique qui sert au percentile).
+- **Berkshire Hathaway** jugée en P/E et P/B (son « résultat d'exploitation » comprend les plus-values de son portefeuille).
+- **Comptes anciens** : le feu affiché passe à l'orange immédiatement (il pouvait garder sa couleur quatre jours).
+- Nombre d'actions : la référence du nettoyage est une valeur confirmée par sa voisine (Alibaba : page de garde 2026 dix fois trop petite).
+- Effet : 41 sociétés solides au lieu de 45 ; Coca-Cola V 43 → 62 ; Verizon, Philip Morris et Amphenol échouent au test de dette ;
+  Chevron n'est plus vert même en brut (V 24 → 41) ; seule Accenture reste verte.
+
+**Indices et Bitcoin (effet négligeable, mais point-in-time) :** le CAPE d'un mois n'est utilisé qu'après la publication de l'indice des
+prix (vers le 15 du mois suivant) ; l'écart de crédit Baa est daté du jour ouvré suivant ; la barre fictive du dimanche du MSCI World
+est écartée ; le drapeau de tendance des secteurs et thèmes est décalé d'un jour comme celui des indices ; les jours Bitcoin sans
+MVRV ou sans moyenne 200 semaines (2010-2014) n'affichent plus un motif vert ou rouge. Protocole v1.0 recalculé : aucun écart de
+plus de 0,1 point, mêmes conclusions.
+
+**Textes corrigés :** le MVRV a dépassé 3,7 pendant 22 jours depuis 2014 (pas « jamais ») ; ses sommets (7,7 en 2011, 5,9 en 2013,
+4,7 en 2017, 4,0 en 2021) ; le rouge Bitcoin de mai-juin 2017 manquait à la liste des épisodes ; le vert des indices n'a été suivi
+que de +1 à +3 points par an (et sur le Nasdaq-100 de nouvelles baisses en 2000-2002), pas d'« un bon moment » ; plan « trois
+tranches » réellement en trois tranches égales (pratiquement identique à l'investissement immédiat) ; la ligne « rouge : levier 5 % »
+retirée du tableau de conduite (le rouge ne concerne que le Bitcoin) ; chiffre de l'hypothèse Nasdaq-100 « cher et tendu » : −7,8 points
+contre les autres jours (et non −8,5, qui était l'écart vert − rouge ; voir `prereg/ERRATA.md`).
+
+**Application :** part de levier = montant en ETF à levier / poche actions (un Bitcoin ×2 la faussait) ; alerte si un produit Bitcoin à
+levier est détenu en rouge ou en tendance cassée ; textes saisis échappés ; un portefeuille importé incomplet ne bloque plus le Journal ;
+une vente d'action est aussi « en période de stress » quand le marché l'est.
+
+**Garde-fous :** témoins sans succès vacant (listes vides = échec), dette et flux libre connus, aucune valeur d'entreprise avec une dette
+inconnue, empreintes des pré-inscriptions recalculées (bloquant), fraîcheur du VIX, de l'écart de crédit et des données de Shiller
+(bloquant), cours des actions. Pré-inscription : seulement à la date du jour ; l'hypothèse « actions » est désormais suivie.
+Tests unitaires exécutés avant chaque publication.
+
+**Limites restantes, documentées :** les bénéfices mensuels de Shiller sont interpolés (annuels avant 1926), si bien que le décalage
+de 3 mois peut laisser passer 1 à 2 mois d'information, davantage au début du hors-échantillon 1920-1989 ; les dettes de Deere et
+Shopify, et le capex d'Alibaba, NextEra, TotalEnergies et ConocoPhillips sont publiés sous des concepts propres à la société : inconnus ;
+celui de Nvidia ne l'est sous des concepts standard que depuis fin 2023 : son test de cash reste « n.d. » tant que trois ans ne sont pas réunis.
+
 ## 2026-11-09 — v1.0 (refonte selon un protocole pré-enregistré)
 Déclencheur : en v0.6, le rouge des indices ne passait pas son propre critère (écart vert − rouge à 3 ans < 5 points sur le
 S&P 500 et le MSCI World), et la consigne de « challenger la pertinence des signaux ».
@@ -21,11 +73,11 @@ depuis 1990** (+2,2 à +3,6 points) : le CAPE a été au-dessus de son 80e perce
 - Contexte séparé de la règle (dette sur marge, excess CAPE yield, allocation des ménages, momentum, GSY). Drapeau de tendance décalé d'un jour.
 - Conduite : montants exceptionnels en trois tranches mensuelles en orange (« cher » compris), réserve déployée en vert ;
   levier plafonné à 15 % en vert, 10 % en orange (« cher » compris, conformément au §8.4), 5 % si la tendance est cassée.
-- Plan type 1990-2026 (1 000 €/mois + 10 000 €/an) : trois tranches contre tout investir tout de suite, −0,3 % de capital final ;
-  attendre le vert, −9,1 % (S&P 500) et −26,5 % (Nasdaq-100).
+- Plan type 1990-2026 (1 000 €/mois + 10 000 €/an) : trois tranches mensuelles égales contre tout investir tout de suite, pratiquement
+  identique ; attendre le vert, −9,6 % (S&P 500) et −28,8 % (Nasdaq-100) (chiffres corrigés en v1.0.1, voir plus haut).
 
 **Bitcoin.** Règle B1 en niveaux (vert si MVRV < 1 ou prix < moyenne 200 semaines ; rouge si MVRV ≥ 3) au lieu des z-scores
-glissants. Le seuil d'origine 3,7 n'a jamais été atteint depuis 2014 et B1 n'a allumé le rouge ni en novembre 2021 ni en mars 2024
+glissants. Le MVRV n'a dépassé 3,7 que 22 jours depuis 2014 (corrigé en v1.0.1) et B1 n'a allumé le rouge ni en novembre 2021 ni en mars 2024
 ni en octobre 2025 : il peut manquer le prochain sommet (écrit sur la carte). État du jour : orange (v0.6 : vert).
 
 **Actions.**

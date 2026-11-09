@@ -70,7 +70,7 @@ l'API `companyfacts` : ces sociétés restent en « comptes anciens » (orange) 
 ## 6. Modes d'échec connus et acceptés
 
 - **Marché cher pendant des années** (1995-1999, 2024-2026) : orange « cher » ; les montants exceptionnels partent en trois tranches,
-  sans attendre (attendre le vert aurait coûté 9 % de capital final sur le S&P 500 et 26 % sur le Nasdaq-100 depuis 1990).
+  sans attendre (attendre le vert aurait coûté près de 10 % de capital final sur le S&P 500 et 29 % sur le Nasdaq-100 depuis 1990).
 - **Baisse ordonnée sans panique** (2022) : le feu reste orange, pas vert (VIX et écarts de crédit modérés).
 - **Vert dans une baisse structurelle** (2000-2002 sur le Nasdaq) : « décoté » peut le devenir davantage ; parade = tranches, couteau
   qui tombe, levier interdit sous la MM10.

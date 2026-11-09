@@ -57,7 +57,7 @@ def simple_index(key: str, row: pd.Series) -> str:
     why = _why_index(row)
     proxy = " (valorisation du S&P 500 utilisée comme repère)" if bool(row.get("valuation_is_proxy", False)) else ""
     if c == "green":
-        s = f"Feu vert sur {name} : {why}. C'est historiquement un bon moment pour investir une réserve, en plusieurs fois."
+        s = f"Feu vert sur {name} : {why}. Depuis 1990, les jours verts ont été suivis de rendements à trois ans un peu meilleurs que les jours orange (+1 à +3 points par an selon l'indice), parfois après de nouvelles baisses : c'est le moment d'engager une réserve, en plusieurs fois."
         if bool(row.get("falling_knife", False)):
             s += " Attention : la baisse n'est peut-être pas finie (prix sous la moyenne des 10 derniers mois), d'où l'étalement sur six mois."
     elif bool(row.get("cher", False)):
@@ -99,8 +99,8 @@ def simple_btc(row: pd.Series) -> str:
     dd = f"{100 * row['drawdown']:.0f} %"
     lv = _btc_levels(row)
     if c == "red":
-        s = (f"Feu rouge sur le Bitcoin : {lv}. Les détenteurs ont en moyenne triplé leur mise, ce qui n'a été vu qu'aux sommets de 2013, "
-             f"2017 et début 2021. Pas d'achat exceptionnel, pas de société « proxy » à levier.")
+        s = (f"Feu rouge sur le Bitcoin : {lv}. Les détenteurs ont en moyenne triplé leur mise, ce qui n'a été vu que lors des bulles de 2011, "
+             f"2013, 2017 et début 2021. Pas d'achat exceptionnel, pas de société « proxy » à levier.")
     elif c == "green":
         s = (f"Feu vert sur le Bitcoin : {lv}. Le prix est sous le prix moyen payé par les détenteurs ou sous sa moyenne des quatre dernières années : "
              f"historiquement, les meilleures zones d'achat (2015, fin 2018, 2022). Achat exceptionnel possible, par tiers.")
@@ -210,7 +210,7 @@ GLOSSARY = [
                              "(monter de 10 % puis baisser de 10 % laisse l'indice à −1 %, le x2 à −4 %). En 2000-2002, un x2 Nasdaq aurait perdu 98,5 %.",
      "Plafond de la poche actions : 15 % en vert, 10 % en orange, 5 % quand la tendance est cassée."),
     ("MVRV", "Le prix du Bitcoin rapporté au prix moyen auquel les détenteurs actuels ont acheté. Sous 1, le détenteur moyen est en perte (capitulation : 2015, fin 2018, 2022) ; "
-             "à 3, il a triplé sa mise (sommets de 2013, 2017, début 2021). Ses sommets baissent à chaque cycle : 4,25 (2017), 3,4 (avril 2021), 2,7 (novembre 2021 et mars 2024), 2,3 (octobre 2025).",
+             "à 3, il a triplé sa mise (bulles de 2011, 2013, 2017, début 2021). Ses sommets baissent d'un cycle à l'autre : 7,7 (2011), 5,9 (2013), 4,7 (décembre 2017), 4,0 (février 2021), puis sous 3 aux sommets de prix de novembre 2021 (2,7), mars 2024 (2,7) et octobre 2025 (2,3).",
      "Règle Bitcoin (v1.0) : vert sous 1, rouge à 3 ou plus. Le rouge peut manquer le prochain sommet."),
     ("Prix / moyenne 200 semaines", "Le prix du Bitcoin rapporté à son prix moyen des quatre dernières années. Historiquement, cette moyenne a servi de plancher aux "
                                     "marchés baissiers (2015, 2018, 2020, 2022).", "Règle Bitcoin : vert quand le prix passe dessous."),

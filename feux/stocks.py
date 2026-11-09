@@ -92,7 +92,11 @@ def clean_share_counts(sh: pd.DataFrame, tol: float = 3.0) -> pd.DataFrame:
         cls = np.round(np.log10(recent / recent.max()) / 3).astype(int)
         counts = {int(c): int((cls == c).sum()) for c in np.unique(cls)}
         good = [c for c in sorted(counts, reverse=True) if counts[c] >= 2] or [max(counts, key=counts.get)]
-        anchor = len(v) - len(recent) + int(np.where(cls == good[0])[0][-1])
+        cand = [len(v) - len(recent) + int(i) for i in np.where(cls == good[0])[0]]
+        # dans cette classe, la dernière valeur confirmée par une voisine (à moins de 50 % près) : une dernière valeur isolée
+        # et fausse ne sert pas de référence (Alibaba, page de garde de 2026 dix fois trop petite, v1.0.1)
+        confirmed = [i for i in cand if any(0 <= j < len(v) and 1 / 1.5 <= v[i] / v[j] <= 1.5 for j in (i - 1, i + 1))]
+        anchor = confirmed[-1] if confirmed else cand[-1]
         keep = np.zeros(len(v), bool)
         keep[anchor] = True
         for rng in (range(anchor - 1, -1, -1), range(anchor + 1, len(v))):
@@ -148,6 +152,8 @@ FINANCIAL_INDUSTRIES = {"Banks", "Capital Markets", "Consumer Finance", "Insuran
 
 
 def _mode(spec: dict, f: dict) -> str:
+    if spec.get("mode") in ("industrial", "financial", "reit"):      # surcharge explicite de stocks.yaml (Berkshire)
+        return spec["mode"]
     sector, industry = spec.get("sector") or "", spec.get("industry") or ""
     if sector == "Real Estate" or "Reit" in industry or "REIT" in industry:
         return "reit"
@@ -247,10 +253,13 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
         shares_source = f["shares"].attrs["concept"]
     unit = next((v.attrs.get("unit") for k, v in f.items() if hasattr(v, "attrs") and k != "public_float" and v.attrs.get("unit") and v.attrs.get("unit") != "shares"), px_ccy)
     df["price_in_accounts_ccy"] = px * fx_series(px_ccy, unit, cal) if unit and px_ccy and unit != px_ccy else px
-    for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt_lt", "debt_st", "equity", "shares",
+    # déposants de 20-F / 40-F (comptes annuels publiés 3 à 4 mois après la clôture) : tolérance plus longue avant d'oublier
+    # une valeur, pour les flux ET pour le bilan (sinon, chaque année, la dette et la trésorerie expiraient avant les flux :
+    # EV = capitalisation pendant des semaines, v1.0.1)
+    annual_filer = any(bool(getattr(f.get(k), "attrs", {}).get("annual_only")) for k in ("net_income", "revenue", "cfo"))
+    for k in ("revenue", "ebit", "net_income", "cfo", "capex", "da", "cash", "st_investments", "debt", "equity", "shares",
               "assets", "pretax", "interest", "sbc", "dividends", "buybacks", "issuance", "gross_profit", "cost_of_revenue"):
-        # déposants de 20-F (valeurs annuelles publiées 3 à 4 mois après la clôture) : tolérance plus longue avant d'oublier une valeur
-        annual = f.get(k) is not None and bool(getattr(f[k], "attrs", {}).get("annual_only"))
+        annual = annual_filer or (f.get(k) is not None and bool(getattr(f[k], "attrs", {}).get("annual_only")))
         age = MAX_AGE_DAYS_SHARES if k == "shares" else MAX_AGE_DAYS_ANNUAL if annual else MAX_AGE_DAYS
         df[k] = _asof(f.get(k), cal, max_age_days=age)
     accounts_as_of = None if f["net_income"].empty else str(pd.Timestamp(f["net_income"]["end"].max()).date())
@@ -261,13 +270,21 @@ def analyse_operating(key: str, spec: dict) -> pd.DataFrame:
         # on comble aussi les trous intermédiaires (concept abandonné puis repris) pour garder des moyennes calculables
         df["ebit"] = df["ebit"].fillna(df["pretax"] + df["interest"].fillna(0.0))
         ebit_source = "résultat avant impôt + intérêts (approximation)"
-    has_capex = f.get("capex") is not None and len(f["capex"]) > 0
-    df["fcf_gross"] = df["cfo"] - (df["capex"].ffill() if has_capex else np.nan)   # sans capex connu : FCF inconnu (pas CFO)
+    # sans capex connu et à jour : FCF inconnu (ni CFO seul, ni un capex ancien reporté indéfiniment : v1.0.1)
+    df["fcf_gross"] = df["cfo"] - df["capex"]
     # v1.0 : la rémunération en actions est un coût réel (Buffett, Mauboussin) : FCF = CFO − capex − SBC
     sbc_known = f.get("sbc") is not None and len(f["sbc"]) > 0
     df["fcf"] = df["fcf_gross"] - (df["sbc"].fillna(0.0) if sbc_known else 0.0)
-    df["debt"] = df["debt_lt"].fillna(0.0) + df["debt_st"].fillna(0.0)
-    df["liquidity"] = df["cash"].fillna(0.0) + df["st_investments"].fillna(0.0)
+    # dette et trésorerie inconnues restent inconnues (v1.0.1 : une dette manquante comptée zéro faisait passer Verizon pour peu
+    # endettée et sous-évaluait l'EV d'Oracle) ; les placements à court terme absents valent zéro (beaucoup n'en ont pas)
+    df["liquidity"] = df["cash"] + df["st_investments"].fillna(0.0)
+    # sociétés sans dette (Arista, Intuitive Surgical) : aucun concept de dette publié depuis trois ans ET charges d'intérêts
+    # négligeables (≤ 0,3 % du chiffre d'affaires) → dette nulle. Sinon une dette introuvable reste inconnue (Deere, Berkshire :
+    # dette publiée sous des concepts propres à la société, intérêts importants).
+    debt_recent = _asof(f.get("debt"), cal, max_age_days=3 * 365)
+    small_interest = df["interest"].abs().fillna(0.0) <= 0.003 * df["revenue"].abs()
+    df["debt_free"] = (df["debt"].isna() & debt_recent.isna() & small_interest & df["revenue"].notna()).astype(bool)
+    df.loc[df["debt_free"], "debt"] = 0.0
     df["mcap"] = df["price_in_accounts_ccy"] * df["shares"]
     # garde-fou : un nombre d'actions exprimé en ADS ou dans une autre unité rend la capitalisation absurde
     last_rev, last_ni = df["revenue"].iloc[-1], df["net_income"].iloc[-1]
@@ -407,7 +424,7 @@ def targets() -> list[dict]:
                     "source": "top100"}
             over = next((v for v in ex.values() if v.get("ticker") == row.symbol), None)
             if over:
-                spec.update({k: over[k] for k in ("type", "cik", "name", "extra_ciks") if k in over})
+                spec.update({k: over[k] for k in ("type", "cik", "name", "extra_ciks", "mode") if k in over})
             out.append(spec)
             seen.add(row.symbol)
     for k, v in ex.items():
@@ -496,6 +513,8 @@ def apply_cross_section(res: dict[str, pd.DataFrame]) -> None:
         color[df["V"].isna() | df["V_cross"].isna() | df["stale_accounts"]] = "orange"
         df["color"] = color
         df["color_confirmed"] = confirmed_color(df["color"], days)
+        # des comptes trop anciens neutralisent aussi la couleur AFFICHÉE, sans attendre la confirmation de 5 jours (v1.0.1)
+        df.loc[df["stale_accounts"].astype(bool), "color_confirmed"] = "orange"
     # écart au secteur (dernière date) : multiple / médiane des sociétés du même secteur et du même mode (≥ 3)
     last = {k: df.iloc[-1] for k, df in res.items() if df["kind"].iloc[-1] == "operating"}
     groups: dict[tuple, list[float]] = {}
