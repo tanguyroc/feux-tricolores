@@ -361,7 +361,7 @@ renderSectors();
 (function(){const C=D.checks||{};const el=$('#sanity');if(!el||!C.publication)return;
  const all=[...(C.publication||[]),...(C['témoins']||[])];const nko=all.filter(x=>!x.ok).length;
  const wit=(C['témoins']||[]).map(w=>`<tr><td>${w['témoin']}${w.critique?' <small class="note">(bloquant)</small>':''}</td><td>${w.attendu}</td><td>${w['observé']}</td><td class="${w.ok?'ok':'ko'}">${w.ok?'OK':'ÉCHEC'}</td></tr>`).join('');
- const pub=(C.publication||[]).map(c=>`<tr><td>${c['contrôle']}</td><td>${c['observé']??'—'}</td><td class="${c.ok?'ok':'ko'}">${c.ok?'OK':'ÉCHEC'}</td></tr>`).join('');
+ const pub=(C.publication||[]).map(c=>`<tr><td>${c['contrôle']}${c.bloquant===false?' <small class="note">(non bloquant)</small>':''}</td><td>${c['observé']??'—'}</td><td class="${c.ok?'ok':'ko'}">${c.ok?'OK':'ÉCHEC'}</td></tr>`).join('');
  el.innerHTML=`<h3>4. Témoins : ce que le code doit faire, vérifié avant chaque publication</h3><p class="note">Avant de publier, des contrôles vérifient que les données sont fraîches et complètes, et des « témoins » que les règles se comportent comme annoncé sur les données du jour (repris de Kairys). Un contrôle bloquant en échec arrête la mise à jour : le site garde la version précédente plutôt que d'afficher un feu faux, et une alerte est envoyée. Contrôles du ${fmtDate(C.date)} : ${nko?'<b class="warnc">'+nko+' en échec</b>':'tous réussis'}.</p>
  <table><tr><th>Témoin</th><th>Attendu</th><th>Observé</th><th></th></tr>${wit}</table>
  <details><summary>Contrôles de fraîcheur et de complétude</summary><table><tr><th>Contrôle</th><th>Observé</th><th></th></tr>${pub}</table></details>`;})();

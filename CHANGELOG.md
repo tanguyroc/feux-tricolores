@@ -53,6 +53,12 @@ minute de déclenchement non ronde (22 h 17 UTC) ; fraîcheur affichée (« il y
 d'attention par ligne et « test d'échange » dans Mon portefeuille ; alerte de concentration (une action > 12 % de la poche risquée) ;
 trois questions de vente et délai de 7 jours pour une vente en période de stress ; revue écrite à 90 jours de chaque décision.
 
+**Défaut d'affichage corrigé.** Du 8 novembre au soir (v0.6) au 9 novembre, une erreur JavaScript (déclaration placée dans un
+`switch`) arrêtait le script de la page : le tableau des actions, les secteurs, Mon portefeuille et le Journal restaient vides ; les
+cartes du jour, générées côté serveur, s'affichaient normalement. Un test de fumée de la page (navigateur simulé, `tests/page_smoke.js`)
+s'exécute désormais avant chaque publication et la bloque à la moindre erreur. Les contrôles de couverture des actions ne bloquent
+pas la publication (une panne de la SEC ne doit pas empêcher la mise à jour des feux des indices et du Bitcoin).
+
 **Archivé.** Règles et résultats v0.6 (`archive/`) ; la robustesse v0.6 est remplacée par le protocole et la pré-inscription.
 
 ## 2026-11-08 — v0.6 (couche d'honnêteté ; aucune règle modifiée)

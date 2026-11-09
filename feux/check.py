@@ -33,12 +33,15 @@ def publication_checks() -> list[dict]:
         date = d.get("date")
         age = (today - dt.date.fromisoformat(date)).days if date else None
         out.append({"contrôle": f"{k} : données de moins de {max_age} jours", "observé": f"{date} ({age} j)" if date else "absent",
-                    "ok": age is not None and age <= max_age})
-        out.append({"contrôle": f"{k} : couleur calculée", "observé": d.get("color_confirmed"), "ok": d.get("color_confirmed") in ("green", "orange", "red")})
+                    "ok": age is not None and age <= max_age, "bloquant": True})
+        out.append({"contrôle": f"{k} : couleur calculée", "observé": d.get("color_confirmed"),
+                    "ok": d.get("color_confirmed") in ("green", "orange", "red"), "bloquant": True})
+    # couverture des actions : non bloquante (une panne de la SEC ne doit pas empêcher la mise à jour des feux des indices et
+    # du Bitcoin ; les sociétés sans comptes passent en « prix seul », ce qui est affiché) — les témoins, eux, restent bloquants
     st = _load("stocks_latest.json")
     n_val = sum(1 for s in st.values() if s.get("V") is not None)
-    out.append({"contrôle": "actions : au moins 80 sociétés suivies", "observé": len(st), "ok": len(st) >= 80})
-    out.append({"contrôle": "actions : au moins 60 valorisées", "observé": n_val, "ok": n_val >= 60})
+    out.append({"contrôle": "actions : au moins 80 sociétés suivies", "observé": len(st), "ok": len(st) >= 80, "bloquant": False})
+    out.append({"contrôle": "actions : au moins 60 valorisées (comptes SEC)", "observé": n_val, "ok": n_val >= 60, "bloquant": False})
     return out
 
 
@@ -114,9 +117,9 @@ def run() -> bool:
     pc, ws = publication_checks(), witnesses()
     (DOCS_DIR / "checks.json").write_text(json.dumps({"publication": pc, "témoins": ws, "date": dt.date.today().isoformat()},
                                                      ensure_ascii=False, indent=1, default=str), encoding="utf-8")
-    bad = [c for c in pc if not c["ok"]] + [w for w in ws if not w["ok"] and w["critique"]]
+    bad = [c for c in pc if not c["ok"] and c["bloquant"]] + [w for w in ws if not w["ok"] and w["critique"]]
     for c in pc:
-        (log.info if c["ok"] else log.error)("%s %s : %s", "OK " if c["ok"] else "KO ", c["contrôle"], c["observé"])
+        (log.info if c["ok"] else log.error if c["bloquant"] else log.warning)("%s %s : %s", "OK " if c["ok"] else "KO ", c["contrôle"], c["observé"])
     for w in ws:
         (log.info if w["ok"] else (log.error if w["critique"] else log.warning))("%s %s : %s", "OK " if w["ok"] else "KO ", w["témoin"], w["observé"])
     if bad:

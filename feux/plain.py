@@ -217,7 +217,7 @@ GLOSSARY = [
     ("Z-score (Bitcoin)", "Nombre d'écarts à la normale des quatre dernières années. Défaut constaté : comparé à un cycle qui contient un krach, un prix encore élevé paraît « bas ».",
      "Contexte depuis la v1.0 (l'ancienne règle était verte un tiers du temps)."),
     ("Taux de financement", "Ce que paient les spéculateurs à levier pour rester acheteurs de Bitcoin sur les marchés à terme. Très élevé = euphorie à crédit (début 2021).",
-     "Contexte (n'a jamais déclenché seul un rouge)."),
+     "Contexte, hors règle."),
     ("Fear & Greed", "Indice de 0 (peur extrême) à 100 (avidité extrême) du monde crypto, en partie construit sur le prix lui-même.", "Contexte."),
     ("EV/EBIT (actions)", "Combien d'années de résultat d'exploitation il faut pour payer l'entreprise entière, dettes comprises. 15 = quinze ans. On le compare à l'historique de "
                           "la société elle-même sur dix ans ET aux autres grandes sociétés.", "Jauge de valorisation d'une action (deux lentilles)."),
