@@ -2,7 +2,7 @@
  "publication": [
   {
    "contrôle": "sp500 : données de moins de 5 jours",
-   "observé": "2026-11-06 (3 j)",
+   "observé": "2026-11-09 (1 j)",
    "ok": true,
    "bloquant": true
   },
@@ -14,7 +14,7 @@
   },
   {
    "contrôle": "ndx : données de moins de 5 jours",
-   "observé": "2026-11-06 (3 j)",
+   "observé": "2026-11-09 (1 j)",
    "ok": true,
    "bloquant": true
   },
@@ -26,7 +26,7 @@
   },
   {
    "contrôle": "world : données de moins de 5 jours",
-   "observé": "2026-11-06 (3 j)",
+   "observé": "2026-11-09 (1 j)",
    "ok": true,
    "bloquant": true
   },
@@ -38,7 +38,7 @@
   },
   {
    "contrôle": "btc : données de moins de 4 jours",
-   "observé": "2026-11-09 (0 j)",
+   "observé": "2026-11-10 (0 j)",
    "ok": true,
    "bloquant": true
   },
@@ -50,19 +50,19 @@
   },
   {
    "contrôle": "VIX (FRED) : moins de 7 jours",
-   "observé": "2026-11-05 (4 j)",
+   "observé": "2026-11-06 (4 j)",
    "ok": true,
    "bloquant": true
   },
   {
    "contrôle": "écart de crédit Baa (FRED) : moins de 7 jours",
-   "observé": "2026-11-05 (4 j)",
+   "observé": "2026-11-06 (4 j)",
    "ok": true,
    "bloquant": true
   },
   {
    "contrôle": "dernier mois de Shiller : moins de 75 jours",
-   "observé": "2026-10-31 (9 j)",
+   "observé": "2026-10-31 (10 j)",
    "ok": true,
    "bloquant": true
   },
@@ -89,21 +89,21 @@
   {
    "témoin": "Indices : rouge si et seulement si V ≥ 98 (rouge extrême, v1.1)",
    "attendu": "rouge ⇔ V ≥ 98",
-   "observé": "red (V 98.1), red (V 98.1), red (V 98.1)",
+   "observé": "red (V 98.5), red (V 98.5), red (V 98.5)",
    "ok": true,
    "critique": true
   },
   {
    "témoin": "S&P 500 : un CAPE au-dessus de 30 est « cher » (V ≥ 80) contre l'histoire depuis 1881",
    "attendu": "cher si CAPE > 30",
-   "observé": "CAPE 39.3, V 98, cher True",
+   "observé": "CAPE 40.2, V 98, cher True",
    "ok": true,
    "critique": true
   },
   {
    "témoin": "Rendement réel attendu à 10 ans dans une plage plausible",
    "attendu": "entre −10 % et +15 %/an",
-   "observé": "+0.7 %/an",
+   "observé": "+0.5 %/an",
    "ok": true,
    "critique": false
   },
@@ -230,82 +230,82 @@
  "fraîcheur": [
   {
    "source": "S&P 500, Nasdaq-100 (Yahoo Finance)",
-   "date": "2026-11-06",
-   "âge": 3,
+   "date": "2026-11-09",
+   "âge": 1,
    "rythme": "chaque séance, clôture"
   },
   {
    "source": "MSCI World (Yahoo Finance)",
-   "date": "2026-11-06",
-   "âge": 3,
+   "date": "2026-11-09",
+   "âge": 1,
    "rythme": "chaque séance, clôture"
   },
   {
    "source": "VIX (FRED, complété par Yahoo pour les derniers jours)",
-   "date": "2026-11-06",
-   "âge": 3,
+   "date": "2026-11-09",
+   "âge": 1,
    "rythme": "chaque séance"
   },
   {
    "source": "Écart de crédit Baa − 10 ans (FRED)",
-   "date": "2026-11-05",
+   "date": "2026-11-06",
    "âge": 4,
    "rythme": "chaque séance, publié le lendemain"
   },
   {
    "source": "CAPE de Shiller : dernier mois de prix",
    "date": "2026-10-31",
-   "âge": 9,
+   "âge": 10,
    "rythme": "mensuel"
   },
   {
    "source": "CAPE de Shiller : derniers bénéfices",
    "date": "2026-06-30",
-   "âge": 132,
+   "âge": 133,
    "rythme": "trimestriel, environ 3 mois de décalage"
   },
   {
    "source": "Dette sur marge (FINRA)",
    "date": "2026-09-30",
-   "âge": 40,
+   "âge": 41,
    "rythme": "mensuel, environ 3 semaines de décalage"
   },
   {
    "source": "Allocation des ménages en actions (Fed Z.1)",
    "date": "2026-06-30",
-   "âge": 132,
+   "âge": 133,
    "rythme": "trimestriel, environ 10 semaines de décalage"
   },
   {
    "source": "Bitcoin : prix (Coin Metrics, complété par Yahoo)",
-   "date": "2026-11-09",
+   "date": "2026-11-10",
    "âge": 0,
    "rythme": "quotidien"
   },
   {
    "source": "Bitcoin : MVRV (Coin Metrics)",
-   "date": "2026-11-08",
+   "date": "2026-11-09",
    "âge": 1,
    "rythme": "quotidien, 1 à 2 jours de décalage"
   },
   {
    "source": "Actions du Top 100 : cours (Yahoo Finance)",
    "date": "2026-11-06",
-   "âge": 3,
+   "âge": 4,
    "rythme": "chaque séance (la plus ancienne)"
   },
   {
    "source": "Actions : comptes SEC les plus anciens (RY.TO)",
    "date": "2025-10-31",
-   "âge": 374,
+   "âge": 375,
    "rythme": "trimestriel (10-Q) ou annuel (20-F, 40-F)"
   },
   {
    "source": "Zones, secteurs et thèmes : cours des 36 ETF (le plus ancien)",
-   "date": "2026-11-06",
-   "âge": 3,
+   "date": "2026-11-09",
+   "âge": 1,
    "rythme": "chaque séance"
   }
  ],
- "date": "2026-11-09"
+ "date": "2026-11-10"
 }

@@ -7,7 +7,7 @@
   "falling_knife": false,
   "cher": true,
   "cher_tendu": false,
-  "date": "2026-11-06"
+  "date": "2026-11-09"
  },
  "ndx": {
   "name": "Nasdaq-100",
@@ -16,7 +16,7 @@
   "falling_knife": false,
   "cher": true,
   "cher_tendu": false,
-  "date": "2026-11-06"
+  "date": "2026-11-09"
  },
  "world": {
   "name": "MSCI World (USD)",
@@ -25,7 +25,7 @@
   "falling_knife": false,
   "cher": true,
   "cher_tendu": false,
-  "date": "2026-11-06"
+  "date": "2026-11-09"
  },
  "btc": {
   "name": "Bitcoin",
@@ -34,6 +34,6 @@
   "falling_knife": false,
   "cher": false,
   "cher_tendu": false,
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  }
 }
