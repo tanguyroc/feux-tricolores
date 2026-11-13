@@ -503,5 +503,10 @@
 "symbol": "T",
 "exchange": "NYQ",
 "us_symbol": "T"
+},
+"CH0244767585": {
+"symbol": "UBSG.SW",
+"exchange": "EBS",
+"us_symbol": null
 }
 }

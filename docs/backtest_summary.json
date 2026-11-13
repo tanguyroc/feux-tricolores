@@ -1,32 +1,32 @@
 {
  "sp500": {
   "share": {
-   "green": 0.0774,
-   "orange": 0.7041,
-   "red": 0.2185
+   "green": 0.0773,
+   "orange": 0.7038,
+   "red": 0.2188
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.023041466752686812,
+    "valeur": 0.023019148638919962,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
    "écart_3ans_orange_moins_rouge": {
-    "valeur": 0.021401603391223434,
+    "valeur": 0.021423921504990284,
     "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"
    },
    "part_rouge": {
-    "valeur": 0.2185,
+    "valeur": 0.2188,
     "seuil": 0.25,
     "ok": true
    },
    "épisodes_rouges": 7,
    "baisse24m_p90": {
     "green": 0.294018146416582,
-    "orange": 0.32964163145486713,
-    "red": 0.354527230704443
+    "orange": 0.32958845655095415,
+    "red": 0.35419523497154154
    },
    "épisodes_verts": 4,
-   "changements_par_an": 3.609887047633202
+   "changements_par_an": 3.608278244076357
   },
   "key_dates": [
    {
@@ -113,11 +113,11 @@
    {
     "horizon": "1 an",
     "couleur": "red",
-    "n_jours": 1790,
-    "médiane_annualisée": 0.15760663937758657,
-    "moyenne_annualisée": 0.11184701610041992,
-    "p10_annualisé": -0.16274442129644529,
-    "part_négative": 0.2782122905027933
+    "n_jours": 1794,
+    "médiane_annualisée": 0.15741565615865394,
+    "moyenne_annualisée": 0.11185698866687788,
+    "p10_annualisé": -0.1625948779517914,
+    "part_négative": 0.27759197324414714
    },
    {
     "horizon": "3 ans",
@@ -131,11 +131,11 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 6171,
-    "médiane_annualisée": 0.09975321630307943,
-    "moyenne_annualisée": 0.10048143828981515,
-    "p10_annualisé": -0.035365358032198646,
-    "part_négative": 0.14098201263976665
+    "n_jours": 6175,
+    "médiane_annualisée": 0.09977553441684628,
+    "moyenne_annualisée": 0.10055375192949367,
+    "p10_annualisé": -0.0353635533856268,
+    "part_négative": 0.1408906882591093
    },
    {
     "horizon": "3 ans",
@@ -167,11 +167,11 @@
    {
     "horizon": "5 ans",
     "couleur": "red",
-    "n_jours": 1578,
-    "médiane_annualisée": -0.008862041512374352,
-    "moyenne_annualisée": 0.05006849629526222,
-    "p10_annualisé": -0.038992636617918075,
-    "part_négative": 0.5513307984790875
+    "n_jours": 1582,
+    "médiane_annualisée": -0.008755043827607945,
+    "moyenne_annualisée": 0.05021516662583947,
+    "p10_annualisé": -0.038955505204440466,
+    "part_négative": 0.549936788874842
    }
   ],
   "dd24": [
@@ -184,48 +184,48 @@
    },
    {
     "couleur": "orange",
-    "n_jours": 6422,
-    "drawdown_24m_médian": 0.05189050807390433,
-    "drawdown_24m_p90": 0.32964163145486713,
-    "part_drawdown_>20%": 0.16365618187480535
+    "n_jours": 6424,
+    "drawdown_24m_médian": 0.051970121481630216,
+    "drawdown_24m_p90": 0.32958845655095415,
+    "part_drawdown_>20%": 0.1636052303860523
    },
    {
     "couleur": "red",
-    "n_jours": 1637,
-    "drawdown_24m_médian": 0.09722624010255232,
-    "drawdown_24m_p90": 0.354527230704443,
-    "part_drawdown_>20%": 0.2773365913255956
+    "n_jours": 1639,
+    "drawdown_24m_médian": 0.0973273177806282,
+    "drawdown_24m_p90": 0.35419523497154154,
+    "part_drawdown_>20%": 0.2769981696156193
    }
   ]
  },
  "ndx": {
   "share": {
-   "green": 0.1149,
-   "orange": 0.6666,
-   "red": 0.2185
+   "green": 0.1148,
+   "orange": 0.6663,
+   "red": 0.2188
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.017134183784748958,
+    "valeur": 0.01704352860551772,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
    "écart_3ans_orange_moins_rouge": {
-    "valeur": 0.053701316033303526,
+    "valeur": 0.05379197121253476,
     "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"
    },
    "part_rouge": {
-    "valeur": 0.2185,
+    "valeur": 0.2188,
     "seuil": 0.25,
     "ok": true
    },
    "épisodes_rouges": 7,
    "baisse24m_p90": {
     "green": 0.5002639332284295,
-    "orange": 0.2291839721509999,
-    "red": 0.7101044400400068
+    "orange": 0.22910562417162722,
+    "red": 0.7097746799043299
    },
    "épisodes_verts": 8,
-   "changements_par_an": 4.586999331203091
+   "changements_par_an": 4.584955062021837
   },
   "key_dates": [
    {
@@ -312,11 +312,11 @@
    {
     "horizon": "1 an",
     "couleur": "red",
-    "n_jours": 1790,
-    "médiane_annualisée": 0.27240144882628003,
-    "moyenne_annualisée": 0.24448949584361745,
-    "p10_annualisé": -0.45770931931222303,
-    "part_négative": 0.2810055865921788
+    "n_jours": 1794,
+    "médiane_annualisée": 0.27147175953051006,
+    "moyenne_annualisée": 0.24418589486675057,
+    "p10_annualisé": -0.45701207906179153,
+    "part_négative": 0.28037904124860646
    },
    {
     "horizon": "3 ans",
@@ -330,11 +330,11 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 5823,
-    "médiane_annualisée": 0.15952290154297732,
-    "moyenne_annualisée": 0.1700419277364844,
-    "p10_annualisé": 0.023226541158998026,
-    "part_négative": 0.07075390692083118
+    "n_jours": 5827,
+    "médiane_annualisée": 0.15961355672220856,
+    "moyenne_annualisée": 0.1700846451369753,
+    "p10_annualisé": 0.023377811255018033,
+    "part_négative": 0.07070533722327098
    },
    {
     "horizon": "3 ans",
@@ -366,11 +366,11 @@
    {
     "horizon": "5 ans",
     "couleur": "red",
-    "n_jours": 1578,
-    "médiane_annualisée": -0.004295239939460793,
-    "moyenne_annualisée": 0.100505941385574,
-    "p10_annualisé": -0.15347349912229646,
-    "part_négative": 0.5114068441064639
+    "n_jours": 1582,
+    "médiane_annualisée": -0.003996755257562379,
+    "moyenne_annualisée": 0.10055098654725159,
+    "p10_annualisé": -0.15338560607520546,
+    "part_négative": 0.5101137800252844
    }
   ],
   "dd24": [
@@ -383,37 +383,37 @@
    },
    {
     "couleur": "orange",
-    "n_jours": 6074,
-    "drawdown_24m_médian": 0.06849187080431568,
-    "drawdown_24m_p90": 0.2291839721509999,
-    "part_drawdown_>20%": 0.12364175172867962
+    "n_jours": 6076,
+    "drawdown_24m_médian": 0.0685398331106572,
+    "drawdown_24m_p90": 0.22910562417162722,
+    "part_drawdown_>20%": 0.12360105332455563
    },
    {
     "couleur": "red",
-    "n_jours": 1637,
-    "drawdown_24m_médian": 0.14299595119189168,
-    "drawdown_24m_p90": 0.7101044400400068,
-    "part_drawdown_>20%": 0.42455711667684787
+    "n_jours": 1639,
+    "drawdown_24m_médian": 0.14416314759730686,
+    "drawdown_24m_p90": 0.7097746799043299,
+    "part_drawdown_>20%": 0.424039048200122
    }
   ]
  },
  "world": {
   "share": {
    "green": 0.0948,
-   "orange": 0.6869,
-   "red": 0.2182
+   "orange": 0.6866,
+   "red": 0.2186
   },
   "checks": {
    "écart_3ans_vert_moins_orange": {
-    "valeur": 0.027715699376849035,
+    "valeur": 0.02767507662991342,
     "note": "information : le vert a-t-il été suivi de meilleurs rendements que l'orange ?"
    },
    "écart_3ans_orange_moins_rouge": {
-    "valeur": 0.029013526186432825,
+    "valeur": 0.02905414893336844,
     "note": "information (v1.1, règle de jugement, échantillon vu) : le rouge extrême a-t-il été suivi de rendements plus faibles que l'orange ?"
    },
    "part_rouge": {
-    "valeur": 0.2182,
+    "valeur": 0.2186,
     "seuil": 0.25,
     "ok": true
    },
@@ -421,10 +421,10 @@
    "baisse24m_p90": {
     "green": 0.3003374470943021,
     "orange": 0.30464929865357715,
-    "red": 0.3903148099775737
+    "red": 0.3899323963333962
    },
    "épisodes_verts": 5,
-   "changements_par_an": 3.7184550791409676
+   "changements_par_an": 3.716797890514744
   },
   "key_dates": [
    {
@@ -511,11 +511,11 @@
    {
     "horizon": "1 an",
     "couleur": "red",
-    "n_jours": 1808,
-    "médiane_annualisée": 0.11894831674910322,
-    "moyenne_annualisée": 0.06152164235705393,
-    "p10_annualisé": -0.19840009649834411,
-    "part_négative": 0.2959070796460177
+    "n_jours": 1812,
+    "médiane_annualisée": 0.11888778581424342,
+    "moyenne_annualisée": 0.061639225398696595,
+    "p10_annualisé": -0.19822641442764222,
+    "part_négative": 0.29525386313465785
    },
    {
     "horizon": "3 ans",
@@ -529,11 +529,11 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 6078,
-    "médiane_annualisée": 0.08049163581335805,
-    "moyenne_annualisée": 0.07574110659878541,
-    "p10_annualisé": -0.042941871081949246,
-    "part_négative": 0.14758144126357353
+    "n_jours": 6082,
+    "médiane_annualisée": 0.08053225856029367,
+    "moyenne_annualisée": 0.075823953414077,
+    "p10_annualisé": -0.042908624764671166,
+    "part_négative": 0.14748438013811246
    },
    {
     "horizon": "3 ans",
@@ -565,11 +565,11 @@
    {
     "horizon": "5 ans",
     "couleur": "red",
-    "n_jours": 1595,
-    "médiane_annualisée": -0.01483509564686969,
-    "moyenne_annualisée": 0.023823199494083847,
-    "p10_annualisé": -0.04198991295672505,
-    "part_négative": 0.5598746081504702
+    "n_jours": 1599,
+    "médiane_annualisée": -0.014667834116928957,
+    "moyenne_annualisée": 0.023998935751506023,
+    "p10_annualisé": -0.04198682547516552,
+    "part_négative": 0.5584740462789243
    }
   ],
   "dd24": [
@@ -589,18 +589,18 @@
    },
    {
     "couleur": "red",
-    "n_jours": 1654,
-    "drawdown_24m_médian": 0.10902875515097743,
-    "drawdown_24m_p90": 0.3903148099775737,
-    "part_drawdown_>20%": 0.3234582829504232
+    "n_jours": 1658,
+    "drawdown_24m_médian": 0.1119909187782252,
+    "drawdown_24m_p90": 0.3899323963333962,
+    "part_drawdown_>20%": 0.3226779252110977
    }
   ]
  },
  "btc": {
   "share": {
-   "green": 0.173,
-   "orange": 0.7831,
-   "red": 0.0439
+   "green": 0.1729,
+   "orange": 0.7833,
+   "red": 0.0438
   },
   "checks": {
    "a_écart_3ans_vert_moins_rouge": {
@@ -609,7 +609,7 @@
     "ok": true
    },
    "b_part_rouge": {
-    "valeur": 0.0439,
+    "valeur": 0.0438,
     "seuil": 0.3,
     "ok": true
    },
@@ -618,7 +618,7 @@
     "seuil": 2,
     "ok": true
    },
-   "changements_par_an": 7.370695327922791
+   "changements_par_an": 7.36423405654175
   },
   "key_dates": [
    {
@@ -696,11 +696,11 @@
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 3231,
-    "médiane_annualisée": 0.5254302836685434,
-    "moyenne_annualisée": 1.480725493556739,
-    "p10_annualisé": -0.5179018643719118,
-    "part_négative": 0.3593314763231198
+    "n_jours": 3235,
+    "médiane_annualisée": 0.5245445415220178,
+    "moyenne_annualisée": 1.4785297234918326,
+    "p10_annualisé": -0.5177974685239617,
+    "part_négative": 0.3601236476043277
    },
    {
     "horizon": "1 an",
@@ -723,10 +723,10 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 2501,
-    "médiane_annualisée": 0.5385424796013432,
-    "moyenne_annualisée": 0.820529402341303,
-    "p10_annualisé": 0.22832763210268592,
+    "n_jours": 2505,
+    "médiane_annualisée": 0.5373364624660544,
+    "moyenne_annualisée": 0.8198782515177172,
+    "p10_annualisé": 0.22837227391828674,
     "part_négative": 0.0
    },
    {
@@ -750,10 +750,10 @@
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 2091,
-    "médiane_annualisée": 0.6081997707893858,
-    "moyenne_annualisée": 0.9119474033040278,
-    "p10_annualisé": 0.14684123552260808,
+    "n_jours": 2095,
+    "médiane_annualisée": 0.6078445495119031,
+    "moyenne_annualisée": 0.911248807385092,
+    "p10_annualisé": 0.1456702462966193,
     "part_négative": 0.0
    },
    {
@@ -776,10 +776,10 @@
    },
    {
     "couleur": "orange",
-    "n_jours": 2866,
-    "drawdown_24m_médian": 0.22689085050104446,
-    "drawdown_24m_p90": 0.6651325341137431,
-    "part_drawdown_>20%": 0.5303558967201675
+    "n_jours": 2870,
+    "drawdown_24m_médian": 0.2277776004328902,
+    "drawdown_24m_p90": 0.6650737171061428,
+    "part_drawdown_>20%": 0.5310104529616725
    },
    {
     "couleur": "red",
@@ -793,13 +793,13 @@
  "plan_sp500": {
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
-  "A_valeur_finale": 5666691.247824737,
-  "B_valeur_finale": 5124015.452129243,
-  "B_moins_A": -542675.7956954939,
-  "B_moins_A_pct": -0.09576590146918806,
-  "C_valeur_finale": 5658577.261335009,
-  "C_moins_A": -8113.986489728093,
-  "C_moins_A_pct": -0.0014318737575199636,
+  "A_valeur_finale": 5832233.678547965,
+  "B_valeur_finale": 5268054.37210436,
+  "B_moins_A": -564179.3064436056,
+  "B_moins_A_pct": -0.09673468820681197,
+  "C_valeur_finale": 5823882.61435887,
+  "C_moins_A": -8351.06418909505,
+  "C_moins_A_pct": -0.0014318809309393776,
   "C_drawdown_max": 0.496422202284571,
   "réserve_B_finale": 193282.06182064328,
   "réserve_B_max": 193282.06182064328,
@@ -809,13 +809,13 @@
  "plan_ndx": {
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
-  "A_valeur_finale": 19515387.924822614,
-  "B_valeur_finale": 14991321.65763251,
-  "B_moins_A": -4524066.267190104,
-  "B_moins_A_pct": -0.23182046314517346,
-  "C_valeur_finale": 19463409.391726483,
-  "C_moins_A": -51978.53309613094,
-  "C_moins_A_pct": -0.0026634639955077644,
+  "A_valeur_finale": 20454737.632329542,
+  "B_valeur_finale": 15704317.010957243,
+  "B_moins_A": -4750420.621372299,
+  "B_moins_A_pct": -0.23224060395006318,
+  "C_valeur_finale": 20400257.046899077,
+  "C_moins_A": -54480.58543046564,
+  "C_moins_A_pct": -0.0026634702634541485,
   "C_drawdown_max": 0.799356996994519,
   "réserve_B_finale": 178300.31756928237,
   "réserve_B_max": 178300.31756928237,
@@ -825,13 +825,13 @@
  "plan_world": {
   "période": "1990-01-31 → 2026-11-30",
   "investi_total": 813000.0,
-  "A_valeur_finale": 3436390.1162277786,
-  "B_valeur_finale": 3383008.5332994596,
-  "B_moins_A": -53381.582928318996,
-  "B_moins_A_pct": -0.015534203371216027,
-  "C_valeur_finale": 3440078.5094511756,
-  "C_moins_A": 3688.393223396968,
-  "C_moins_A_pct": 0.0010733336724428888,
+  "A_valeur_finale": 3530974.056691594,
+  "B_valeur_finale": 3471449.3700575996,
+  "B_moins_A": -59524.68663399434,
+  "B_moins_A_pct": -0.01685786575553805,
+  "C_valeur_finale": 3534763.999594429,
+  "C_moins_A": 3789.942902835086,
+  "C_moins_A_pct": 0.0010733420415969253,
   "C_drawdown_max": 0.5235767578002921,
   "réserve_B_finale": 169742.5293675899,
   "réserve_B_max": 169742.5293675899,
@@ -840,8 +840,8 @@
  },
  "levier_ndx": {
   "Nasdaq-100 sans levier": {
-   "multiple": 240.68120546883648,
-   "cagr": 0.14273524813440552,
+   "multiple": 252.26669925068265,
+   "cagr": 0.14398170966256973,
    "drawdown_max": 0.8289721157242125,
    "pire_année": -0.418853359997274,
    "drawdown_2000_2002": 0.8132656785632214,
@@ -849,8 +849,8 @@
    "drawdown_2021_2022": 0.32856638423499207
   },
   "x2 permanent": {
-   "multiple": 639.8965928621758,
-   "cagr": 0.17025014207998557,
+   "multiple": 701.2812074042066,
+   "cagr": 0.1727866855825737,
    "drawdown_max": 0.9889851097457032,
    "pire_année": -0.7298839180840349,
    "drawdown_2000_2002": 0.9852359156745808,
@@ -858,8 +858,8 @@
    "drawdown_2021_2022": 0.6088726575028809
   },
   "x2 si tendance OK, sinon indice sans levier (illustration du filtre)": {
-   "multiple": 1237.7448094799568,
-   "cagr": 0.1891876327548636,
+   "multiple": 1356.4803815690098,
+   "cagr": 0.19175757987160247,
    "drawdown_max": 0.9030375180461808,
    "pire_année": -0.5762206417988684,
    "drawdown_2000_2002": 0.8867582097623121,
@@ -867,8 +867,8 @@
    "drawdown_2021_2022": 0.3802959215277094
   },
   "x2 si tendance OK, sinon monétaire (Faber, référence)": {
-   "multiple": 628.6430455883583,
-   "cagr": 0.16974502466275987,
+   "multiple": 688.9481190461897,
+   "cagr": 0.17228067552403226,
    "drawdown_max": 0.7146494361092803,
    "pire_année": -0.4542499247942201,
    "drawdown_2000_2002": 0.5632095544982967,
@@ -876,60 +876,60 @@
    "drawdown_2021_2022": 0.23628508820241367
   },
   "indice si tendance OK, sinon monétaire (Faber classique)": {
-   "multiple": 122.24051748225546,
-   "cagr": 0.12405211271443739,
+   "multiple": 128.12471916897047,
+   "cagr": 0.12528560677152,
    "drawdown_max": 0.3993498689575382,
    "pire_année": -0.22282139163715997,
    "drawdown_2000_2002": 0.29834925276933855,
    "drawdown_2007_2009": 0.20910104600912982,
    "drawdown_2021_2022": 0.11959361225791731
   },
-  "_part_du_temps_tendance_ok": 0.7456546929316339
+  "_part_du_temps_tendance_ok": 0.7457528957528957
  },
  "tendance_sp500": {
   "achat-conservation": {
-   "cagr": 0.0950136567370059,
+   "cagr": 0.09572827229236691,
    "drawdown_max": 0.5677538774277292,
-   "volatilité": 0.18095220135845344
+   "volatilité": 0.18096574987343847
   },
   "filtre 10 mois (monétaire hors tendance)": {
-   "cagr": 0.0822881397887052,
+   "cagr": 0.08299941866892824,
    "drawdown_max": 0.332363323120331,
-   "volatilité": 0.12852667486612865
+   "volatilité": 0.12857008438459974
   },
-  "_part_du_temps_investi": 0.7715288315629742,
-  "_allers_retours_par_an": 1.4578453183275535
+  "_part_du_temps_investi": 0.7716154721274175,
+  "_allers_retours_par_an": 1.4572732029563737
  },
  "tendance_ndx": {
   "achat-conservation": {
-   "cagr": 0.14359788979196986,
+   "cagr": 0.14482274935672357,
    "drawdown_max": 0.8289721157242126,
-   "volatilité": 0.25637188274785894
+   "volatilité": 0.2564006297694771
   },
   "filtre 10 mois (monétaire hors tendance)": {
-   "cagr": 0.12523072892616294,
+   "cagr": 0.1264430736733393,
    "drawdown_max": 0.3993498689575382,
-   "volatilité": 0.19027465891715223
+   "volatilité": 0.1903435024482602
   },
-  "_part_du_temps_investi": 0.7501896813353566,
-  "_allers_retours_par_an": 1.6968363541189557
+  "_part_du_temps_investi": 0.7502844141069397,
+  "_allers_retours_par_an": 1.6961704493426646
  },
  "tendance_world": {
   "achat-conservation": {
-   "cagr": 0.08052843946100485,
+   "cagr": 0.08119690023747883,
    "drawdown_max": 0.5906794533676618,
-   "volatilité": 0.15449472412986315
+   "volatilité": 0.15451224995976898
   },
   "filtre 10 mois (monétaire hors tendance)": {
-   "cagr": 0.08170410027568176,
+   "cagr": 0.0823728264543051,
    "drawdown_max": 0.26082197126276874,
-   "volatilité": 0.10122584267715842
+   "volatilité": 0.10127793534246593
   },
-  "_part_du_temps_investi": 0.736738519212746,
-  "_allers_retours_par_an": 1.3622489040109926
+  "_part_du_temps_investi": 0.7368371744425707,
+  "_allers_retours_par_an": 1.3617143044018574
  },
  "btc_MVRV_3": {
-  "part_rouge": 0.0434412265758092,
+  "part_rouge": 0.04340425531914894,
   "sommets": {
    "2017-12-17": "red (MVRV 4.25)",
    "2021-04-14": "red (MVRV 3.38)",
@@ -950,11 +950,11 @@
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 3363,
-    "médiane_annualisée": 0.4527470883486089,
-    "moyenne_annualisée": 1.400161476602742,
-    "p10_annualisé": -0.5531214770667723,
-    "part_négative": 0.38447814451382695
+    "n_jours": 3367,
+    "médiane_annualisée": 0.4517629542679171,
+    "moyenne_annualisée": 1.3981474997413943,
+    "p10_annualisé": -0.5530387001807098,
+    "part_négative": 0.3852093852093852
    },
    {
     "horizon": "1 an",
@@ -977,11 +977,11 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 2633,
-    "médiane_annualisée": 0.5018363531101253,
-    "moyenne_annualisée": 0.8003019988086733,
-    "p10_annualisé": 0.210392801076428,
-    "part_négative": 0.001139384732244588
+    "n_jours": 2637,
+    "médiane_annualisée": 0.5013318190484288,
+    "moyenne_annualisée": 0.7997005185805195,
+    "p10_annualisé": 0.21073378522314212,
+    "part_négative": 0.0011376564277588168
    },
    {
     "horizon": "3 ans",
@@ -1004,10 +1004,10 @@
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 2223,
-    "médiane_annualisée": 0.6030260311993787,
-    "moyenne_annualisée": 0.8960339337912293,
-    "p10_annualisé": 0.15262509775300948,
+    "n_jours": 2227,
+    "médiane_annualisée": 0.6019732174613688,
+    "moyenne_annualisée": 0.8953835198598059,
+    "p10_annualisé": 0.1513994427951979,
     "part_négative": 0.0
    },
    {
@@ -1022,7 +1022,7 @@
   ]
  },
  "btc_MVRV_3.7": {
-  "part_rouge": 0.004684838160136286,
+  "part_rouge": 0.004680851063829788,
   "sommets": {
    "2017-12-17": "red (MVRV 4.25)",
    "2021-04-14": "orange (MVRV 3.38)",
@@ -1043,11 +1043,11 @@
    {
     "horizon": "1 an",
     "couleur": "orange",
-    "n_jours": 3545,
-    "médiane_annualisée": 0.38510666797407733,
-    "moyenne_annualisée": 1.339309602317483,
-    "p10_annualisé": -0.5544039610352042,
-    "part_négative": 0.39492242595204513
+    "n_jours": 3549,
+    "médiane_annualisée": 0.3826319178826507,
+    "moyenne_annualisée": 1.3374674911326374,
+    "p10_annualisé": -0.5543246991438948,
+    "part_négative": 0.3956043956043956
    },
    {
     "horizon": "1 an",
@@ -1070,11 +1070,11 @@
    {
     "horizon": "3 ans",
     "couleur": "orange",
-    "n_jours": 2815,
-    "médiane_annualisée": 0.4610401078825519,
-    "moyenne_annualisée": 0.7737850113993145,
-    "p10_annualisé": 0.1573190286905266,
-    "part_négative": 0.0017761989342806395
+    "n_jours": 2819,
+    "médiane_annualisée": 0.4595540448509221,
+    "moyenne_annualisée": 0.7732436354569376,
+    "p10_annualisé": 0.15808975598541752,
+    "part_négative": 0.0017736786094359701
    },
    {
     "horizon": "3 ans",
@@ -1097,11 +1097,11 @@
    {
     "horizon": "5 ans",
     "couleur": "orange",
-    "n_jours": 2405,
-    "médiane_annualisée": 0.5801840632771229,
-    "moyenne_annualisée": 0.870941517814432,
-    "p10_annualisé": 0.11837401596853603,
-    "part_négative": 0.0012474012474012475
+    "n_jours": 2409,
+    "médiane_annualisée": 0.5791353701442592,
+    "moyenne_annualisée": 0.8703501899600152,
+    "p10_annualisé": 0.11725477111403237,
+    "part_négative": 0.0012453300124533001
    },
    {
     "horizon": "5 ans",
