@@ -508,5 +508,10 @@
 "symbol": "UBSG.SW",
 "exchange": "EBS",
 "us_symbol": null
+},
+"FR0000121972": {
+"symbol": "SU.PA",
+"exchange": "PAR",
+"us_symbol": null
 }
 }
