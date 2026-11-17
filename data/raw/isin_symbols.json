@@ -513,5 +513,10 @@
 "symbol": "SU.PA",
 "exchange": "PAR",
 "us_symbol": null
+},
+"TW0002454006": {
+"symbol": "2454.TW",
+"exchange": "TAI",
+"us_symbol": null
 }
 }
