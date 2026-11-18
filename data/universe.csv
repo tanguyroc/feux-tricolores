@@ -1,101 +1,101 @@
 isin,name,currency,weight,country,sector,industry,local_price,market_value_usd,company,symbol,us_symbol,exchange,cik,pea_eligible_approx,in_sp500,w_sp500,in_ndx,in_world,rank,as_of
-US0378331005,Apple Inc.,USD,5.206335,United States,Information Technology,Technology Hardware Storage & Peripherals,356.27,1235726700,apple,AAPL,AAPL,NMS,320193,False,True,7.966594,True,True,1,13-Nov-2026
-US67066G1040,NVIDIA Corporation,USD,3.725553,United States,Information Technology,Semiconductors & Semiconductor Equipment,162.85,884262140,nvidia,NVDA,NVDA,NMS,1045810,False,True,6.038302,True,True,2,13-Nov-2026
-US5949181045,Microsoft Corporation,USD,3.679414,United States,Information Technology,Software,523.88,873311100,microsoft,MSFT,MSFT,NMS,789019,False,True,5.96034,True,True,3,13-Nov-2026
-US0231351067,Amazon.com Inc.,USD,2.569351,United States,Consumer Discretionary,Broadline Retail,266.66,609837000,amazon com,AMZN,AMZN,NMS,1018724,False,True,4.010288,True,True,4,13-Nov-2026
-TW0002330008,Taiwan Semiconductor Manufacturing Co. Ltd.,TWD,1.758886,Taiwan,Information Technology,Semiconductors & Semiconductor Equipment,2350,417472740,taiwan semiconductor manufacturing,2330.TW,,TAI,1046179,False,False,,False,False,5,13-Nov-2026
-US02079K3059,Alphabet Inc. Class A,USD,1.735407,United States,Communication Services,Interactive Media & Services,295.77,411899940,alphabet,GOOGL,GOOGL,NMS,1652044,False,True,2.659454,True,True,6,13-Nov-2026
-US11135F1012,Broadcom Inc.,USD,1.560538,United States,Information Technology,Semiconductors & Semiconductor Equipment,347.01,370394660,broadcom,AVGO,AVGO,NMS,1730168,False,True,2.529736,True,True,7,13-Nov-2026
-US30303M1027,Meta Platforms Inc Class A,USD,1.403133,United States,Communication Services,Interactive Media & Services,641.69,333034530,meta platforms,META,META,NMS,1326801,False,True,2.168202,True,True,8,13-Nov-2026
-US5324571083,Eli Lilly and Company,USD,1.14908,United States,Health Care,Pharmaceuticals,1443.5,272734880,eli lilly and,LLY,LLY,NYQ,59478,False,True,1.769781,False,True,9,13-Nov-2026
-US88160R1014,Tesla Inc.,USD,1.111691,United States,Consumer Discretionary,Automobiles,390.22,263860530,tesla,TSLA,TSLA,NMS,1318605,False,True,1.685087,True,True,10,13-Nov-2026
-US46625H1005,JPMorgan Chase & Co.,USD,0.914149,United States,Financials,Banks,346.19,216973890,jpmorgan chase,JPM,JPM,NYQ,19617,False,True,1.409999,False,True,11,13-Nov-2026
-US5951121038,Micron Technology Inc.,USD,0.875076,United States,Information Technology,Semiconductors & Semiconductor Equipment,778.31,207699800,micron technology,MU,MU,NMS,723125,False,True,1.346856,True,True,12,13-Nov-2026
-US0079031078,Advanced Micro Devices Inc.,USD,0.866568,United States,Information Technology,Semiconductors & Semiconductor Equipment,534.06,205680380,advanced micro devices,AMD,AMD,NMS,2488,False,True,1.335816,True,True,13,13-Nov-2026
-US0846707026,Berkshire Hathaway Inc. Class B,USD,0.829105,United States,Financials,Financial Services,592.94,196788480,berkshire hathaway,BRK-B,BRK-B,NYQ,1067983,False,True,1.692055,False,True,14,13-Nov-2026
-KR7005930003,Samsung Electronics Co. Ltd.,KRW,0.72335,South Korea,Information Technology,Technology Hardware Storage & Peripherals,206000,171687570,samsung electronics,005930.KS,,KSC,,False,False,,False,False,15,13-Nov-2026
-US30233Q1085,Exxonmobil Holdings Corporation,USD,0.706361,United States,Energy,Oil Gas & Consumable Fuels,170.59,167655170,exxonmobil,XOM,XOM,NYQ,2115436,False,True,1.067996,False,True,16,13-Nov-2026
-US92826C8394,Visa Inc. Class A,USD,0.702143,United States,Financials,Financial Services,425.76,166653950,visa,V,V,NYQ,1403161,False,True,1.111647,False,True,17,13-Nov-2026
-US4781601046,Johnson & Johnson,USD,0.68078,United States,Health Care,Pharmaceuticals,285.75,161583620,johnson johnson,JNJ,JNJ,NYQ,200406,False,True,1.054939,False,True,18,13-Nov-2026
-NL0010273215,ASML Holding NV,EUR,0.57019,Netherlands,Information Technology,Semiconductors & Semiconductor Equipment,1338.8,135334900,asml,ASML.AS,,AMS,937966,True,False,,False,True,19,13-Nov-2026
-US9311421039,Walmart Inc.,USD,0.559117,United States,Consumer Staples,Consumer Staples Distribution & Retail,128.09,132706744,walmart,WMT,WMT,NMS,104169,False,True,0.874451,True,True,20,13-Nov-2026
-US57636Q1040,Mastercard Incorporated Class A,USD,0.532502,United States,Financials,Financial Services,661.19,126389780,mastercard,MA,MA,NYQ,1141391,False,True,0.818989,False,True,21,13-Nov-2026
-US00287Y1091,AbbVie Inc.,USD,0.513044,United States,Health Care,Biotechnology,295.03,121771270,abbvie,ABBV,ABBV,NYQ,1551152,False,True,0.799097,False,True,22,13-Nov-2026
-KR7000660001,SK hynix Inc.,KRW,0.501072,South Korea,Information Technology,Semiconductors & Semiconductor Equipment,1216000,118929820,sk hynix,000660.KS,,KSC,2120882,False,False,,False,False,23,13-Nov-2026
-US22160K1051,Costco Wholesale Corporation,USD,0.49004,United States,Consumer Staples,Consumer Staples Distribution & Retail,1106.21,116311340,costco wholesale,COST,COST,NMS,909832,False,True,0.751917,True,True,24,13-Nov-2026
-US1667641005,Chevron Corporation,USD,0.406356,United States,Energy,Oil Gas & Consumable Fuels,219.89,96448810,chevron,CVX,CVX,NYQ,93410,False,True,0.665881,False,True,25,13-Nov-2026
-US7427181091,Procter & Gamble Company,USD,0.395032,United States,Consumer Staples,Household Products,169.8,93761180,procter gamble,PG,PG,NYQ,80424,False,True,0.604903,False,True,26,13-Nov-2026
-US1912161007,Coca-Cola Company,USD,0.378704,United States,Consumer Staples,Beverages,99.25,89885660,coca cola,KO,KO,NYQ,21344,False,True,0.589014,False,True,27,13-Nov-2026
-US17275R1023,Cisco Systems Inc.,USD,0.372544,United States,Information Technology,Communications Equipment,95.64,88423576,cisco systems,CSCO,CSCO,NMS,858877,False,True,0.57774,True,True,28,13-Nov-2026
-US91324P1021,UnitedHealth Group Incorporated,USD,0.368476,United States,Health Care,Health Care Providers & Services,407.46,87458030,unitedhealth,UNH,UNH,NYQ,731766,False,True,0.560516,False,True,29,13-Nov-2026
-US69608A1088,Palantir Technologies Inc. Class A,USD,0.364708,United States,Information Technology,Software,167.99,86563736,palantir technologies,PLTR,PLTR,NMS,1321655,False,True,0.592364,True,True,30,13-Nov-2026
-US58933Y1055,Merck & Co. Inc.,USD,0.362226,United States,Health Care,Pharmaceuticals,147.76,85974600,merck,MRK,MRK,NYQ,310158,False,True,0.558704,False,True,31,13-Nov-2026
-US4370761029,Home Depot Inc.,USD,0.347993,United States,Consumer Discretionary,Specialty Retail,348.69,82596296,home depot,HD,HD,NYQ,354950,False,True,0.532538,False,True,32,13-Nov-2026
-US3696043013,GE Aerospace,USD,0.345762,United States,Industrials,Aerospace & Defense,331.81,82066900,ge aerospace,GE,,NYSE,40545,False,True,0.527606,False,True,33,13-Nov-2026
-CH1499059983,Roche Holding Ltd,CHF,0.333079,Switzerland,Health Care,Pharmaceuticals,404.7,79056400,roche,ROP.SW,,EBS,,False,False,,False,True,34,13-Nov-2026
-US0605051046,Bank of America Corp,USD,0.329933,United States,Financials,Banks,51.02,78309880,bank of america,BAC,BAC,NYQ,70858,False,True,0.508481,False,True,35,13-Nov-2026
-US7181721090,Philip Morris International Inc.,USD,0.308798,United States,Consumer Staples,Tobacco,198.96,73293480,philip morris international,PM,PM,NYQ,1413329,False,True,0.475236,False,True,36,13-Nov-2026
-GB0005405286,HSBC Holdings Plc,GBP,0.307584,United Kingdom,Financials,Banks,13.544,73005180,hsbc,HSBA.L,,LSE,1089113,False,False,,False,True,37,13-Nov-2026
-KYG875721634,Tencent Holdings Ltd,HKD,0.305942,China,Communication Services,Interactive Media & Services,386.6,72615630,tencent,0700.HK,,HKG,,False,False,,False,False,38,13-Nov-2026
-US0382221051,Applied Materials Inc.,USD,0.293266,United States,Information Technology,Semiconductors & Semiconductor Equipment,370.5,69606940,applied materials,AMAT,AMAT,NMS,6951,False,True,0.450589,True,True,39,13-Nov-2026
-CH0012005267,Novartis AG,CHF,0.289298,Switzerland,Health Care,Pharmaceuticals,134.06,68665144,novartis,NOVN.SW,,EBS,1114448,False,False,,False,True,40,13-Nov-2026
-GB00BP6MXD84,Shell Plc,GBP,0.288642,United Kingdom,Energy,Oil Gas & Consumable Fuels,37.195,68509320,shell,SHEL.L,,LSE,1306965,False,False,,False,True,41,13-Nov-2026
-US5128073062,Lam Research Corporation,USD,0.281694,United States,Information Technology,Semiconductors & Semiconductor Equipment,225.92,66860348,lam research,LRCX,LRCX,NMS,707549,False,True,0.433022,True,True,42,13-Nov-2026
-GB0009895292,AstraZeneca PLC,GBP,0.278101,United Kingdom,Health Care,Pharmaceuticals,139.82,66007372,astrazeneca,AZN.L,,LSE,901832,False,False,,False,True,43,13-Nov-2026
-US1491231015,Caterpillar Inc.,USD,0.276382,United States,Industrials,Machinery,600.2,65599460,caterpillar,CAT,CAT,NYQ,18230,False,True,0.422599,False,True,44,13-Nov-2026
-CA7800871021,Royal Bank of Canada,CAD,0.274644,Canada,Financials,Banks,288.37,65186940,royal bank of canada,RY.TO,,TOR,1000275,False,False,,False,True,45,13-Nov-2026
-US8825081040,Texas Instruments Incorporated,USD,0.273938,United States,Information Technology,Semiconductors & Semiconductor Equipment,303.6,65019280,texas instruments,TXN,TXN,NMS,97476,False,True,0.424997,True,True,46,13-Nov-2026
-US75513E1010,RTX Corporation,USD,0.270658,United States,Industrials,Aerospace & Defense,198.58,64240828,rtx,RTX,RTX,NYQ,101829,False,True,0.410239,False,True,47,13-Nov-2026
-US38141G1040,Goldman Sachs Group Inc.,USD,0.269391,United States,Financials,Capital Markets,916.56,63940144,goldman sachs,GS,GS,NYQ,886982,False,True,0.409048,False,True,48,13-Nov-2026
-CH0038863350,Nestle S.A.,CHF,0.268673,Switzerland,Consumer Staples,Food Products,87.72,63769710,nestle s a,NESN.SW,,EBS,,False,False,,False,True,49,13-Nov-2026
-US6974351057,Palo Alto Networks Inc.,USD,0.261663,United States,Information Technology,Software,322.24,62105960,palo alto networks,PANW,PANW,NMS,1327567,False,True,0.402457,True,True,50,13-Nov-2026
-US4581401001,Intel Corporation,USD,0.261295,United States,Information Technology,Semiconductors & Semiconductor Equipment,59.66,62018600,intel,INTC,INTC,NMS,50863,False,True,0.454088,True,True,51,13-Nov-2026
-US9497461015,Wells Fargo & Company,USD,0.260079,United States,Financials,Banks,86.05,61729948,wells fargo,WFC,WFC,NYQ,72971,False,True,0.398744,False,True,52,13-Nov-2026
-US64110L1061,Netflix Inc.,USD,0.258639,United States,Communication Services,Entertainment,62.15,61388228,netflix,NFLX,NFLX,NMS,1065280,False,True,0.396381,True,True,53,13-Nov-2026
-US8835561023,Thermo Fisher Scientific Inc.,USD,0.256167,United States,Health Care,Life Sciences Tools & Services,700.22,60801504,thermo fisher scientific,TMO,TMO,NYQ,97745,False,True,0.39655,False,True,54,13-Nov-2026
-US0311621009,Amgen Inc.,USD,0.248014,United States,Health Care,Biotechnology,465.67,58866276,amgen,AMGN,AMGN,NMS,318154,False,True,0.385956,True,True,55,13-Nov-2026
-IE000S9YS762,Linde plc,USD,0.244223,United States,Materials,Chemicals,526.06,57966550,linde,LIN,LIN,NMS,1707925,False,True,0.371592,True,True,56,13-Nov-2026
-DE0007164600,SAP SE,EUR,0.2394,Germany,Information Technology,Software,213.45,56821692,sap,SAP.DE,,GER,1000184,True,False,,False,True,57,13-Nov-2026
-JP3902900004,Mitsubishi UFJ Financial Group Inc.,JPY,0.233848,Japan,Financials,Banks,3475,55503924,mitsubishi ufj financial,8306.T,,JPX,67088,False,False,,False,True,58,13-Nov-2026
-US4592001014,International Business Machines Corporation,USD,0.232184,United States,Information Technology,It Services,247.13,55109000,international business machines,IBM,IBM,NYQ,51143,False,True,0.356887,False,True,59,13-Nov-2026
-DE0007236101,Siemens AG,EUR,0.224395,Germany,Industrials,Industrial Conglomerates,279.4,53260270,siemens,SIE.DE,,GER,,True,False,,False,True,60,13-Nov-2026
-US22788C1053,CrowdStrike Holdings Inc. Class A,USD,0.224013,United States,Information Technology,Software,226.61,53169504,crowdstrike,CRWD,CRWD,NMS,1535527,False,True,0.353441,True,True,61,13-Nov-2026
-US6174464486,Morgan Stanley,USD,0.22157,United States,Financials,Capital Markets,190.65,52589850,morgan stanley,MS,MS,NYQ,895421,False,True,0.348525,False,True,62,13-Nov-2026
-US68389X1054,Oracle Corporation,USD,0.218451,United States,Information Technology,Software,125.35,51849396,oracle,ORCL,ORCL,NYQ,1341439,False,True,0.377038,False,True,63,13-Nov-2026
-US36828A1016,GE Vernova Inc.,USD,0.214775,United States,Industrials,Electrical Equipment,803.13,50977070,ge vernova,GEV,GEV,NYQ,1996810,False,True,0.327612,False,True,64,13-Nov-2026
-US1729674242,Citigroup Inc.,USD,0.210876,United States,Financials,Banks,124.01,50051428,citigroup,C,C,NYQ,831001,False,True,0.318572,False,True,65,13-Nov-2026
-US0404132054,Arista Networks Inc,USD,0.209074,United States,Information Technology,Communications Equipment,197.29,49623760,arista networks,ANET,ANET,NYQ,1596532,False,True,0.316566,False,True,66,13-Nov-2026
-US3755581036,Gilead Sciences Inc.,USD,0.206886,United States,Health Care,Biotechnology,168.08,49104572,gilead sciences,GILD,GILD,NMS,882095,False,True,0.319326,True,True,67,13-Nov-2026
-US2546871060,Walt Disney Company,USD,0.206854,United States,Communication Services,Entertainment,118.97,49096896,walt disney,DIS,DIS,NYQ,1744489,False,True,0.31459,False,True,68,13-Nov-2026
-JP3633400001,Toyota Motor Corp.,JPY,0.205637,Japan,Consumer Discretionary,Automobiles,3418,48808108,toyota motor,7203.T,,JPX,1094517,False,False,,False,True,69,13-Nov-2026
-DE0008404005,Allianz SE,EUR,0.20124,Germany,Financials,Insurance,477.2,47764468,allianz,ALV.DE,,GER,,True,False,,False,True,70,13-Nov-2026
-CA8911605092,Toronto-Dominion Bank,CAD,0.201043,Canada,Financials,Banks,176.42,47717644,toronto dominion bank,TD,TD,NYQ,947263,False,False,,False,True,71,13-Nov-2026
-US4824801009,KLA Corporation,USD,0.198409,United States,Information Technology,Semiconductors & Semiconductor Equipment,152.32,47092468,kla,KLAC,KLAC,NMS,319201,False,True,0.304594,True,True,72,13-Nov-2026
-US7134481081,PepsiCo Inc.,USD,0.197564,United States,Consumer Staples,Beverages,145.44,46891892,pepsico,PEP,PEP,NMS,77476,False,True,0.303992,True,True,73,13-Nov-2026
-KYG017191142,Alibaba Group Holding Limited,HKD,0.195281,China,Consumer Discretionary,Broadline Retail,90.55,46349996,alibaba,9988.HK,,HKG,1577552,False,False,,False,False,74,13-Nov-2026
-US92343V1044,Verizon Communications Inc.,USD,0.195115,United States,Communication Services,Diversified Telecommunication Services,46.36,46310720,verizon communications,VZ,VZ,NYQ,732712,False,True,0.294965,False,True,75,13-Nov-2026
-AU000000CBA7,Commonwealth Bank of Australia,AUD,0.19429,Australia,Financials,Banks,170.87,46114750,commonwealth bank of australia,CBA.AX,,ASX,,False,False,,False,True,76,13-Nov-2026
-AU000000BHP4,BHP Group Ltd,AUD,0.19261,Australia,Materials,Metals & Mining,58.86,45716212,bhp,BHP.AX,,ASX,811809,False,False,,False,True,77,13-Nov-2026
-US5801351017,McDonald's Corporation,USD,0.192322,United States,Consumer Discretionary,Hotels Restaurants & Leisure,271.97,45647716,mcdonald s,MCD,MCD,NYQ,63908,False,True,0.29472,False,True,78,13-Nov-2026
-US0326541051,Analog Devices Inc.,USD,0.192251,United States,Information Technology,Semiconductors & Semiconductor Equipment,397.97,45630844,analog devices,ADI,ADI,NMS,6281,False,True,0.296863,True,True,79,13-Nov-2026
-US0320951017,Amphenol Corporation Class A,USD,0.191965,United States,Information Technology,Electronic Equipment Instruments & Components,78.23,45563108,amphenol,APH,APH,NYQ,820313,False,True,0.295439,False,True,80,13-Nov-2026
-US0028241000,Abbott Laboratories,USD,0.186753,United States,Health Care,Health Care Equipment & Supplies,108.52,44325972,abbott laboratories,ABT,ABT,NYQ,1800,False,True,0.287836,False,True,81,13-Nov-2026
-FR0000120271,TotalEnergies SE,EUR,0.182586,France,Energy,Oil Gas & Consumable Fuels,82.17,43336860,totalenergies,TTE.PA,,PAR,879764,True,False,,False,True,82,13-Nov-2026
-US7475251036,QUALCOMM Incorporated,USD,0.181767,United States,Information Technology,Semiconductors & Semiconductor Equipment,172.47,43142508,qualcomm,QCOM,QCOM,NMS,804328,False,True,0.282361,True,True,83,13-Nov-2026
-CA82509L1076,Shopify Inc. Class A,CAD,0.1775,Canada,Information Technology,It Services,209.74,42129770,shopify,SHOP,SHOP,NMS,1594805,False,False,,False,True,84,13-Nov-2026
-US65339F1012,NextEra Energy Inc.,USD,0.176045,United States,Utilities,Electric Utilities,85.12,41784300,nextera energy,NEE,NEE,NYQ,753308,False,True,0.271894,False,True,85,13-Nov-2026
-US20825C1045,ConocoPhillips,USD,0.175603,United States,Energy,Oil Gas & Consumable Fuels,142.28,41679360,conocophillips,COP,COP,NYQ,1163165,False,True,0.260288,False,True,86,13-Nov-2026
-ES0113900J37,Banco Santander S.A.,EUR,0.175381,Spain,Financials,Banks,11.09,41626710,banco santander s a,SAN.MC,,MCE,891478,True,False,,False,True,87,13-Nov-2026
-US79466L3024,Salesforce Inc.,USD,0.174434,United States,Information Technology,Software,217.84,41402016,salesforce,CRM,CRM,NYQ,1108524,False,True,0.273529,False,True,88,13-Nov-2026
-US9078181081,Union Pacific Corporation,USD,0.173449,United States,Industrials,Ground Transportation,302.44,41168132,union pacific,UNP,UNP,NYQ,100885,False,True,0.275096,False,True,89,13-Nov-2026
-US95040Q1040,Welltower Inc.,USD,0.171745,United States,Real Estate,Health Care Reits,244.46,40763704,welltower,WELL,WELL,NYQ,766704,False,True,0.270079,False,True,90,13-Nov-2026
-US0258161092,American Express Company,USD,0.170734,United States,Financials,Consumer Finance,320.6,40523840,american express,AXP,AXP,NYQ,4962,False,True,0.258848,False,True,91,13-Nov-2026
-US09290D1019,BlackRock Inc.,USD,0.169939,United States,Financials,Capital Markets,1222.91,40335240,blackrock,BLK,BLK,NYQ,2012383,False,True,0.269954,False,True,92,13-Nov-2026
-US2441991054,Deere & Company,USD,0.163397,United States,Industrials,Machinery,673.54,38782430,deere,DE,DE,NYQ,315189,False,True,0.258914,False,True,93,13-Nov-2026
-US7170811035,Pfizer Inc.,USD,0.162444,United States,Health Care,Pharmaceuticals,28.89,38556276,pfizer,PFE,PFE,NYQ,78003,False,True,0.252143,False,True,94,13-Nov-2026
-JP3435000009,Sony Group Corporation,JPY,0.160204,Japan,Consumer Discretionary,Household Durables,4353,38024424,sony,6758.T,,JPX,313838,False,False,,False,True,95,13-Nov-2026
-ES0144580Y14,Iberdrola SA,EUR,0.158326,Spain,Utilities,Electric Utilities,23.7,37578720,iberdrola,IBE.MC,,MCE,,True,False,,False,True,96,13-Nov-2026
-TW0002454006,MediaTek Inc,TWD,0.156936,Taiwan,Information Technology,Semiconductors & Semiconductor Equipment,4120,37248748,mediatek,2454.TW,,TAI,,False,False,,False,False,97,13-Nov-2026
-IE00B4BNMY34,Accenture Plc Class A,USD,0.155377,United States,Information Technology,It Services,250.49,36878892,accenture,ACN,ACN,NYQ,1467373,False,True,0.234813,False,True,98,13-Nov-2026
-US00206R1023,AT&T Inc,USD,0.155081,United States,Communication Services,Diversified Telecommunication Services,22.18,36808620,at t,T,T,NYQ,732717,False,True,0.2327,False,True,99,13-Nov-2026
-US8085131055,Charles Schwab Corp,USD,0.153736,United States,Financials,Capital Markets,92.98,36489444,charles schwab,SCHW,SCHW,NYQ,316709,False,True,0.231412,False,True,100,13-Nov-2026
+US0378331005,Apple Inc.,USD,5.246477,United States,Information Technology,Technology Hardware Storage & Peripherals,352.78,1231559200,apple,AAPL,AAPL,NMS,320193,False,True,8.041495,True,True,1,16-Nov-2026
+US5949181045,Microsoft Corporation,USD,3.702281,United States,Information Technology,Software,517.99,869074300,microsoft,MSFT,MSFT,NMS,789019,False,True,6.007583,True,True,2,16-Nov-2026
+US67066G1040,NVIDIA Corporation,USD,3.63498,United States,Information Technology,Semiconductors & Semiconductor Equipment,156.14,853276000,nvidia,NVDA,NVDA,NMS,1045810,False,True,5.901748,True,True,3,16-Nov-2026
+US0231351067,Amazon.com Inc.,USD,2.527403,United States,Consumer Discretionary,Broadline Retail,257.75,593283260,amazon com,AMZN,AMZN,NMS,1018724,False,True,3.951444,True,True,4,16-Nov-2026
+US02079K3059,Alphabet Inc. Class A,USD,1.693993,United States,Communication Services,Interactive Media & Services,283.72,397648320,alphabet,GOOGL,GOOGL,NMS,1652044,False,True,2.600561,True,True,5,16-Nov-2026
+TW0002330008,Taiwan Semiconductor Manufacturing Co. Ltd.,TWD,1.681935,Taiwan,Information Technology,Semiconductors & Semiconductor Equipment,2215,394817920,taiwan semiconductor manufacturing,2330.TW,,TAI,1046179,False,False,,False,False,6,16-Nov-2026
+US11135F1012,Broadcom Inc.,USD,1.525618,United States,Information Technology,Semiconductors & Semiconductor Equipment,333.4,358123940,broadcom,AVGO,AVGO,NMS,1730168,False,True,2.47764,True,True,7,16-Nov-2026
+US30303M1027,Meta Platforms Inc Class A,USD,1.39392,United States,Communication Services,Interactive Media & Services,626.41,327209020,meta platforms,META,META,NMS,1326801,False,True,2.157607,True,True,8,16-Nov-2026
+US5324571083,Eli Lilly and Company,USD,1.159655,United States,Health Care,Pharmaceuticals,1431.67,272217730,eli lilly and,LLY,LLY,NYQ,59478,False,True,1.789297,False,True,9,16-Nov-2026
+US88160R1014,Tesla Inc.,USD,1.100834,United States,Consumer Discretionary,Automobiles,379.74,258410030,tesla,TSLA,TSLA,NMS,1318605,False,True,1.67162,True,True,10,16-Nov-2026
+US46625H1005,JPMorgan Chase & Co.,USD,0.909302,United States,Financials,Banks,338.21,213449740,jpmorgan chase,JPM,JPM,NYQ,19617,False,True,1.404205,False,True,11,16-Nov-2026
+US0846707026,Berkshire Hathaway Inc. Class B,USD,0.844016,United States,Financials,Financial Services,592.85,198124540,berkshire hathaway,BRK-B,BRK-B,NYQ,1067983,False,True,1.724597,False,True,12,16-Nov-2026
+US0079031078,Advanced Micro Devices Inc.,USD,0.832502,United States,Information Technology,Semiconductors & Semiconductor Equipment,504.28,195421620,advanced micro devices,AMD,AMD,NMS,2488,False,True,1.285781,True,True,13,16-Nov-2026
+US5951121038,Micron Technology Inc.,USD,0.822587,United States,Information Technology,Semiconductors & Semiconductor Equipment,719.02,193094260,micron technology,MU,MU,NMS,723125,False,True,1.268386,True,True,14,16-Nov-2026
+US92826C8394,Visa Inc. Class A,USD,0.715718,United States,Financials,Financial Services,426.46,168007760,visa,V,V,NYQ,1403161,False,True,1.135066,False,True,15,16-Nov-2026
+KR7005930003,Samsung Electronics Co. Ltd.,KRW,0.70401,South Korea,Information Technology,Technology Hardware Storage & Peripherals,196800,165259410,samsung electronics,005930.KS,,KSC,,False,False,,False,False,16,16-Nov-2026
+US30233Q1085,Exxonmobil Holdings Corporation,USD,0.703623,United States,Energy,Oil Gas & Consumable Fuels,166.87,165168590,exxonmobil,XOM,XOM,NYQ,2115436,False,True,1.071685,False,True,17,16-Nov-2026
+US4781601046,Johnson & Johnson,USD,0.684889,United States,Health Care,Pharmaceuticals,282.55,160770940,johnson johnson,JNJ,JNJ,NYQ,200406,False,True,1.063348,False,True,18,16-Nov-2026
+US9311421039,Walmart Inc.,USD,0.570639,United States,Consumer Staples,Consumer Staples Distribution & Retail,128.41,133952050,walmart,WMT,WMT,NMS,104169,False,True,0.893634,True,True,19,16-Nov-2026
+NL0010273215,ASML Holding NV,EUR,0.564974,Netherlands,Information Technology,Semiconductors & Semiconductor Equipment,1306.6,132622170,asml,ASML.AS,,AMS,937966,True,False,,False,True,20,16-Nov-2026
+US57636Q1040,Mastercard Incorporated Class A,USD,0.542332,United States,Financials,Financial Services,661.71,127307050,mastercard,MA,MA,NYQ,1141391,False,True,0.835522,False,True,21,16-Nov-2026
+US00287Y1091,AbbVie Inc.,USD,0.520646,United States,Health Care,Biotechnology,294.55,122216456,abbvie,ABBV,ABBV,NYQ,1551152,False,True,0.81277,False,True,22,16-Nov-2026
+US22160K1051,Costco Wholesale Corporation,USD,0.50262,United States,Consumer Staples,Consumer Staples Distribution & Retail,1113.74,117985160,costco wholesale,COST,COST,NMS,909832,False,True,0.771705,True,True,23,16-Nov-2026
+KR7000660001,SK hynix Inc.,KRW,0.46983,South Korea,Information Technology,Semiconductors & Semiconductor Equipment,1120000,110288080,sk hynix,000660.KS,,KSC,2120882,False,False,,False,False,24,16-Nov-2026
+US7427181091,Procter & Gamble Company,USD,0.410308,United States,Consumer Staples,Household Products,173.02,96315736,procter gamble,PG,PG,NYQ,80424,False,True,0.628323,False,True,25,16-Nov-2026
+US1667641005,Chevron Corporation,USD,0.408944,United States,Energy,Oil Gas & Consumable Fuels,217.14,95995640,chevron,CVX,CVX,NYQ,93410,False,True,0.670303,False,True,26,16-Nov-2026
+US1912161007,Coca-Cola Company,USD,0.38664,United States,Consumer Staples,Beverages,99.48,90760080,coca cola,KO,KO,NYQ,21344,False,True,0.601823,False,True,27,16-Nov-2026
+US91324P1021,UnitedHealth Group Incorporated,USD,0.37925,United States,Health Care,Health Care Providers & Services,412.02,89025160,unitedhealth,UNH,UNH,NYQ,731766,False,True,0.57778,False,True,28,16-Nov-2026
+US17275R1023,Cisco Systems Inc.,USD,0.374465,United States,Information Technology,Communications Equipment,94.52,87901896,cisco systems,CSCO,CSCO,NMS,858877,False,True,0.582042,True,True,29,16-Nov-2026
+US58933Y1055,Merck & Co. Inc.,USD,0.360305,United States,Health Care,Pharmaceuticals,144.46,84578010,merck,MRK,MRK,NYQ,310158,False,True,0.556814,False,True,30,16-Nov-2026
+US69608A1088,Palantir Technologies Inc. Class A,USD,0.354204,United States,Information Technology,Software,160.39,83146020,palantir technologies,PLTR,PLTR,NMS,1321655,False,True,0.576528,True,True,31,16-Nov-2026
+US4370761029,Home Depot Inc.,USD,0.35355,United States,Consumer Discretionary,Specialty Retail,347.51,82992340,home depot,HD,HD,NYQ,354950,False,True,0.541026,False,True,32,16-Nov-2026
+US3696043013,GE Aerospace,USD,0.344849,United States,Industrials,Aerospace & Defense,325.18,80949980,ge aerospace,GE,,NYSE,40545,False,True,0.527084,False,True,33,16-Nov-2026
+CH1499059983,Roche Holding Ltd,CHF,0.342424,Switzerland,Health Care,Pharmaceuticals,409.3,80380640,roche,ROP.SW,,EBS,,False,False,,False,True,34,16-Nov-2026
+US0605051046,Bank of America Corp,USD,0.330175,United States,Financials,Banks,50.08,77505310,bank of america,BAC,BAC,NYQ,70858,False,True,0.508788,False,True,35,16-Nov-2026
+KYG875721634,Tencent Holdings Ltd,HKD,0.31438,China,Communication Services,Interactive Media & Services,390.4,73797730,tencent,0700.HK,,HKG,,False,False,,False,False,36,16-Nov-2026
+GB0005405286,HSBC Holdings Plc,GBP,0.310894,United Kingdom,Financials,Banks,13.47,72979320,hsbc,HSBA.L,,LSE,1089113,False,False,,False,True,37,16-Nov-2026
+US7181721090,Philip Morris International Inc.,USD,0.309875,United States,Consumer Staples,Tobacco,196.04,72740056,philip morris international,PM,PM,NYQ,1413329,False,True,0.477341,False,True,38,16-Nov-2026
+CH0012005267,Novartis AG,CHF,0.297485,Switzerland,Health Care,Pharmaceuticals,135.76,69831580,novartis,NOVN.SW,,EBS,1114448,False,False,,False,True,39,16-Nov-2026
+GB00BP6MXD84,Shell Plc,GBP,0.292576,United Kingdom,Energy,Oil Gas & Consumable Fuels,37.055,68679350,shell,SHEL.L,,LSE,1306965,False,False,,False,True,40,16-Nov-2026
+GB0009895292,AstraZeneca PLC,GBP,0.283015,United Kingdom,Health Care,Pharmaceuticals,140.34,66434964,astrazeneca,AZN.L,,LSE,901832,False,False,,False,True,41,16-Nov-2026
+US0382221051,Applied Materials Inc.,USD,0.282004,United States,Information Technology,Semiconductors & Semiconductor Equipment,350.25,66197600,applied materials,AMAT,AMAT,NMS,6951,False,True,0.434224,True,True,42,16-Nov-2026
+CA7800871021,Royal Bank of Canada,CAD,0.276092,Canada,Financials,Banks,285.69,64809852,royal bank of canada,RY.TO,,TOR,1000275,False,False,,False,True,43,16-Nov-2026
+CH0038863350,Nestle S.A.,CHF,0.274475,Switzerland,Consumer Staples,Food Products,88.12,64430252,nestle s a,NESN.SW,,EBS,,False,False,,False,True,44,16-Nov-2026
+US75513E1010,RTX Corporation,USD,0.270615,United States,Industrials,Aerospace & Defense,194.89,63524200,rtx,RTX,RTX,NYQ,101829,False,True,0.410422,False,True,45,16-Nov-2026
+US8825081040,Texas Instruments Incorporated,USD,0.269876,United States,Information Technology,Semiconductors & Semiconductor Equipment,294.21,63350770,texas instruments,TXN,TXN,NMS,97476,False,True,0.419838,True,True,46,16-Nov-2026
+US5128073062,Lam Research Corporation,USD,0.267397,United States,Information Technology,Semiconductors & Semiconductor Equipment,210.83,62768940,lam research,LRCX,LRCX,NMS,707549,False,True,0.411935,True,True,47,16-Nov-2026
+US1491231015,Caterpillar Inc.,USD,0.267343,United States,Industrials,Machinery,570.49,62756180,caterpillar,CAT,CAT,NYQ,18230,False,True,0.409475,False,True,48,16-Nov-2026
+US38141G1040,Goldman Sachs Group Inc.,USD,0.266546,United States,Financials,Capital Markets,891.54,62569170,goldman sachs,GS,GS,NYQ,886982,False,True,0.40559,False,True,49,16-Nov-2026
+US9497461015,Wells Fargo & Company,USD,0.261208,United States,Financials,Banks,84.84,61315988,wells fargo,WFC,WFC,NYQ,72971,False,True,0.400759,False,True,50,16-Nov-2026
+US6974351057,Palo Alto Networks Inc.,USD,0.261107,United States,Information Technology,Software,316.09,61292380,palo alto networks,PANW,PANW,NMS,1327567,False,True,0.40243,True,True,51,16-Nov-2026
+US64110L1061,Netflix Inc.,USD,0.257311,United States,Communication Services,Entertainment,60.75,60401236,netflix,NFLX,NFLX,NMS,1065280,False,True,0.394965,True,True,52,16-Nov-2026
+US8835561023,Thermo Fisher Scientific Inc.,USD,0.257212,United States,Health Care,Life Sciences Tools & Services,691.33,60377996,thermo fisher scientific,TMO,TMO,NYQ,97745,False,True,0.399113,False,True,53,16-Nov-2026
+US0311621009,Amgen Inc.,USD,0.250291,United States,Health Care,Biotechnology,462.32,58753476,amgen,AMGN,AMGN,NMS,318154,False,True,0.390603,True,True,54,16-Nov-2026
+IE000S9YS762,Linde plc,USD,0.247565,United States,Materials,Chemicals,523.46,58113484,linde,LIN,LIN,NMS,1707925,False,True,0.37692,True,True,55,16-Nov-2026
+US4581401001,Intel Corporation,USD,0.247194,United States,Information Technology,Semiconductors & Semiconductor Equipment,55.47,58026390,intel,INTC,INTC,NMS,50863,False,True,0.430383,True,True,56,16-Nov-2026
+DE0007164600,SAP SE,EUR,0.242949,Germany,Information Technology,Software,213.4,57029950,sap,SAP.DE,,GER,1000184,True,False,,False,True,57,16-Nov-2026
+JP3902900004,Mitsubishi UFJ Financial Group Inc.,JPY,0.234436,Japan,Financials,Banks,3415,55031636,mitsubishi ufj financial,8306.T,,JPX,67088,False,False,,False,True,58,16-Nov-2026
+US4592001014,International Business Machines Corporation,USD,0.231877,United States,Information Technology,It Services,242.51,54430884,international business machines,IBM,IBM,NYQ,51143,False,True,0.357002,False,True,59,16-Nov-2026
+US22788C1053,CrowdStrike Holdings Inc. Class A,USD,0.224406,United States,Information Technology,Software,223.21,52677110,crowdstrike,CRWD,CRWD,NMS,1535527,False,True,0.354887,True,True,60,16-Nov-2026
+DE0007236101,Siemens AG,EUR,0.22247,Germany,Industrials,Industrial Conglomerates,272.55,52222716,siemens,SIE.DE,,GER,,True,False,,False,True,61,16-Nov-2026
+US6174464486,Morgan Stanley,USD,0.219307,United States,Financials,Capital Markets,185.57,51480270,morgan stanley,MS,MS,NYQ,895421,False,True,0.345819,False,True,62,16-Nov-2026
+US68389X1054,Oracle Corporation,USD,0.211134,United States,Information Technology,Software,119.09,49561570,oracle,ORCL,ORCL,NYQ,1341439,False,True,0.365156,False,True,63,16-Nov-2026
+JP3633400001,Toyota Motor Corp.,JPY,0.210675,Japan,Consumer Discretionary,Automobiles,3428,49453856,toyota motor,7203.T,,JPX,1094517,False,False,,False,True,64,16-Nov-2026
+US2546871060,Walt Disney Company,USD,0.210257,United States,Communication Services,Entertainment,118.7,49355816,walt disney,DIS,DIS,NYQ,1744489,False,True,0.319964,False,True,65,16-Nov-2026
+US1729674242,Citigroup Inc.,USD,0.210183,United States,Financials,Banks,121.32,49338416,citigroup,C,C,NYQ,831001,False,True,0.317705,False,True,66,16-Nov-2026
+US3755581036,Gilead Sciences Inc.,USD,0.209593,United States,Health Care,Biotechnology,167.58,49199812,gilead sciences,GILD,GILD,NMS,882095,False,True,0.324547,True,True,67,16-Nov-2026
+US36828A1016,GE Vernova Inc.,USD,0.207599,United States,Industrials,Electrical Equipment,763.57,48731800,ge vernova,GEV,GEV,NYQ,1996810,False,True,0.317517,False,True,68,16-Nov-2026
+DE0008404005,Allianz SE,EUR,0.204218,Germany,Financials,Insurance,475.2,47938124,allianz,ALV.DE,,GER,,True,False,,False,True,69,16-Nov-2026
+US7134481081,PepsiCo Inc.,USD,0.202618,United States,Consumer Staples,Beverages,146.43,47562516,pepsico,PEP,PEP,NMS,77476,False,True,0.311998,True,True,70,16-Nov-2026
+CA8911605092,Toronto-Dominion Bank,CAD,0.20146,Canada,Financials,Banks,174.21,47290724,toronto dominion bank,TD,TD,NYQ,947263,False,False,,False,True,71,16-Nov-2026
+US0404132054,Arista Networks Inc,USD,0.201436,United States,Information Technology,Communications Equipment,187.02,47285200,arista networks,ANET,ANET,NYQ,1596532,False,True,0.305905,False,True,72,16-Nov-2026
+US92343V1044,Verizon Communications Inc.,USD,0.198839,United States,Communication Services,Diversified Telecommunication Services,46.34,46675548,verizon communications,VZ,VZ,NYQ,732712,False,True,0.300554,False,True,73,16-Nov-2026
+US5801351017,McDonald's Corporation,USD,0.198132,United States,Consumer Discretionary,Hotels Restaurants & Leisure,274.67,46509596,mcdonald s,MCD,MCD,NYQ,63908,False,True,0.303419,False,True,74,16-Nov-2026
+KYG017191142,Alibaba Group Holding Limited,HKD,0.197788,China,Consumer Discretionary,Broadline Retail,90.15,46428916,alibaba,9988.HK,,HKG,1577552,False,False,,False,False,75,16-Nov-2026
+AU000000CBA7,Commonwealth Bank of Australia,AUD,0.197347,Australia,Financials,Banks,171.14,46325316,commonwealth bank of australia,CBA.AX,,ASX,,False,False,,False,True,76,16-Nov-2026
+US4824801009,KLA Corporation,USD,0.190694,United States,Information Technology,Semiconductors & Semiconductor Equipment,143.96,44763500,kla,KLAC,KLAC,NMS,319201,False,True,0.293901,True,True,77,16-Nov-2026
+AU000000BHP4,BHP Group Ltd,AUD,0.188511,Australia,Materials,Metals & Mining,57.21,44251092,bhp,BHP.AX,,ASX,811809,False,False,,False,True,78,16-Nov-2026
+US0320951017,Amphenol Corporation Class A,USD,0.188198,United States,Information Technology,Electronic Equipment Instruments & Components,75.43,44177616,amphenol,APH,APH,NYQ,820313,False,True,0.290389,False,True,79,16-Nov-2026
+US0326541051,Analog Devices Inc.,USD,0.188159,United States,Information Technology,Semiconductors & Semiconductor Equipment,383.17,44168388,analog devices,ADI,ADI,NMS,6281,False,True,0.291362,True,True,80,16-Nov-2026
+US0028241000,Abbott Laboratories,USD,0.187968,United States,Health Care,Health Care Equipment & Supplies,107.45,44123590,abbott laboratories,ABT,ABT,NYQ,1800,False,True,0.290523,False,True,81,16-Nov-2026
+FR0000120271,TotalEnergies SE,EUR,0.185468,France,Energy,Oil Gas & Consumable Fuels,81.96,43536720,totalenergies,TTE.PA,,PAR,879764,True,False,,False,True,82,16-Nov-2026
+CA82509L1076,Shopify Inc. Class A,CAD,0.181253,Canada,Information Technology,It Services,211.43,42547436,shopify,SHOP,SHOP,NMS,1594805,False,False,,False,True,83,16-Nov-2026
+US7475251036,QUALCOMM Incorporated,USD,0.180647,United States,Information Technology,Semiconductors & Semiconductor Equipment,168.52,42405190,qualcomm,QCOM,QCOM,NMS,804328,False,True,0.281242,True,True,84,16-Nov-2026
+US65339F1012,NextEra Energy Inc.,USD,0.179562,United States,Utilities,Electric Utilities,85.34,42150364,nextera energy,NEE,NEE,NYQ,753308,False,True,0.277882,False,True,85,16-Nov-2026
+ES0113900J37,Banco Santander S.A.,EUR,0.177134,Spain,Financials,Banks,11.022,41580476,banco santander s a,SAN.MC,,MCE,891478,True,False,,False,True,86,16-Nov-2026
+US9078181081,Union Pacific Corporation,USD,0.177092,United States,Industrials,Ground Transportation,303.71,41570610,union pacific,UNP,UNP,NYQ,100885,False,True,0.281607,False,True,87,16-Nov-2026
+US20825C1045,ConocoPhillips,USD,0.176681,United States,Energy,Oil Gas & Consumable Fuels,140.52,41474056,conocophillips,COP,COP,NYQ,1163165,False,True,0.263775,False,True,88,16-Nov-2026
+US79466L3024,Salesforce Inc.,USD,0.174969,United States,Information Technology,Software,214.83,41072270,salesforce,CRM,CRM,NYQ,1108524,False,True,0.274977,False,True,89,16-Nov-2026
+US95040Q1040,Welltower Inc.,USD,0.17479,United States,Real Estate,Health Care Reits,244.65,41030252,welltower,WELL,WELL,NYQ,766704,False,True,0.275526,False,True,90,16-Nov-2026
+US0258161092,American Express Company,USD,0.173005,United States,Financials,Consumer Finance,319.05,40611236,american express,AXP,AXP,NYQ,4962,False,True,0.262587,False,True,91,16-Nov-2026
+US09290D1019,BlackRock Inc.,USD,0.168325,United States,Financials,Capital Markets,1197.97,39512644,blackrock,BLK,BLK,NYQ,2012383,False,True,0.26957,False,True,92,16-Nov-2026
+US7170811035,Pfizer Inc.,USD,0.165213,United States,Health Care,Pharmaceuticals,28.86,38782212,pfizer,PFE,PFE,NYQ,78003,False,True,0.256766,False,True,93,16-Nov-2026
+JP3435000009,Sony Group Corporation,JPY,0.162161,Japan,Consumer Discretionary,Household Durables,4320,38065812,sony,6758.T,,JPX,313838,False,False,,False,True,94,16-Nov-2026
+US2441991054,Deere & Company,USD,0.161489,United States,Industrials,Machinery,653.99,37907876,deere,DE,DE,NYQ,315189,False,True,0.256273,False,True,95,16-Nov-2026
+US00206R1023,AT&T Inc,USD,0.159205,United States,Communication Services,Diversified Telecommunication Services,22.36,37371900,at t,T,T,NYQ,732717,False,True,0.239138,False,True,96,16-Nov-2026
+ES0144580Y14,Iberdrola SA,EUR,0.15702,Spain,Utilities,Electric Utilities,23.14,36858980,iberdrola,IBE.MC,,MCE,,True,False,,False,True,97,16-Nov-2026
+IE00B4BNMY34,Accenture Plc Class A,USD,0.156406,United States,Information Technology,It Services,247.7,36714836,accenture,ACN,ACN,NYQ,1467373,False,True,0.236702,False,True,98,16-Nov-2026
+US8085131055,Charles Schwab Corp,USD,0.156258,United States,Financials,Capital Markets,92.94,36680070,charles schwab,SCHW,SCHW,NYQ,316709,False,True,0.235799,False,True,99,16-Nov-2026
+JP3890350006,Sumitomo Mitsui Financial Group Inc.,JPY,0.154877,Japan,Financials,Banks,3260,36355920,sumitomo mitsui financial,8316.T,,JPX,1022837,False,False,,False,True,100,16-Nov-2026

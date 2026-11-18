@@ -518,5 +518,10 @@
 "symbol": "2454.TW",
 "exchange": "TAI",
 "us_symbol": null
+},
+"JP3890350006": {
+"symbol": "8316.T",
+"exchange": "JPX",
+"us_symbol": null
 }
 }
