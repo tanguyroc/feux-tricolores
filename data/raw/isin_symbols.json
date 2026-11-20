@@ -523,5 +523,10 @@
 "symbol": "8316.T",
 "exchange": "JPX",
 "us_symbol": null
+},
+"US8725401090": {
+"symbol": "TJX",
+"exchange": "NYQ",
+"us_symbol": "TJX"
 }
 }
