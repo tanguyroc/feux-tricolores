@@ -41,3 +41,6 @@ date_calcul,date_données,actif,règles,couleur,couleur_confirmée,cher,cher_ten
 2026-11-26,2026-11-25,sp500,1.1,orange,orange,True,False,False,97.455689,0.009304,7182.779785,,
 2026-11-26,2026-11-25,ndx,1.1,orange,orange,True,False,False,97.455689,0.009304,26046.896484,,
 2026-11-26,2026-11-25,world,1.1,orange,orange,True,False,False,97.455689,0.009304,4595.299805,,
+2026-11-28,2026-11-27,sp500,1.1,orange,orange,True,False,False,97.684391,0.008273,7297.490234,,
+2026-11-28,2026-11-27,ndx,1.1,orange,orange,True,False,False,97.684391,0.008273,26726.388672,,
+2026-11-28,2026-11-27,world,1.1,orange,orange,True,False,False,97.684391,0.008273,4678.799805,,
